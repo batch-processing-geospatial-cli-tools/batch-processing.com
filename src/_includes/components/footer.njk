@@ -1,0 +1,32 @@
+<footer class="site-footer" aria-label="Site footer">
+  <div class="page-wrapper">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="/" class="footer-brand__logo" aria-label="{{ site.site.name }} home">
+          <img src="/icons/logo.svg" alt="" width="32" height="32" aria-hidden="true">
+          <span class="footer-brand__name">GIS CLI Toolcraft</span>
+        </a>
+        <p class="footer-brand__desc">{{ site.site.description }}</p>
+      </div>
+
+      {% for section in site.sections %}
+      <div class="footer-nav">
+        <p class="footer-nav__heading">{{ section.title }}</p>
+        <ul class="footer-nav__list">
+      {% set sectionSlug = section.url %}
+      {% for sub in collections.subsections %}
+        {% if sub.url and sectionSlug and (sub.url.indexOf(sectionSlug) === 0) %}
+        <li><a href="{{ sub.url }}">{{ sub.data.title or sub.fileSlug }}</a></li>
+        {% endif %}
+      {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; {% year %} {{ site.site.name }}</p>
+    </div>
+  </div>
+</footer>
+

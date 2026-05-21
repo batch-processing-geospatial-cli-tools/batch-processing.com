@@ -1,0 +1,35 @@
+---
+layout: layouts/base
+pageType: subsection
+---
+<div class="page-hero">
+  <div class="page-wrapper">
+    <p class="page-hero__subtitle">Subsection</p>
+    <h1 class="page-hero__title">{{ title }}</h1>
+  </div>
+</div>
+
+<div class="page-wrapper content-area" style="padding-top: var(--space-xl);">
+  {% include "components/breadcrumb.njk" %}
+
+  <div class="prose">
+    {{ content | removeH1 | safe }}
+  </div>
+
+  {# List leaf articles belonging to this subsection #}
+  {% set myUrl = page.url %}
+  {% set arts = collections.articles | articlesFor(myUrl) %}
+  {% if arts.length %}
+  <section class="related-articles" aria-label="Articles in this subsection">
+    <p class="related-articles__heading">Articles in this subsection</p>
+    <div class="articles-grid">
+      {% for art in arts %}
+      <a href="{{ art.url }}" class="card">
+        <p class="card__title">{{ art.data.title or art.fileSlug }}</p>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+

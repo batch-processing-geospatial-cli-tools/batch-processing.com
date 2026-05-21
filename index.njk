@@ -1,0 +1,78 @@
+---
+layout: layouts/home
+pageType: home
+title: Python GIS CLI Toolcraft & Batch Processing
+description: A practitioner-focused resource for building, packaging, testing, and deploying command-line tools for spatial workflows.
+---
+
+<section class="home-hero" aria-label="Hero">
+  <div class="page-wrapper home-hero__inner">
+    <div class="home-hero__badge">Python · GIS · CLI · Batch Processing</div>
+    <h1 class="home-hero__title">
+      Build Powerful<br>
+      <span>Geospatial CLI Tools</span>
+    </h1>
+    <p class="home-hero__desc">
+      A practitioner-focused resource for building, packaging, testing, and deploying
+      Python command-line tools for spatial workflows — from argument parsing to
+      production-grade async batch pipelines.
+    </p>
+    <div class="hero-cta-group">
+      {% for section in site.sections %}
+      <a href="{{ section.url }}" class="btn btn--primary">
+        <span class="btn__icon" aria-hidden="true">{{ section.icon }}</span>
+        {{ section.title }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="home-intro" aria-label="About this site">
+  <div class="page-wrapper">
+    <p>
+      Modern geospatial workflows demand more than ad-hoc scripts. Whether you're automating
+      raster tile processing across thousands of files, building internal toolchain CLIs for
+      a GIS team, or packaging reusable spatial utilities as open-source libraries,
+      <strong>Python GIS CLI Toolcraft &amp; Batch Processing</strong> gives you the architecture
+      patterns, code templates, and production hardening techniques you need to ship tools
+      that scale.
+    </p>
+    <p>
+      Each guide is written for working practitioners — Python GIS developers, DevOps engineers,
+      and open-source maintainers — who need code that runs reliably in CI/CD pipelines,
+      Kubernetes jobs, and local development environments alike. You'll find complete,
+      runnable implementations alongside the reasoning behind every architectural decision.
+    </p>
+    <p>
+      The content is organised into two complementary sections: the first covers the
+      <strong>CLI layer</strong> — argument parsing with Typer and Click, subcommand organisation,
+      Rich console output, and configuration management. The second dives into the
+      <strong>processing layer</strong> — async I/O, multiprocessing, chunked vector reading,
+      memory-safe pipelines, and checkpointing for long-running spatial batch jobs.
+    </p>
+  </div>
+</section>
+
+<section class="home-sections" aria-label="Content sections">
+  <div class="page-wrapper">
+    <h2 class="home-sections__heading">Explore the guides</h2>
+    <div class="sections-grid">
+      {% for section in site.sections %}
+      <div class="section-card">
+        <div class="section-card__icon" aria-hidden="true">{{ section.icon }}</div>
+        <a href="{{ section.url }}" class="section-card__title">{{ section.title }}</a>
+        <p class="section-card__desc">{{ section.description }}</p>
+        {% set subs = collections.subsections | subsectionsFor(section.url) %}
+        {% if subs.length %}
+        <ul class="link-list">
+          {% for sub in subs %}
+          <li><a href="{{ sub.url }}">{{ sub.data.title or sub.fileSlug }}</a></li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>

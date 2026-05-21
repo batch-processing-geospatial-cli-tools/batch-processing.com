@@ -1,0 +1,43 @@
+/* ── Reset & Base ────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  font-size: var(--font-size-base);
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--c-cream);
+  color: var(--c-text);
+  line-height: var(--line-height);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+main { flex: 1; }
+
+img, svg, video { max-width: 100%; display: block; }
+
+ul, ol { padding-left: var(--space-lg); }
+
+/* Remove bullets from checkbox lists — handled in content.css */
+ul:has(> li > .checkbox-item) {
+  list-style: none;
+  padding-left: 0;
+}
+
+a {
+  color: var(--c-indigo);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+a:hover { color: var(--c-accent-hover); }
+a:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+

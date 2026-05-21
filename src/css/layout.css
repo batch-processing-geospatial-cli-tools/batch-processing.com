@@ -1,0 +1,133 @@
+/* ── Layout ───────────────────────────────────────────────────────────────── */
+
+/* Centred container — full width up to --container-max, then centred */
+.page-wrapper {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 var(--page-padding);
+  box-sizing: border-box;
+}
+
+/* Content area with comfortable reading measure on very wide screens */
+.content-area {
+  width: 100%;
+  padding-top: calc(var(--header-height) + var(--space-2xl));
+  padding-bottom: var(--space-3xl);
+}
+
+/* Section grid — 2 columns on desktop */
+.sections-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr));
+  gap: var(--space-xl);
+  margin: var(--space-xl) 0;
+}
+
+/* Article list grid */
+.articles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+  gap: var(--space-lg);
+  margin: var(--space-lg) 0;
+}
+
+/* Card base */
+.card {
+  background: var(--c-cream);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition), transform var(--transition), border-color var(--transition);
+  text-decoration: none;
+  display: block;
+}
+.card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+  border-color: var(--c-mauve);
+}
+
+.card__icon {
+  font-size: 2.5rem;
+  margin-bottom: var(--space-sm);
+  line-height: 1;
+}
+
+.card__title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--c-indigo-dark);
+  margin-bottom: var(--space-sm);
+}
+
+/* When card title is an <a> link */
+a.card__title, .card__title--link {
+  display: block;
+  color: var(--c-indigo-dark);
+  text-decoration: none;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+  transition: color var(--transition);
+}
+a.card__title:hover, .card__title--link:hover {
+  color: var(--c-accent);
+}
+
+.card__desc {
+  font-size: 0.95rem;
+  color: var(--c-text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Subsection / article link list */
+.link-list {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-md) 0 0;
+  border-top: 1px solid var(--c-border);
+}
+
+.link-list li {
+  border-bottom: 1px solid var(--c-border);
+  margin: 0;
+}
+
+.link-list a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-xs);
+  color: var(--c-accent);
+  font-size: 0.95rem;
+  transition: background var(--transition), padding-left var(--transition);
+  border-radius: var(--radius-sm);
+}
+
+.link-list a::before {
+  content: "→";
+  color: var(--c-mauve);
+  flex-shrink: 0;
+  transition: transform var(--transition);
+}
+
+.link-list a:hover {
+  padding-left: var(--space-md);
+  background: var(--c-lavender);
+  color: var(--c-accent-hover);
+}
+
+.link-list a:hover::before {
+  transform: translateX(3px);
+}
+
+/* Responsive breakpoints */
+@media (max-width: 768px) {
+  .page-wrapper { padding: 0 var(--space-md); }
+  .content-area { padding-top: calc(var(--header-height) + var(--space-xl)); }
+}
+

@@ -1,0 +1,12 @@
+{% set crumbs = page.url | breadcrumbs %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  {% for crumb in crumbs %}
+    {% if loop.last %}
+      <span class="breadcrumb__current" aria-current="page">{{ title or crumb.label }}</span>
+    {% else %}
+      <a href="{{ crumb.url }}">{{ crumb.label }}</a>
+      <span class="breadcrumb__sep" aria-hidden="true">›</span>
+    {% endif %}
+  {% endfor %}
+</nav>
+

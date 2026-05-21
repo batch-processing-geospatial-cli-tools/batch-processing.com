@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="{{ description or site.site.description }}">
+  <meta name="theme-color" content="{{ site.site.themeColor }}">
+
+  <!-- Canonical -->
+  <link rel="canonical" href="{{ site.site.url }}{{ page.url }}">
+
+  <!-- Open Graph -->
+  <meta property="og:site_name" content="{{ site.site.name }}">
+  <meta property="og:type" content="{% if pageType == 'article' %}article{% else %}website{% endif %}">
+  <meta property="og:title" content="{{ title or site.site.name }}">
+  <meta property="og:description" content="{{ description or site.site.description }}">
+  <meta property="og:url" content="{{ site.site.url }}{{ page.url }}">
+  <meta property="og:image" content="{{ site.site.url }}/icons/icon-512.png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ title or site.site.name }}">
+  <meta name="twitter:description" content="{{ description or site.site.description }}">
+  <meta name="twitter:image" content="{{ site.site.url }}/icons/icon-512.png">
+
+  <!-- PWA / Apple -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="{{ site.site.shortName }}">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+
+  <title>{% if title and title !== site.site.name %}{{ title }} | {{ site.site.name }}{% else %}{{ site.site.name }}{% endif %}</title>
+
+  <!-- Icons -->
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/css/main.css">
+
+  <!-- JSON-LD Structured Data ─────────────────────────────────────────── -->
+  {%- if pageType == "home" %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": {{ (site.site.url + "/#website") | json | safe }},
+    "url": {{ (site.site.url + "/") | json | safe }},
+    "name": {{ site.site.name | json | safe }},
+    "description": {{ site.site.description | json | safe }}
+  }
+  </script>
+  {%- elif pageType == "article" %}
+  {%- set crumbs = page.url | breadcrumbs %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "TechArticle",
+        "@id": {{ (site.site.url + page.url + "#article") | json | safe }},
+        "url": {{ (site.site.url + page.url) | json | safe }},
+        "headline": {{ title | json | safe }},
+        "description": {{ (description or site.site.description) | json | safe }},
+        "dateModified": "{{ page.date | htmlDateString }}",
+        "inLanguage": "en-US",
+        "publisher": {
+          "@type": "Organization",
+          "name": {{ site.site.name | json | safe }},
+          "url": {{ site.site.url | json | safe }}
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {%- for crumb in crumbs %}
+          {
+            "@type": "ListItem",
+            "position": {{ loop.index }},
+            "name": {{ (title if loop.last else crumb.label) | json | safe }},
+            "item": {{ (site.site.url + crumb.url) | json | safe }}
+          }{% if not loop.last %},{% endif %}
+          {%- endfor %}
+        ]
+      }
+    ]
+  }
+  </script>
+  {%- elif pageType == "section" or pageType == "subsection" %}
+  {%- set crumbs = page.url | breadcrumbs %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": {{ (site.site.url + page.url + "#webpage") | json | safe }},
+        "url": {{ (site.site.url + page.url) | json | safe }},
+        "name": {{ title | json | safe }},
+        "description": {{ (description or site.site.description) | json | safe }},
+        "inLanguage": "en-US"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {%- for crumb in crumbs %}
+          {
+            "@type": "ListItem",
+            "position": {{ loop.index }},
+            "name": {{ (title if loop.last else crumb.label) | json | safe }},
+            "item": {{ (site.site.url + crumb.url) | json | safe }}
+          }{% if not loop.last %},{% endif %}
+          {%- endfor %}
+        ]
+      }
+    ]
+  }
+  </script>
+  {%- endif %}
+
+  <!-- Mermaid (deferred) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (typeof mermaid !== 'undefined') {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: 'base',
+          themeVariables: {
+            primaryColor: '#e8e4f0',
+            primaryBorderColor: '#4a3f7a',
+            primaryTextColor: '#2d2340',
+            lineColor: '#7c5cbf',
+            secondaryColor: '#c9a8c0',
+            tertiaryColor: '#f5ede8',
+            edgeLabelBackground: '#fdf9f6',
+            fontFamily: 'Segoe UI, system-ui, sans-serif'
+          }
+        });
+      }
+    });
+  </script>
+</head>
+<body>
+  {% include "components/header.njk" %}
+
+  <main id="main-content">
+    {{ content | safe }}
+  </main>
+
+  {% include "components/footer.njk" %}
+
+  <!-- Scripts -->
+  <script src="/js/nav.js" defer></script>
+  <script src="/js/copy-code.js" defer></script>
+  <script src="/js/checkbox.js" defer></script>
+  <script src="/js/accordion.js" defer></script>
+  <script src="/js/main.js" defer></script>
+</body>
+</html>

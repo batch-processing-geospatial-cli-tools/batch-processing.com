@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2d2340"/>
+      <stop offset="55%" stop-color="#4a3f7a"/>
+      <stop offset="100%" stop-color="#7c5cbf"/>
+    </linearGradient>
+    <linearGradient id="term" x1="0" y1="0" x2="64" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#e8e4f0"/>
+      <stop offset="100%" stop-color="#c9a8c0"/>
+    </linearGradient>
+    <linearGradient id="globe" x1="10" y1="36" x2="54" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7c5cbf"/>
+      <stop offset="100%" stop-color="#c9a8c0"/>
+    </linearGradient>
+  </defs>
+  <!-- Background rounded square -->
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+
+  <!-- Terminal window chrome -->
+  <rect x="8" y="10" width="48" height="30" rx="5" fill="rgba(232,228,240,0.08)" stroke="rgba(232,228,240,0.25)" stroke-width="1"/>
+  <!-- Traffic-light dots -->
+  <circle cx="14" cy="16" r="2.2" fill="#a3427a" opacity="0.9"/>
+  <circle cx="20.5" cy="16" r="2.2" fill="#c9a8c0" opacity="0.9"/>
+  <circle cx="27" cy="16" r="2.2" fill="#7c5cbf" opacity="0.9"/>
+  <!-- Prompt `>_` -->
+  <text x="12" y="31" font-family="monospace" font-size="11" font-weight="700" fill="url(#term)">&#62;_</text>
+  <!-- Blinking cursor line -->
+  <rect x="30" y="25" width="10" height="2.5" rx="1.2" fill="#e8e4f0" opacity="0.7"/>
+
+  <!-- Geo globe / grid below terminal -->
+  <ellipse cx="32" cy="50" rx="16" ry="9" stroke="url(#globe)" stroke-width="1.4" fill="none"/>
+  <!-- Meridian lines -->
+  <path d="M32 41 Q38 50 32 59" stroke="url(#globe)" stroke-width="1.1" fill="none"/>
+  <path d="M32 41 Q26 50 32 59" stroke="url(#globe)" stroke-width="1.1" fill="none"/>
+  <!-- Latitude line -->
+  <path d="M19 49.5 Q32 54 45 49.5" stroke="url(#globe)" stroke-width="1" fill="none" opacity="0.7"/>
+</svg>
+

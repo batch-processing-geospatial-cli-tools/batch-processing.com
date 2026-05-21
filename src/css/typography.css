@@ -1,0 +1,246 @@
+/* ── Typography ──────────────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-body);
+  line-height: 1.25;
+  color: var(--c-indigo-dark);
+  scroll-margin-top: calc(var(--header-height) + 1.5rem);
+}
+
+h1 {
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--c-indigo-dark) 0%, var(--c-plum) 60%, var(--c-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: var(--space-lg);
+}
+
+h2 {
+  font-size: clamp(1.3rem, 3vw, 1.9rem);
+  font-weight: 600;
+  color: var(--c-indigo);
+  margin-top: var(--space-2xl);
+  margin-bottom: var(--space-md);
+  padding-left: var(--space-md);
+  border-left: 4px solid var(--c-mauve);
+}
+
+h3 {
+  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+  font-weight: 600;
+  color: var(--c-plum);
+  margin-top: var(--space-xl);
+  margin-bottom: var(--space-sm);
+}
+
+h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  margin-top: var(--space-lg);
+  margin-bottom: var(--space-sm);
+}
+
+p {
+  margin-bottom: var(--space-md);
+  color: var(--c-text);
+}
+
+p + p { margin-top: 0; }
+
+strong { color: var(--c-indigo-dark); }
+
+ul, ol {
+  margin-bottom: var(--space-md);
+}
+
+li { margin-bottom: var(--space-xs); }
+
+li > ul, li > ol { margin-top: var(--space-xs); margin-bottom: 0; }
+
+/* ── Styled prose lists ──────────────────────────────────────────────────── */
+
+/* ── Unordered list — custom mauve diamond bullet ─────────────────────── */
+.prose ul {
+  list-style: none;
+  padding-left: var(--space-md);
+  margin-bottom: var(--space-xl);
+  border-left: 3px solid var(--c-lavender-mid);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.prose ul > li {
+  position: relative;
+  padding: var(--space-xs) var(--space-sm) var(--space-xs) calc(var(--space-lg) + var(--space-xs));
+  margin-bottom: 2px;
+  line-height: var(--line-height);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition), padding-left var(--transition);
+}
+
+.prose ul > li:hover {
+  background: var(--c-lavender);
+  padding-left: calc(var(--space-lg) + var(--space-md));
+}
+
+.prose ul > li::before {
+  content: "";
+  position: absolute;
+  left: var(--space-sm);
+  top: 0.68em;
+  width: 8px;
+  height: 8px;
+  background: linear-gradient(135deg, var(--c-mauve), var(--c-accent));
+  border-radius: 2px;
+  transform: rotate(45deg);
+  flex-shrink: 0;
+  transition: transform var(--transition), background var(--transition);
+}
+
+.prose ul > li:hover::before {
+  transform: rotate(135deg) scale(1.15);
+  background: linear-gradient(135deg, var(--c-accent), var(--c-plum));
+}
+
+/* Nested ul — smaller hollow dot */
+.prose ul ul {
+  margin-top: var(--space-xs);
+  margin-bottom: 0;
+  padding-left: var(--space-md);
+  border-left: 2px solid var(--c-border);
+}
+
+.prose ul ul > li::before {
+  width: 6px;
+  height: 6px;
+  background: transparent;
+  border: 2px solid var(--c-mauve);
+  border-radius: 50%;
+  transform: none;
+  top: 0.68em;
+}
+
+.prose ul ul > li:hover::before {
+  background: var(--c-mauve);
+  transform: scale(1.2);
+}
+
+/* ── Ordered list — numbered badge ──────────────────────────────────────── */
+.prose ol {
+  list-style: none;
+  padding-left: var(--space-md);
+  margin-bottom: var(--space-xl);
+  counter-reset: prose-ol;
+}
+
+.prose ol > li {
+  position: relative;
+  padding: var(--space-xs) var(--space-sm) var(--space-xs) calc(var(--space-2xl) + var(--space-xs));
+  margin-bottom: 2px;
+  counter-increment: prose-ol;
+  line-height: var(--line-height);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition);
+}
+
+.prose ol > li:hover {
+  background: var(--c-lavender);
+}
+
+.prose ol > li::before {
+  content: counter(prose-ol);
+  position: absolute;
+  left: var(--space-xs);
+  top: 0.25em;
+  width: 1.6em;
+  height: 1.6em;
+  background: linear-gradient(135deg, var(--c-lavender), var(--c-lavender-mid));
+  color: var(--c-indigo);
+  border: 1px solid var(--c-lavender-mid);
+  border-radius: 50%;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.6em;
+  text-align: center;
+  font-family: var(--font-body);
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.prose ol > li:hover::before {
+  background: linear-gradient(135deg, var(--c-indigo), var(--c-accent));
+  color: var(--c-cream);
+  border-color: var(--c-accent);
+}
+
+/* Nested ol — use letters */
+.prose ol ol {
+  margin-top: var(--space-xs);
+  margin-bottom: 0;
+  counter-reset: prose-ol-nested;
+  border-left: 2px solid var(--c-border);
+  padding-left: var(--space-md);
+}
+
+.prose ol ol > li {
+  counter-increment: prose-ol-nested;
+}
+
+.prose ol ol > li::before {
+  content: counter(prose-ol-nested, lower-alpha);
+  background: transparent;
+  background-image: none;
+  border-color: var(--c-border);
+  color: var(--c-text-muted);
+  box-shadow: none;
+}
+
+.prose ol ol > li:hover::before {
+  background: var(--c-lavender);
+  color: var(--c-indigo);
+  border-color: var(--c-lavender-mid);
+}
+
+/* ── Mixed nesting ───────────────────────────────────────────────────────── */
+.prose ul ol,
+.prose ol ul {
+  margin-top: var(--space-xs);
+  margin-bottom: 0;
+}
+
+/* ── Tight lists (no extra spacing between items) ────────────────────────── */
+.prose ul + p,
+.prose ol + p {
+  margin-top: var(--space-sm);
+}
+
+blockquote {
+  border-left: 4px solid var(--c-accent);
+  background: var(--c-lavender);
+  padding: var(--space-md) var(--space-lg);
+  margin: var(--space-lg) 0;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  font-style: italic;
+  color: var(--c-plum);
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--c-border);
+  margin: var(--space-2xl) 0;
+}
+
+/* Styled links in content prose */
+.prose a {
+  color: var(--c-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color var(--transition), text-decoration-color var(--transition);
+}
+.prose a:hover {
+  color: var(--c-accent-hover);
+  text-decoration-color: var(--c-mauve);
+}
+

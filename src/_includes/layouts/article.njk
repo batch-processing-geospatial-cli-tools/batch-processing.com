@@ -1,0 +1,42 @@
+---
+layout: layouts/base
+pageType: article
+---
+<div class="page-hero">
+  <div class="page-wrapper">
+    <p class="page-hero__subtitle">Article</p>
+    <h1 class="page-hero__title">{{ title }}</h1>
+  </div>
+</div>
+
+<div class="page-wrapper content-area" style="padding-top: var(--space-xl);">
+  {% include "components/breadcrumb.njk" %}
+
+  <article class="prose">
+    {{ content | removeH1 | safe }}
+  </article>
+
+  {# Related articles — others in the same subsection #}
+  {% set myUrl = page.url %}
+  {% set parentUrl = myUrl | parentUrl %}
+  {% set siblings = collections.articles | articlesFor(parentUrl) %}
+
+  {% if siblings.length %}
+  <aside class="related-articles" aria-label="Related articles">
+    <p class="related-articles__heading">Related articles</p>
+    <ul class="link-list">
+      {% for art in siblings %}
+        {% if art.url !== myUrl %}
+        <li><a href="{{ art.url }}">{{ art.data.title or art.fileSlug }}</a></li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </aside>
+  {% endif %}
+
+  {# Back to subsection link #}
+  <nav class="breadcrumb" aria-label="Section navigation" style="margin-top: var(--space-2xl);">
+    <a href="{{ parentUrl }}">← Back to subsection</a>
+  </nav>
+</div>
+

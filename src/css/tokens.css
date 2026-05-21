@@ -1,0 +1,52 @@
+/* ── Design Tokens ──────────────────────────────────────────────────────── */
+:root {
+  /* Palette */
+  --c-cream:        #fdf9f6;   /* page background */
+  --c-beige:        #f5ede8;   /* alt section bg  */
+  --c-lavender:     #e8e4f0;   /* card / code bg  */
+  --c-lavender-mid: #d2cbe8;   /* hover, borders   */
+  --c-mauve:        #c9a8c0;   /* decorative accents */
+  --c-plum:         #6b4a6e;   /* headings, borders  */
+  --c-indigo:       #4a3f7a;   /* primary text, links */
+  --c-indigo-dark:  #2d2340;   /* H1, heavy text      */
+  --c-accent:       #7c5cbf;   /* interactive / CTA   */
+  --c-accent-hover: #634aab;   /* link hover          */
+  --c-code-bg:      #f0ecf8;   /* inline + block code */
+  --c-border:       #d6cee8;   /* borders, dividers   */
+  --c-text:         #2d2340;   /* body copy           */
+  --c-text-muted:   #6b5f80;   /* metadata, captions  */
+  --c-white:        #ffffff;
+
+  /* Typography */
+  --font-body:  'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono:  'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  --font-size-base: 1rem;
+  --line-height: 1.75;
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+
+  /* Layout */
+  --container-max: 1400px;
+  --header-height: 64px;
+  --page-padding: clamp(1rem, 4vw, 3rem);
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+
+  /* Transitions */
+  --transition: 0.2s ease;
+  --transition-slow: 0.35s ease;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(45, 35, 64, 0.08);
+  --shadow-md: 0 4px 12px rgba(45, 35, 64, 0.12);
+  --shadow-lg: 0 8px 24px rgba(45, 35, 64, 0.16);
+}
+

@@ -1,0 +1,27 @@
+---
+permalink: /sitemap.xml
+eleventyExcludeFromCollections: true
+---
+<?xml version="1.0" encoding="utf-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  {% for item in collections.sitemap %}
+  {%- set depth = item.url | urlDepth %}
+  <url>
+    <loc>{{ site.site.url }}{{ item.url }}</loc>
+    <lastmod>{{ item.date | htmlDateString if item.date else "2026-05-21" }}</lastmod>
+    {%- if depth == 0 %}
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    {%- elif depth == 1 %}
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    {%- elif depth == 2 %}
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    {%- else %}
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    {%- endif %}
+  </url>
+  {% endfor %}
+</urlset>

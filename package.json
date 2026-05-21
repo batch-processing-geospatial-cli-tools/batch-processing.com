@@ -1,0 +1,25 @@
+{
+  "name": "batch-processing.com",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "eleventy",
+    "start": "eleventy --serve --watch",
+    "icons": "node src/scripts/generate-icons.js",
+    "deploy": "npm run build && wrangler pages deploy ./_site --project-name=batch-processing-com",
+    "deploy:prod": "npm run build && wrangler pages deploy ./_site --project-name=batch-processing-com --branch=main"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.5",
+    "@11ty/eleventy-plugin-bundle": "^3.0.7",
+    "@11ty/eleventy-plugin-syntaxhighlight": "^5.0.2",
+    "markdown-it": "^14.1.1",
+    "markdown-it-anchor": "^9.2.0",
+    "markdown-it-checkbox": "^1.1.0"
+  }
+}
