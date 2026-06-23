@@ -110,7 +110,7 @@ a.card__title:hover, .card__title--link:hover {
 
 .link-list a::before {
   content: "→";
-  color: var(--c-mauve);
+  color: var(--c-plum);
   flex-shrink: 0;
   transition: transform var(--transition);
 }

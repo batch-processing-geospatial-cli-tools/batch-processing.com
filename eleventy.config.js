@@ -13,6 +13,8 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.ignores.add("AGENTS.md");
   eleventyConfig.ignores.add("BUILD_CHECKLIST.md");
   eleventyConfig.ignores.add("site_description_and_requirements.md");
+  eleventyConfig.ignores.add("CLAUDE.md");
+  eleventyConfig.ignores.add("_plan/**");
   eleventyConfig.ignores.add("node_modules/**");
   eleventyConfig.ignores.add("_site/**");
   eleventyConfig.ignores.add("src/css/**");
@@ -30,6 +32,8 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ "src/robots.txt": "robots.txt" });
   eleventyConfig.addPassthroughCopy({ "src/favicon.ico": "favicon.ico" });
   eleventyConfig.addPassthroughCopy({ "src/favicon.svg": "favicon.svg" });
+  eleventyConfig.addPassthroughCopy({ "src/og-image.png": "og-image.png" });
+  eleventyConfig.addPassthroughCopy({ "src/a6f9053bdafb0276b849024ecb0d03ac.txt": "a6f9053bdafb0276b849024ecb0d03ac.txt" });
 
   // ── Markdown-it configuration ─────────────────────────────────────────────
   const md = markdownIt({
@@ -110,7 +114,7 @@ module.exports = function (eleventyConfig) {
 
   // Remove the first H1 from rendered HTML (used in layouts that render title separately)
   eleventyConfig.addFilter("removeH1", function (htmlContent) {
-    return htmlContent.replace(/^[\s]*<h1\b[^>]*>.*?<\/h1>/is, "").trimStart();
+    return htmlContent.replace(/<h1\b[^>]*>.*?<\/h1>/is, "").trimStart();
   });
 
   // Derive parent URL by stripping the last path segment

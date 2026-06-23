@@ -145,6 +145,99 @@
 
 .home-intro .page-wrapper p + p { margin-top: var(--space-md); }
 
+/* ── Start here section ─────────────────────────────────────────────────── */
+.home-start-here {
+  background: var(--c-lavender);
+  border-top: 1px solid var(--c-border);
+  border-bottom: 1px solid var(--c-border);
+  padding: var(--space-3xl) 0;
+}
+
+.home-start-here__heading {
+  font-size: clamp(1.3rem, 3vw, 1.8rem);
+  font-weight: 700;
+  color: var(--c-indigo-dark);
+  margin-bottom: var(--space-sm);
+  text-align: center;
+  background: none;
+  -webkit-text-fill-color: var(--c-indigo-dark);
+}
+
+.home-start-here__intro {
+  text-align: center;
+  color: var(--c-text-muted);
+  font-size: 1rem;
+  max-width: 600px;
+  margin: 0 auto var(--space-xl);
+  line-height: 1.7;
+}
+
+.start-here-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: var(--space-lg);
+}
+
+.start-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  background: var(--c-cream);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-slow), transform var(--transition-slow), border-color var(--transition);
+}
+
+.start-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+  border-color: var(--c-accent);
+}
+
+.start-card__tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--c-accent);
+  background: var(--c-lavender);
+  border: 1px solid var(--c-lavender-mid);
+  border-radius: 99px;
+  padding: 2px var(--space-sm);
+  align-self: flex-start;
+}
+
+.start-card__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--c-indigo-dark);
+  line-height: 1.35;
+  display: block;
+}
+
+.start-card__desc {
+  font-size: 0.9rem;
+  color: var(--c-text-muted);
+  line-height: 1.6;
+  margin: 0;
+  flex: 1;
+}
+
+.start-card__cta {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--c-accent);
+  margin-top: var(--space-xs);
+  transition: color var(--transition);
+}
+
+.start-card:hover .start-card__cta {
+  color: var(--c-accent-hover);
+}
+
 /* ── Section cards ──────────────────────────────────────────────────────── */
 .home-sections {
   padding: var(--space-3xl) 0;

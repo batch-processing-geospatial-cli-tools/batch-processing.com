@@ -15,7 +15,7 @@
 
 .breadcrumb a { color: var(--c-accent); }
 .breadcrumb a:hover { color: var(--c-accent-hover); }
-.breadcrumb__sep { color: var(--c-mauve); }
+.breadcrumb__sep { color: var(--c-plum); }
 .breadcrumb__current { color: var(--c-text-muted); font-weight: 500; }
 
 /* ── Code blocks ─────────────────────────────────────────────────────────── */
@@ -79,14 +79,16 @@
 /* Code block has a lang label — push copy button down */
 .code-block-wrapper[data-lang] .copy-btn { top: calc(var(--space-xs) * 2 + 1.2rem + var(--space-xs)); }
 
-/* ── Inline code ─────────────────────────────────────────────────────────── */
+/* ── Inline code — blends with prose, no pill box ────────────────────────── */
 :not(pre) > code {
-  background: var(--c-code-bg);
-  color: var(--c-plum);
+  background: none;
+  border: none;
+  color: var(--c-text);
   font-family: var(--font-mono);
-  font-size: 0.875em;
-  padding: 0.1em 0.35em;
-  border-radius: var(--radius-sm);
+  font-size: 0.9em;
+  padding: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 /* ── Prism overrides — light theme matching palette ───────────────────────── */
@@ -102,13 +104,13 @@ pre[class*="language-"] {
 code[class*="language-"] { background: none !important; }
 
 /* Token colours */
-.token.comment, .token.prolog, .token.doctype, .token.cdata { color: #8b7fb0; }
+.token.comment, .token.prolog, .token.doctype, .token.cdata { color: #5a4f7a; }
 .token.punctuation { color: var(--c-text-muted); }
-.token.property, .token.tag, .token.boolean, .token.number { color: #7c5cbf; }
+.token.property, .token.tag, .token.boolean, .token.number { color: var(--c-accent); }
 .token.string, .token.char, .token.attr-value { color: #a3427a; }
 .token.selector, .token.attr-name { color: var(--c-plum); }
 .token.keyword, .token.atrule { color: var(--c-indigo); font-weight: 600; }
-.token.function, .token.class-name { color: #4a7a6b; }
+.token.function, .token.class-name { color: #2e5a4d; }
 .token.regex, .token.important, .token.variable { color: var(--c-accent); }
 .token.operator { color: var(--c-text-muted); }
 .token.builtin { color: #6b4a6e; }
@@ -141,6 +143,8 @@ code[class*="language-"] { background: none !important; }
   text-align: left;
   white-space: nowrap;
 }
+
+.table-scroll th code { color: inherit; }
 
 .table-scroll td {
   padding: var(--space-sm) var(--space-md);
@@ -232,7 +236,7 @@ details.faq-item > summary {
 details.faq-item > summary::-webkit-details-marker { display: none; }
 details.faq-item > summary::after {
   content: "▸";
-  color: var(--c-mauve);
+  color: var(--c-plum);
   font-size: 0.9rem;
   transition: transform var(--transition-slow);
   flex-shrink: 0;
@@ -291,6 +295,7 @@ details.faq-item > summary:hover { background: var(--c-lavender-mid); }
 }
 
 .page-hero__subtitle {
+  display: block;
   font-size: 1rem;
   color: rgba(232, 228, 240, 0.85);
   margin: 0;

@@ -1,6 +1,7 @@
 ---
 layout: layouts/base
 title: You're offline
+description: "You appear to be offline. Previously visited pages are cached and still available. Reconnect to continue exploring GIS CLI tutorials."
 permalink: /offline/index.html
 ---
 <div class="page-wrapper content-area" style="text-align:center; padding-top: calc(var(--header-height) + 4rem);">

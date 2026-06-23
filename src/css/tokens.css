@@ -9,8 +9,8 @@
   --c-plum:         #6b4a6e;   /* headings, borders  */
   --c-indigo:       #4a3f7a;   /* primary text, links */
   --c-indigo-dark:  #2d2340;   /* H1, heavy text      */
-  --c-accent:       #7c5cbf;   /* interactive / CTA   */
-  --c-accent-hover: #634aab;   /* link hover          */
+  --c-accent:       #5b3fa8;   /* interactive / CTA   */
+  --c-accent-hover: #4a3d8a;   /* link hover          */
   --c-code-bg:      #f0ecf8;   /* inline + block code */
   --c-border:       #d6cee8;   /* borders, dividers   */
   --c-text:         #2d2340;   /* body copy           */

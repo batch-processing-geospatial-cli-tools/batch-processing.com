@@ -22,12 +22,22 @@ module.exports = {
       return "layouts/article";
     },
 
-    // Extract the # H1 from the markdown file as the page title
+    // Extract the # H1 from the markdown file as the page title.
+    // Honour explicit frontmatter title first.  When falling back to the
+    // markdown body, skip lines that are inside fenced code blocks so that
+    // Python/shell comments starting with `#` are never mistaken for headings.
     title: (data) => {
+      if (data.title) return data.title; // honour explicit frontmatter
       try {
         const raw = fs.readFileSync(data.page.inputPath, "utf8");
-        const match = raw.match(/^#\s+(.+)$/m);
-        return match ? match[1].trim() : undefined;
+        let inFence = false;
+        for (const line of raw.split("\n")) {
+          if (/^```/.test(line)) { inFence = !inFence; continue; }
+          if (inFence) continue;
+          const m = line.match(/^#\s+(.+)$/);
+          if (m) return m[1].trim();
+        }
+        return undefined;
       } catch {
         return undefined;
       }

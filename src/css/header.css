@@ -149,6 +149,7 @@
     padding: var(--space-md) var(--space-lg);
     gap: var(--space-xs);
     box-shadow: var(--shadow-md);
+    overflow: hidden; /* prevent nav content from pushing page width */
     /* Hidden state */
     clip-path: inset(0 0 100% 0);
     opacity: 0;
@@ -162,7 +163,11 @@
     pointer-events: auto;
   }
 
-  .site-nav__link { padding: var(--space-sm) var(--space-md); font-size: 0.95rem; }
+  .site-nav__link {
+    padding: var(--space-sm) var(--space-md);
+    font-size: 0.95rem;
+    white-space: normal; /* allow long nav labels to wrap on mobile */
+  }
 
   .site-logo__text { max-width: 120px; font-size: 0.85rem; }
 }
