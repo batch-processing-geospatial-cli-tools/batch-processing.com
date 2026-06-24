@@ -116,7 +116,7 @@ Three compounding failures produced this outcome: no CRS validation at parse tim
   <text x="525" y="86" text-anchor="middle" font-size="12" fill="currentColor" font-family="inherit" font-weight="600">CLI Flags</text>
   <text x="525" y="104" text-anchor="middle" font-size="10" fill="currentColor" font-family="inherit" opacity="0.7">--crs-target EPSG:3857</text>
   <!-- Arrows to merge point -->
-  <line x1="140" y1="90" x2="178" y2="90" stroke="currentColor" stroke-width="1.5" opacity="0.5" marker-end="url(#arrow)"/>
+  <line x1="140" y1="90" x2="156" y2="90" stroke="currentColor" stroke-width="1.5" opacity="0.5" marker-end="url(#arrow)"/>
   <line x1="290" y1="90" x2="308" y2="90" stroke="currentColor" stroke-width="1.5" opacity="0.5" marker-end="url(#arrow)"/>
   <line x1="440" y1="90" x2="458" y2="90" stroke="currentColor" stroke-width="1.5" opacity="0.5" marker-end="url(#arrow)"/>
   <!-- Priority label -->

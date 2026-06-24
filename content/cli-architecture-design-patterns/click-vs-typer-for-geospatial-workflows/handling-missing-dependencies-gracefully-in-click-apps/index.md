@@ -148,7 +148,7 @@ The diagram below shows how a module-level import fails the entire process versu
   <text x="593" y="186" text-anchor="middle" font-size="10" fill="#92400e">raster-to-vector</text>
   <text x="593" y="199" text-anchor="middle" font-size="9" fill="currentColor" opacity=".55">lazy-loads rasterio</text>
   <line x1="593" y1="208" x2="593" y2="232" stroke="currentColor" stroke-width="1.5" opacity=".4" marker-end="url(#arr)"/>
-  <rect x="535" y="234" width="115" height="44" rx="5" fill="#ef4444" opacity=".12"/>
+  <rect x="535" y="234" width="115" height="54" rx="5" fill="#ef4444" opacity=".12"/>
   <text x="593" y="251" text-anchor="middle" font-size="10" fill="#991b1b">ImportError →</text>
   <text x="593" y="265" text-anchor="middle" font-size="10" fill="#991b1b">click.UsageError</text>
   <text x="593" y="279" text-anchor="middle" font-size="9" fill="currentColor" opacity=".55">clean message, exit 2</text>
