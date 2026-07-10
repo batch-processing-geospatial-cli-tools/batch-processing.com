@@ -2,7 +2,7 @@
 title: "Argument Parsing with Typer for Python GIS CLIs"
 description: "Build type-safe CLI argument parsers for geospatial pipelines using Typer — covering validation, subcommands, batch progress, and production error handling."
 slug: "argument-parsing-with-typer"
-type: "cluster"
+type: "topic"
 breadcrumb: "CLI Architecture > Argument Parsing with Typer"
 datePublished: "2024-03-15"
 dateModified: "2026-06-23"
@@ -74,14 +74,14 @@ dateModified: "2026-06-23"
 }
 </script>
 
-Typer turns Python type annotations into a complete argument-parsing layer — inputs are coerced, validated, and documented automatically, with no manual `required=True` flags or `argparse.add_argument` boilerplate. This page is part of the [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) guide.
+Typer turns Python type annotations into a complete argument-parsing layer — inputs are coerced, validated, and documented automatically, with no manual `required=True` flags or `argparse.add_argument` boilerplate. This page is part of the [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
 
 ## Prerequisites
 
 - **Python 3.10+** for `str | None` union syntax and `list[Path]` generics without `from __future__ import annotations`.
 - **`pip install "typer[all]"`** — the `[all]` extra pulls in Click (the parsing engine), Rich (terminal rendering), and shellingham (shell detection for tab completion). Without it, progress bars, help formatting, and shell completion are unavailable.
 - **Geospatial stack**: `geopandas`, `rasterio`, and `pyproj` for the downstream operations the CLI wraps. Install `pyogrio` as the `geopandas` I/O backend (`pip install pyogrio`) — it is substantially faster than fiona for both read and write paths.
-- Familiarity with the broader [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) context helps when deciding where argument parsing ends and subcommand routing begins.
+- Familiarity with the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) context helps when deciding where argument parsing ends and subcommand routing begins.
 
 ## Problem framing
 
@@ -232,7 +232,7 @@ Failing early with `typer.BadParameter` exits with code 2, which distinguishes u
 
 ### Step 4 — Structure subcommands for spatial operations
 
-As a toolset grows, splitting operations into named subcommands — each with its own typed signature — is significantly cleaner than a single function with dozens of flags. Typer registers each `@app.command()` decorated function as a subcommand automatically. For the full pattern on grouping related subcommands into nested `typer.Typer()` instances, see [CLI Subcommand Organization](/cli-architecture-design-patterns/cli-subcommand-organization/).
+As a toolset grows, splitting operations into named subcommands — each with its own typed signature — is significantly cleaner than a single function with dozens of flags. Typer registers each `@app.command()` decorated function as a subcommand automatically. For the full pattern on grouping related subcommands into nested `typer.Typer()` instances, see [CLI Subcommand Organization](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/).
 
 ```python
 from pathlib import Path
@@ -271,7 +271,7 @@ def merge(
 
 ### Step 5 — Integrate batch iteration with Rich progress tracking
 
-Batch runs over file directories or glob patterns need both robust iteration and live user feedback. Pair `typer.Argument` with a glob pattern string and `rich.progress.track` for non-blocking progress display. For [Rich console output and progress bars](/cli-architecture-design-patterns/rich-console-output-progress-bars/) beyond the basics — live tables, status spinners, and column customisation — see the dedicated coverage.
+Batch runs over file directories or glob patterns need both robust iteration and live user feedback. Pair `typer.Argument` with a glob pattern string and `rich.progress.track` for non-blocking progress display. For [Rich console output and progress bars](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/) beyond the basics — live tables, status spinners, and column customisation — see the dedicated coverage.
 
 ```python
 import glob
@@ -324,7 +324,7 @@ The `disable=not sys.stdout.isatty()` guard prevents Rich's live-rendering escap
 
 ## Configuration integration
 
-CLI flags should be the final override layer, not the sole source of truth. Wire Typer defaults into the site's layered config pattern — YAML file first, environment variable second, CLI flag last — so that automated runs pick up project-level settings without repeating flags on every invocation. [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/) covers the full YAML/TOML loading pattern; the Typer integration point is the `default_factory` parameter:
+CLI flags should be the final override layer, not the sole source of truth. Wire Typer defaults into the site's layered config pattern — YAML file first, environment variable second, CLI flag last — so that automated runs pick up project-level settings without repeating flags on every invocation. [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) covers the full YAML/TOML loading pattern; the Typer integration point is the `default_factory` parameter:
 
 ```python
 import os
@@ -359,7 +359,7 @@ def export(
     ...
 ```
 
-Storing project-level defaults in `geo_pipeline.yaml` and surfacing the config path via `GEO_PIPELINE_CONFIG` mirrors the env-var sync pattern described in [Environment Variable Sync](/cli-architecture-design-patterns/environment-variable-sync/).
+Storing project-level defaults in `geo_pipeline.yaml` and surfacing the config path via `GEO_PIPELINE_CONFIG` mirrors the env-var sync pattern described in [Environment Variable Sync](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/).
 
 ## Error handling & gotchas
 
@@ -436,8 +436,8 @@ def test_batch_validate_no_match():
 Typer's parsing overhead is negligible — microseconds per invocation. The performance-critical choices are downstream:
 
 - **`pyogrio` over `fiona`**: pyogrio's vectorised GDAL bindings are 3–10× faster for large GeoPackage and FlatGeobuf reads. Pass `engine="pyogrio"` to `geopandas.read_file` consistently.
-- **Parallelism for batch operations**: GDAL is not thread-safe. Use `concurrent.futures.ProcessPoolExecutor` for CPU-bound raster operations (reprojection, resampling). Each worker process gets its own GDAL state. See [Multiprocessing Geospatial Tasks](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) for pool sizing and shared-memory patterns.
-- **Memory on large vector reads**: Reading an entire GeoDataFrame into memory before clipping or reprojecting is the most common source of OOM errors. Stream the file in chunks using pyogrio's `read_info` + row-range slicing, or use [Chunked Vector Data Reading](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) to process features incrementally.
+- **Parallelism for batch operations**: GDAL is not thread-safe. Use `concurrent.futures.ProcessPoolExecutor` for CPU-bound raster operations (reprojection, resampling). Each worker process gets its own GDAL state. See [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) for pool sizing and shared-memory patterns.
+- **Memory on large vector reads**: Reading an entire GeoDataFrame into memory before clipping or reprojecting is the most common source of OOM errors. Stream the file in chunks using pyogrio's `read_info` + row-range slicing, or use [Chunked Vector Data Reading](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) to process features incrementally.
 - **Shell completion cost**: `add_completion=True` adds two hidden subcommands (`--install-completion`, `--show-completion`). They impose no runtime cost on normal invocations.
 
 ## FAQ
@@ -459,7 +459,7 @@ Accept the value as `int`, then call `pyproj.CRS.from_epsg(value)` inside a `try
 <details class="faq-item">
 <summary>Can I layer a YAML config file under CLI flags?</summary>
 
-Yes. Load the YAML file into a dict at import time (or lazily via `@lru_cache`), then set each `typer.Option`'s `default_factory` to a function that reads from `os.environ` first and falls back to the config dict. CLI flags always override because Typer resolves them after the Python default expression runs. The full layered-config pattern is covered in [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/).
+Yes. Load the YAML file into a dict at import time (or lazily via `@lru_cache`), then set each `typer.Option`'s `default_factory` to a function that reads from `os.environ` first and falls back to the config dict. CLI flags always override because Typer resolves them after the Python default expression runs. The full layered-config pattern is covered in [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/).
 
 </details>
 
@@ -481,7 +481,7 @@ Use `typer.testing.CliRunner` from the `typer[all]` package. Call `runner.invoke
 
 ## Related
 
-- [How to Build a Typer CLI for Shapefile Conversion](/cli-architecture-design-patterns/argument-parsing-with-typer/how-to-build-a-typer-cli-for-shapefile-conversion/) — end-to-end worked example wiring the patterns above to a real `geopandas` shapefile driver workflow.
-- [Adding Auto-completion to Python Spatial CLI Tools](/cli-architecture-design-patterns/argument-parsing-with-typer/adding-auto-completion-to-python-spatial-cli-tools/) — configure shell completion for file paths, EPSG codes, and layer names.
-- [Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) — when explicit Click decorator syntax is preferable to Typer's type-hint inference.
-- [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) — parent guide covering subcommand organisation, configuration layering, environment variable sync, and Rich output.
+- [How to Build a Typer CLI for Shapefile Conversion](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/how-to-build-a-typer-cli-for-shapefile-conversion/) — end-to-end worked example wiring the patterns above to a real `geopandas` shapefile driver workflow.
+- [Adding Auto-completion to Python Spatial CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/adding-auto-completion-to-python-spatial-cli-tools/) — configure shell completion for file paths, EPSG codes, and layer names.
+- [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) — when explicit Click decorator syntax is preferable to Typer's type-hint inference.
+- [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) — parent guide covering subcommand organisation, configuration layering, environment variable sync, and Rich output.

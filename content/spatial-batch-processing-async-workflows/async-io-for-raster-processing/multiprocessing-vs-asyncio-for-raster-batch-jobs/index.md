@@ -2,7 +2,7 @@
 title: "Multiprocessing vs Asyncio for Raster Batch Jobs"
 description: "Decide between a process pool and an async event loop for raster batch work by matching CPU-bound warps to multiprocessing and I/O-bound cloud reads to asyncio."
 slug: "multiprocessing-vs-asyncio-for-raster-batch-jobs"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # Multiprocessing vs Asyncio for Raster Batch Jobs
 
-Match the tool to the bottleneck: use `multiprocessing` for CPU-bound raster work — warp, reproject, resample, raster algebra — because that pixel math holds the CPU and only true parallel processes scale it, and use `asyncio` for I/O-bound work such as cloud-optimized GeoTIFF range reads and many small HTTP fetches, where tasks spend their time awaiting the network. For jobs that mix both, run an async loop that dispatches to a process pool. This page is part of the [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) guide inside the broader [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) reference.
+Match the tool to the bottleneck: use `multiprocessing` for CPU-bound raster work — warp, reproject, resample, raster algebra — because that pixel math holds the CPU and only true parallel processes scale it, and use `asyncio` for I/O-bound work such as cloud-optimized GeoTIFF range reads and many small HTTP fetches, where tasks spend their time awaiting the network. For jobs that mix both, run an async loop that dispatches to a process pool. This page is part of the [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) guide inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -85,7 +85,7 @@ Match the tool to the bottleneck: use `multiprocessing` for CPU-bound raster wor
 - `pip install rasterio aiohttp` (rasterio wraps GDAL 3.4+)
 - `concurrent.futures`, `asyncio`, and `multiprocessing` are all standard library
 
-If your job is purely CPU-bound and you have already decided on processes, the [Multiprocessing Geospatial Tasks](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) guide covers pool tuning, worker isolation, and the `spawn` start method in depth. This page is the decision layer that sits above it.
+If your job is purely CPU-bound and you have already decided on processes, the [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) guide covers pool tuning, worker isolation, and the `spawn` start method in depth. This page is the decision layer that sits above it.
 
 ## The One Question That Decides Everything
 
@@ -356,5 +356,5 @@ Time one representative file end to end and split the total into an I/O wait seg
 
 ## Related
 
-- [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — parent guide covering event-loop patterns and CLI structure for I/O-bound raster pipelines
-- [Streaming Cloud-Optimized GeoTIFFs with Async Range Requests](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/streaming-cloud-optimized-geotiffs-with-async-range-requests/) — the async range-read technique that feeds the I/O-bound side of this decision
+- [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — parent guide covering event-loop patterns and CLI structure for I/O-bound raster pipelines
+- [Streaming Cloud-Optimized GeoTIFFs with Async Range Requests](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/streaming-cloud-optimized-geotiffs-with-async-range-requests/) — the async range-read technique that feeds the I/O-bound side of this decision

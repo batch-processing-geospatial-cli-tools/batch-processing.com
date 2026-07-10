@@ -2,7 +2,7 @@
 title: "Rendering a Live Rich Dashboard for Batch Raster Jobs"
 description: "Combine Rich Live, Progress, and Table to show per-worker throughput, ETA, and error counts for a multiprocessing raster batch without flooding the scrollback."
 slug: "rendering-a-live-rich-dashboard-for-batch-raster-jobs"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # Rendering a Live Rich Dashboard for Batch Raster Jobs
 
-To show a live dashboard for a batch raster job, wrap a `rich.live.Live` around a `Group` that holds a `Progress` bar (tiles done, ETA) and a `Table` of per-worker status, then drive both from the parent process as `ProcessPoolExecutor` futures resolve through `as_completed`. Workers only reproject tiles and return counts; the parent owns the terminal and renders. This page is part of the [Rich Console Output & Progress Bars for GIS CLIs](/cli-architecture-design-patterns/rich-console-output-progress-bars/) guide inside the broader [CLI Architecture & Design Patterns for Python GIS](/cli-architecture-design-patterns/) reference.
+To show a live dashboard for a batch raster job, wrap a `rich.live.Live` around a `Group` that holds a `Progress` bar (tiles done, ETA) and a `Table` of per-worker status, then drive both from the parent process as `ProcessPoolExecutor` futures resolve through `as_completed`. Workers only reproject tiles and return counts; the parent owns the terminal and renders. This page is part of the [Rich Console Output & Progress Bars for GIS CLIs](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/) guide inside the broader [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
@@ -86,7 +86,7 @@ To show a live dashboard for a batch raster job, wrap a `rich.live.Live` around 
 - GDAL 3.4+ available to rasterio (via a wheel or conda/mamba)
 - `concurrent.futures` and `multiprocessing` are in the standard library
 
-For the parallelism model underneath this dashboard, read [Multiprocessing Geospatial Tasks](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/). For the counting and ETA concepts the dashboard visualises, see [Progress Tracking for Python GIS Batch Pipelines](/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/).
+For the parallelism model underneath this dashboard, read [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/). For the counting and ETA concepts the dashboard visualises, see [Progress Tracking for Python GIS Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/).
 
 ## How the Dashboard Data Flows
 
@@ -311,7 +311,7 @@ if __name__ == "__main__":
 
 4. **`stats` keyed by worker PID** — `ProcessPoolExecutor` reuses a fixed set of worker processes, so `os.getpid()` inside `reproject_tile` yields a stable identifier per worker. Accumulating `done`, `errors`, and `busy` seconds per PID gives a genuine tiles-per-second figure for each worker row.
 
-5. **`live.console.print(...)` for failures** — Routing per-tile log lines through the Live console prints them *above* the pinned dashboard rather than tearing it. See [Progress Tracking for Python GIS Batch Pipelines](/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) for the same log-above-progress technique applied to plain counters.
+5. **`live.console.print(...)` for failures** — Routing per-tile log lines through the Live console prints them *above* the pinned dashboard rather than tearing it. See [Progress Tracking for Python GIS Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) for the same log-above-progress technique applied to plain counters.
 
 6. **`live.update(build_dashboard(...))`** — The table is immutable once built, so a fresh `Table` is composed on every result and handed to `live.update`. At a few tiles per second this rebuild is negligible, and it guarantees the rendered state always reflects the latest completed tile.
 
@@ -321,7 +321,7 @@ if __name__ == "__main__":
 
 The single most common way this pattern breaks is trying to pass the `Live`, `Progress`, or a shared `Console` into the worker so each process can update its own row. It fails immediately: `ProcessPoolExecutor` pickles the arguments to every task, and these objects hold a reference to an open terminal file handle, raising `TypeError: cannot pickle '_io.TextIOWrapper' object` (or a lock-pickling error). Even if you force it through with a manager proxy, multiple processes writing ANSI escape sequences to the same terminal interleave into corrupted, unreadable output.
 
-The fix is the architecture shown above: workers are pure functions that reproject a tile and **return** a `TileResult`. Only the parent process holds the `Live` instance, and it mutates the `Progress` task and rebuilds the `Table` inside the single-threaded `as_completed` loop. All rendering is serialised through one process, so the terminal never sees interleaved writes. This mirrors the render-in-the-parent rule from [Multiprocessing Geospatial Tasks](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/).
+The fix is the architecture shown above: workers are pure functions that reproject a tile and **return** a `TileResult`. Only the parent process holds the `Live` instance, and it mutates the `Progress` task and rebuilds the `Table` inside the single-threaded `as_completed` loop. All rendering is serialised through one process, so the terminal never sees interleaved writes. This mirrors the render-in-the-parent rule from [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/).
 
 ## Verification
 
@@ -386,5 +386,5 @@ For a batch driven by `as_completed`, set a modest `refresh_per_second` such as 
 
 ## Related
 
-- [Rich Console Output & Progress Bars for GIS CLIs](/cli-architecture-design-patterns/rich-console-output-progress-bars/) — parent guide covering progress bars, spinners, and structured console output for geospatial command-line tools
-- [Customizing Rich Tables for Coordinate System Outputs](/cli-architecture-design-patterns/rich-console-output-progress-bars/customizing-rich-tables-for-coordinate-system-outputs/) — styling and column formatting for the Rich Table used in this dashboard
+- [Rich Console Output & Progress Bars for GIS CLIs](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/) — parent guide covering progress bars, spinners, and structured console output for geospatial command-line tools
+- [Customizing Rich Tables for Coordinate System Outputs](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/customizing-rich-tables-for-coordinate-system-outputs/) — styling and column formatting for the Rich Table used in this dashboard

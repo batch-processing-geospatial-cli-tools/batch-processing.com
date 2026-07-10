@@ -2,7 +2,7 @@
 title: "Paginating PostGIS Feature Reads for Batch Export"
 description: "Export millions of PostGIS features in keyset-paginated chunks with pyogrio and a server-side cursor so a batch job never loads the whole table into memory."
 slug: "paginating-postgis-feature-reads-for-batch-export"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # Paginating PostGIS Feature Reads for Batch Export
 
-To read millions of PostGIS features without exhausting memory, page through the table by keyset: fetch a fixed batch with `WHERE gid > :last_gid ORDER BY gid LIMIT :batch`, reproject that page to `EPSG:4326`, append it to a GeoPackage, then advance `last_gid` and repeat. Peak memory stays proportional to one batch, never the whole table. This page is part of the [Chunked Vector Data Reading for Spatial Pipelines](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) guide inside the broader [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) reference.
+To read millions of PostGIS features without exhausting memory, page through the table by keyset: fetch a fixed batch with `WHERE gid > :last_gid ORDER BY gid LIMIT :batch`, reproject that page to `EPSG:4326`, append it to a GeoPackage, then advance `last_gid` and repeat. Peak memory stays proportional to one batch, never the whole table. This page is part of the [Chunked Vector Data Reading for Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) guide inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -86,7 +86,7 @@ To read millions of PostGIS features without exhausting memory, page through the
 - GDAL 3.4+ with the PostgreSQL and GPKG drivers (pyogrio ships GDAL wheels; a system `libgdal` also works)
 - A PostGIS table with a primary key column (`gid` below) and a `geom` column with a declared SRID
 
-For why streaming reads matter across the whole pipeline, the [Memory Management for Large GIS Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) section covers the failure modes that a single `read_dataframe` over a full table triggers.
+For why streaming reads matter across the whole pipeline, the [Memory Management for Large GIS Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) section covers the failure modes that a single `read_dataframe` over a full table triggers.
 
 ## Why OFFSET Pagination Degrades
 
@@ -339,5 +339,5 @@ Use a named server-side cursor with `itersize` when a single ordered scan is acc
 
 ## Related
 
-- [Chunked Vector Data Reading for Spatial Pipelines](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — parent guide covering batched vector I/O patterns for memory-bounded spatial pipelines
-- [Reading Large GeoJSON in Chunks with pyogrio](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/reading-large-geojson-in-chunks-with-pyogrio/) — the file-based counterpart to database pagination, streaming features from a single large GeoJSON
+- [Chunked Vector Data Reading for Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — parent guide covering batched vector I/O patterns for memory-bounded spatial pipelines
+- [Reading Large GeoJSON in Chunks with pyogrio](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/reading-large-geojson-in-chunks-with-pyogrio/) — the file-based counterpart to database pagination, streaming features from a single large GeoJSON

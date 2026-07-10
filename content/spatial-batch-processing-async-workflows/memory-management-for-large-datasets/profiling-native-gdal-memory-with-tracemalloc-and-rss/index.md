@@ -2,7 +2,7 @@
 title: "Profiling Native GDAL Memory with tracemalloc and RSS"
 description: "Track down native GDAL memory growth by pairing Python's tracemalloc with process RSS sampling to separate NumPy allocations from C-level GDAL buffers."
 slug: "profiling-native-gdal-memory-with-tracemalloc-and-rss"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # Profiling Native GDAL Memory with tracemalloc and RSS
 
-`tracemalloc` reports low usage while your process keeps swelling because it only tracks allocations routed through Python's allocator. GDAL allocates its block cache and dataset buffers directly in C with `malloc`, so those bytes are invisible to `tracemalloc` and show up only as growth in the process resident set size (RSS). Profiling native GDAL memory means running both meters at once. This page is part of the [Memory Management for Large GIS Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) guide within the wider [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) reference.
+`tracemalloc` reports low usage while your process keeps swelling because it only tracks allocations routed through Python's allocator. GDAL allocates its block cache and dataset buffers directly in C with `malloc`, so those bytes are invisible to `tracemalloc` and show up only as growth in the process resident set size (RSS). Profiling native GDAL memory means running both meters at once. This page is part of the [Memory Management for Large GIS Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) guide within the wider [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -86,7 +86,7 @@ dateModified: "2026-07-10"
 - A directory of GeoTIFFs to read; the harness below reads them in a loop
 - `tracemalloc` is in the standard library, no install needed
 
-If you have not yet decided whether to stream windows or load whole rasters, read the [Memory Management for Large GIS Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) overview first — it frames when native memory becomes the bottleneck rather than Python objects.
+If you have not yet decided whether to stream windows or load whole rasters, read the [Memory Management for Large GIS Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) overview first — it frames when native memory becomes the bottleneck rather than Python objects.
 
 ## Two Meters, Two Kinds of Memory
 
@@ -225,11 +225,11 @@ if __name__ == "__main__":
 
 3. **Recording `base_rss` and `base_traced` before the loop** — Absolute memory figures are noisy because the interpreter and imported modules already occupy tens of megabytes. Subtracting the baseline turns every printed line into a clean per-iteration delta you can trend.
 
-4. **`read_correct()` uses a `with rasterio.open(...)` block** — Exiting the block calls the dataset's `close()`, which hands the file handle and per-dataset buffers back to GDAL. Without this, those buffers accumulate in the C heap and show up only as RSS growth. This is the same explicit-close discipline that keeps [multiprocessing geospatial tasks](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) from leaking descriptors across pool workers.
+4. **`read_correct()` uses a `with rasterio.open(...)` block** — Exiting the block calls the dataset's `close()`, which hands the file handle and per-dataset buffers back to GDAL. Without this, those buffers accumulate in the C heap and show up only as RSS growth. This is the same explicit-close discipline that keeps [multiprocessing geospatial tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) from leaking descriptors across pool workers.
 
 5. **`read_leaky()` appends the open dataset to `held`** — Keeping a live reference prevents both Python garbage collection and GDAL close. Each iteration adds another set of native buffers, so RSS rises linearly while `tracemalloc` barely moves, because the NumPy arrays returned by `read()` are small compared to the retained dataset state.
 
-6. **`with rasterio.Env(GDAL_CACHEMAX=args.cachemax * MB)`** — `rasterio.Env` sets GDAL configuration for the enclosed block. `GDAL_CACHEMAX` caps the shared block cache; passing an explicit byte value avoids the default of five percent of system RAM, which on a 64 GB host is a 3.2 GB ceiling per process. When reading window-by-window instead, pair this with [streaming raster windows to cap memory in mosaics](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/streaming-raster-windows-to-cap-memory-in-mosaics/).
+6. **`with rasterio.Env(GDAL_CACHEMAX=args.cachemax * MB)`** — `rasterio.Env` sets GDAL configuration for the enclosed block. `GDAL_CACHEMAX` caps the shared block cache; passing an explicit byte value avoids the default of five percent of system RAM, which on a 64 GB host is a 3.2 GB ceiling per process. When reading window-by-window instead, pair this with [streaming raster windows to cap memory in mosaics](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/streaming-raster-windows-to-cap-memory-in-mosaics/).
 
 ## Named Gotcha: Leaving Datasets Open in a Loop
 
@@ -290,5 +290,5 @@ RSS is a coarse meter because the C allocator may hold freed pages instead of re
 
 ## Related
 
-- [Memory Management for Large GIS Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) — parent guide covering cache tuning, streaming, and out-of-memory recovery for large raster and vector workloads
-- [Streaming Raster Windows to Cap Memory in Mosaics](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/streaming-raster-windows-to-cap-memory-in-mosaics/) — bound per-read memory by processing windows instead of whole rasters
+- [Memory Management for Large GIS Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) — parent guide covering cache tuning, streaming, and out-of-memory recovery for large raster and vector workloads
+- [Streaming Raster Windows to Cap Memory in Mosaics](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/streaming-raster-windows-to-cap-memory-in-mosaics/) — bound per-read memory by processing windows instead of whole rasters

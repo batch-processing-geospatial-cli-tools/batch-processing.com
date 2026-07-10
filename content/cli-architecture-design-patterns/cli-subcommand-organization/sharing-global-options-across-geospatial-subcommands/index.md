@@ -2,7 +2,7 @@
 title: "Sharing Global Options Across Geospatial Subcommands"
 description: "Propagate --crs, --workers, and --config to every subcommand via a Typer context object so global flags resolve once and flow into each command."
 slug: "sharing-global-options-across-geospatial-subcommands"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # Sharing Global Options Across Geospatial Subcommands
 
-Share global flags across Typer subcommands by declaring them on a root `@app.callback()`, resolving them once, and storing a state object on `ctx.obj`. Each subcommand then takes a `ctx: typer.Context` parameter and reads `ctx.obj` instead of redeclaring `--crs` or `--workers`. This is part of the [CLI Subcommand Organization for GIS Toolchains](/cli-architecture-design-patterns/cli-subcommand-organization/) guide within the broader [CLI Architecture & Design Patterns for Python GIS](/cli-architecture-design-patterns/) reference.
+Share global flags across Typer subcommands by declaring them on a root `@app.callback()`, resolving them once, and storing a state object on `ctx.obj`. Each subcommand then takes a `ctx: typer.Context` parameter and reads `ctx.obj` instead of redeclaring `--crs` or `--workers`. This is part of the [CLI Subcommand Organization for GIS Toolchains](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) guide within the broader [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
@@ -85,7 +85,7 @@ Share global flags across Typer subcommands by declaring them on a root `@app.ca
 - `pip install "typer>=0.12" pyogrio rasterio`
 - GDAL 3.4+ available to rasterio and pyogrio (system package or conda/mamba)
 
-The pattern here assumes you have already split commands into sub-apps. If you have not, read [CLI Subcommand Organization for GIS Toolchains](/cli-architecture-design-patterns/cli-subcommand-organization/) first, then return to wire shared options through them.
+The pattern here assumes you have already split commands into sub-apps. If you have not, read [CLI Subcommand Organization for GIS Toolchains](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) first, then return to wire shared options through them.
 
 ## The Problem: Redeclared Flags Drift Apart
 
@@ -288,7 +288,7 @@ if __name__ == "__main__":
 
 2. **`ctx.obj = AppState(...)`** — `ctx.obj` is Typer's (and Click's) free-form slot for passing data down the command tree. Assigning the frozen `AppState` dataclass here is what makes the resolved values visible to every subcommand. The dataclass is frozen so no command can mutate the shared globals mid-run.
 
-3. **Precedence resolution inside the callback** — The callback merges layers in the order defaults, config file, environment, then flags. Because Typer has already overlaid the command-line flag onto its own default, the code only reaches for the config or environment value when the flag still equals the untouched default. This is the same precedence chain covered in [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/).
+3. **Precedence resolution inside the callback** — The callback merges layers in the order defaults, config file, environment, then flags. Because Typer has already overlaid the command-line flag onto its own default, the code only reaches for the config or environment value when the flag still equals the untouched default. This is the same precedence chain covered in [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/).
 
 4. **`CRS.from_user_input()` validation** — Validating the CRS once at the boundary means no subcommand ever receives an unparseable code. A bad code exits with domain code `10` (CRS mismatch) instead of surfacing a rasterio traceback three calls deep.
 
@@ -350,12 +350,12 @@ Only if you want the root command to do something when called with no subcommand
 <details class="faq-item">
 <summary>Where should config-file values fit in the precedence chain?</summary>
 
-Resolve precedence inside the callback in the order defaults, then config file, then environment variables, then command-line flags, with the flag winning last. Build the final `AppState` once there so every subcommand reads the already-merged result from `ctx.obj` rather than re-reading the file. See [Environment Variable Sync](/cli-architecture-design-patterns/environment-variable-sync/) for wiring the env layer cleanly.
+Resolve precedence inside the callback in the order defaults, then config file, then environment variables, then command-line flags, with the flag winning last. Build the final `AppState` once there so every subcommand reads the already-merged result from `ctx.obj` rather than re-reading the file. See [Environment Variable Sync](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/) for wiring the env layer cleanly.
 </details>
 
 ---
 
 ## Related
 
-- [CLI Subcommand Organization for GIS Toolchains](/cli-architecture-design-patterns/cli-subcommand-organization/) — parent guide covering sub-app layout, command naming, and shared-state patterns for geospatial toolchains
-- [Structuring a Multi-Command GDAL CLI with Typer Sub-Apps](/cli-architecture-design-patterns/cli-subcommand-organization/structuring-a-multi-command-gdal-cli-with-typer-sub-apps/) — how to split raster and vector commands into sub-apps before sharing globals through them
+- [CLI Subcommand Organization for GIS Toolchains](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) — parent guide covering sub-app layout, command naming, and shared-state patterns for geospatial toolchains
+- [Structuring a Multi-Command GDAL CLI with Typer Sub-Apps](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/structuring-a-multi-command-gdal-cli-with-typer-sub-apps/) — how to split raster and vector commands into sub-apps before sharing globals through them

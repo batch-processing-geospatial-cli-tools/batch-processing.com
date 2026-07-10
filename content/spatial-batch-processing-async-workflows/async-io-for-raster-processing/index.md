@@ -2,7 +2,7 @@
 title: "Async I/O for Raster Processing: CLI Patterns"
 description: "Build a Python asyncio pipeline that fetches and writes cloud-optimized GeoTIFFs concurrently — without stalling the event loop on GDAL's synchronous C bindings."
 slug: "async-io-for-raster-processing"
-type: "cluster"
+type: "topic"
 breadcrumb: "Async I/O for Raster Processing"
 datePublished: "2024-11-10"
 dateModified: "2026-06-23"
@@ -73,7 +73,7 @@ dateModified: "2026-06-23"
 }
 </script>
 
-Raster batch pipelines stall at I/O: a synchronous loop over 500 cloud-optimized GeoTIFFs spends 90 % of its wall time blocked on network round-trips, not on pixel math. The fix is to decouple network and disk waits from GDAL compute using Python's `asyncio` event loop — part of the broader [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) guide.
+Raster batch pipelines stall at I/O: a synchronous loop over 500 cloud-optimized GeoTIFFs spends 90 % of its wall time blocked on network round-trips, not on pixel math. The fix is to decouple network and disk waits from GDAL compute using Python's `asyncio` event loop — part of the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) guide.
 
 ## TL;DR
 
@@ -103,7 +103,7 @@ import rasterio
 print(rasterio.drivers.raster_driver_extensions())  # includes 'tif', 'jp2', 'vrt'
 ```
 
-For [CLI Subcommand Organization](/cli-architecture-design-patterns/cli-subcommand-organization/) patterns that structure multi-step pipelines into composable commands, see the CLI Architecture guide.
+For [CLI Subcommand Organization](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) patterns that structure multi-step pipelines into composable commands, see the CLI Architecture guide.
 
 ## Problem Framing
 
@@ -120,7 +120,7 @@ for url in urls:
 
 With 500 tiles, that is over seven minutes of mostly idle time. The event loop approach cuts wall time to roughly the duration of the slowest batch — typically 15–25 seconds at `MAX_CONCURRENT = 15` on a 100 Mbit connection.
 
-The second pain point is memory. Loading entire GeoTIFFs for large mosaics causes RSS to grow linearly with batch size. The solution is windowed reads: GDAL reads only the requested pixel rectangle from disk or over the network range request. For broader coverage of memory-safe strategies see [Memory Management for Large Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/).
+The second pain point is memory. Loading entire GeoTIFFs for large mosaics causes RSS to grow linearly with batch size. The solution is windowed reads: GDAL reads only the requested pixel rectangle from disk or over the network range request. For broader coverage of memory-safe strategies see [Memory Management for Large Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/).
 
 ## Architecture Overview
 
@@ -334,7 +334,7 @@ async def run_batch(
     return [r for r in results if not isinstance(r, Exception)]
 ```
 
-`return_exceptions=True` on `gather` is critical for production: a single malformed tile or unreachable URL should not abort the other 499. Failed tiles are logged and excluded from the return value; the caller can inspect and retry them. [Error handling in spatial pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) covers structured retry and dead-letter patterns in more depth.
+`return_exceptions=True` on `gather` is critical for production: a single malformed tile or unreachable URL should not abort the other 499. Failed tiles are logged and excluded from the return value; the caller can inspect and retry them. [Error handling in spatial pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) covers structured retry and dead-letter patterns in more depth.
 
 ### Step 5 — Click CLI entry point
 
@@ -402,7 +402,7 @@ if __name__ == "__main__":
     cli()
 ```
 
-The `envvar` parameters on `--concurrency` and `--epsg` follow the layered configuration pattern: environment variables override defaults, CLI flags override environment variables. This matches the precedence chain documented in [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/).
+The `envvar` parameters on `--concurrency` and `--epsg` follow the layered configuration pattern: environment variables override defaults, CLI flags override environment variables. This matches the precedence chain documented in [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/).
 
 ## Configuration Integration
 
@@ -432,7 +432,7 @@ Pass values as `default_map` to Click so YAML values sit between built-in defaul
 ctx.default_map = load_config()
 ```
 
-The full YAML config pattern — including environment variable interpolation and schema validation — is covered in [Managing YAML Configs for Geospatial CLI Workflows](/cli-architecture-design-patterns/configuration-file-management/managing-yaml-configs-for-geospatial-cli-workflows/).
+The full YAML config pattern — including environment variable interpolation and schema validation — is covered in [Managing YAML Configs for Geospatial CLI Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/managing-yaml-configs-for-geospatial-cli-workflows/).
 
 ## Error Handling and Gotchas
 
@@ -463,7 +463,7 @@ assert "jp2" in raster_driver_extensions(), "GDAL OpenJPEG driver not available"
 
 Each `asyncio.to_thread()` worker holds the decompressed tile in RAM until `dst.write()` completes. At 15 concurrent 500 MB tiles, peak RSS exceeds 7 GB.
 
-**Fix:** reduce concurrency or use `rasterio` windowed reads with smaller `Window` dimensions to process tiles in 256×256 chunks. See [Memory Management for Large Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) for producer-consumer queue patterns that bound peak memory independently of batch size.
+**Fix:** reduce concurrency or use `rasterio` windowed reads with smaller `Window` dimensions to process tiles in 256×256 chunks. See [Memory Management for Large Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) for producer-consumer queue patterns that bound peak memory independently of batch size.
 
 ### aiohttp ResourceWarning on shutdown
 
@@ -502,7 +502,7 @@ EOF
 
 Expected: CRS matches `--epsg` value; pixel SHA-256 is identical across repeated runs (idempotent).
 
-For structured JSON log output, redirect stderr with `2>pipeline.log` and inspect with `jq '.error // "ok"' pipeline.log`. The logging patterns used in [Logging Spatial Transformation Results to Structured JSON](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/) apply directly here.
+For structured JSON log output, redirect stderr with `2>pipeline.log` and inspect with `jq '.error // "ok"' pipeline.log`. The logging patterns used in [Logging Spatial Transformation Results to Structured JSON](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/) apply directly here.
 
 ## Performance Notes
 
@@ -517,7 +517,7 @@ For structured JSON log output, redirect stderr with `2>pipeline.log` and inspec
 
 - If network utilisation plateaus below bandwidth capacity, increase the semaphore limit in steps of 5 and re-measure.
 - If CPU utilisation hits 100 % before the network saturates, the bottleneck is GDAL decompression. Switch to a `ProcessPoolExecutor` for compute-heavy transforms and coordinate the two pools using a bounded asyncio queue.
-- For batches of 10,000+ tiles, chunk the URL list into pages of 200–500, process each page with `run_batch()`, and write a checkpoint file after each page. The checkpoint pattern for interrupted spatial batches is covered in [Implementing Checkpointing for Interrupted Spatial Batches](/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/implementing-checkpointing-for-interrupted-spatial-batches/).
+- For batches of 10,000+ tiles, chunk the URL list into pages of 200–500, process each page with `run_batch()`, and write a checkpoint file after each page. The checkpoint pattern for interrupted spatial batches is covered in [Implementing Checkpointing for Interrupted Spatial Batches](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/implementing-checkpointing-for-interrupted-spatial-batches/).
 
 ## FAQ
 
@@ -538,7 +538,7 @@ Start at 10–20 and observe two metrics: network bytes/sec and `asyncio` event-
 <details class="faq-item">
 <summary>Can I combine asyncio fetching with multiprocessing for heavy transforms?</summary>
 
-Yes. Run `asyncio` for all I/O phases via `run_batch()`, collect the list of local temp paths, then pass them to a `multiprocessing.Pool` for pixel-level transforms outside the event loop. Do not spawn subprocess workers inside a running loop — the interaction between `fork()` and the event loop is unsafe. See [Multiprocessing Geospatial Tasks](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) for pool-based patterns.
+Yes. Run `asyncio` for all I/O phases via `run_batch()`, collect the list of local temp paths, then pass them to a `multiprocessing.Pool` for pixel-level transforms outside the event loop. Do not spawn subprocess workers inside a running loop — the interaction between `fork()` and the event loop is unsafe. See [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) for pool-based patterns.
 
 </details>
 
@@ -558,7 +558,7 @@ No. GDAL requires a seekable, named file handle with the correct extension for d
 
 ## Related
 
-- [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) — parent guide covering async safety, spatial indexing, and chunk alignment across all pipeline types
-- [Processing 100k GeoJSON Files with Python asyncio](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/processing-100k-geojson-files-with-python-asyncio/) — applies the same semaphore-and-gather pattern to vector feature batches
-- [Multiprocessing Geospatial Tasks](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) — when CPU-bound transforms outpace async I/O savings
-- [Chunked Vector Data Reading](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — complementary memory-safe pattern for heterogeneous spatial pipelines mixing rasters and vector boundaries
+- [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) — parent guide covering async safety, spatial indexing, and chunk alignment across all pipeline types
+- [Processing 100k GeoJSON Files with Python asyncio](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/processing-100k-geojson-files-with-python-asyncio/) — applies the same semaphore-and-gather pattern to vector feature batches
+- [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) — when CPU-bound transforms outpace async I/O savings
+- [Chunked Vector Data Reading](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — complementary memory-safe pattern for heterogeneous spatial pipelines mixing rasters and vector boundaries

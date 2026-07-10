@@ -2,7 +2,7 @@
 title: "Adding Auto-Completion to Python Spatial CLI Tools"
 description: "Step-by-step guide to enabling shell tab completion in Typer-based Python GIS CLIs, with dynamic completers for file paths, EPSG codes, and spatial formats."
 slug: "adding-auto-completion-to-python-spatial-cli-tools"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "CLI Architecture & Design Patterns"
     url: "/cli-architecture-design-patterns/"
@@ -68,12 +68,12 @@ dateModified: "2026-06-23"
 }
 </script>
 
-Tab completion in a Typer spatial CLI requires three things: completer functions that resolve paths or EPSG codes in under 200 ms, binding those functions to parameters via `shell_complete`, and registering the generated script in the user's shell config. Install `typer[all]` (which pulls in `shellingham`) and run `--install-completion` to activate. This page is part of the [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) guide under [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/).
+Tab completion in a Typer spatial CLI requires three things: completer functions that resolve paths or EPSG codes in under 200 ms, binding those functions to parameters via `shell_complete`, and registering the generated script in the user's shell config. Install `typer[all]` (which pulls in `shellingham`) and run `--install-completion` to activate. This page is part of the [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) guide under [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/).
 
 ## Prerequisites
 
 - Python 3.9+ with `pip install "typer[all]"` — the `[all]` extra includes `shellingham` (shell detection) and `rich` (help formatting)
-- A working Typer app; if you are starting from scratch, see [How to Build a Typer CLI for Shapefile Conversion](/cli-architecture-design-patterns/argument-parsing-with-typer/how-to-build-a-typer-cli-for-shapefile-conversion/)
+- A working Typer app; if you are starting from scratch, see [How to Build a Typer CLI for Shapefile Conversion](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/how-to-build-a-typer-cli-for-shapefile-conversion/)
 - Bash 4+, Zsh 5+, or Fish 3+ — the three shells Typer's completion engine supports natively
 
 No rasterio, geopandas, or GDAL is needed for completion itself; keep those imports out of completer functions entirely.
@@ -256,7 +256,7 @@ python spatial_cli.py --show-completion zsh  > completions/spatial_cli.zsh
 sudo cp completions/spatial_cli.bash /etc/profile.d/spatial_cli_completion.sh
 ```
 
-For containerised environments or [configuration-managed deployments](/cli-architecture-design-patterns/configuration-file-management/), source the script from your `Dockerfile`'s shell config rather than relying on `--install-completion` inside the container build.
+For containerised environments or [configuration-managed deployments](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/), source the script from your `Dockerfile`'s shell config rather than relying on `--install-completion` inside the container build.
 
 ## Named Gotcha: Missing `shellingham` Breaks Detection
 
@@ -315,7 +315,7 @@ Containers built with `FROM python:3.x-slim` often lack the Bash `bash-completio
 <details class="faq-item">
 <summary>Can I complete subcommand names as well as flags?</summary>
 
-Yes — Typer generates subcommand completion automatically when you register sub-apps with `app.add_typer(sub_app, name="subcommand")`. No additional `shell_complete` callback is needed; the completion engine introspects the registered command tree at TAB time. For the broader subcommand structure, see [CLI Subcommand Organization](/cli-architecture-design-patterns/cli-subcommand-organization/).
+Yes — Typer generates subcommand completion automatically when you register sub-apps with `app.add_typer(sub_app, name="subcommand")`. No additional `shell_complete` callback is needed; the completion engine introspects the registered command tree at TAB time. For the broader subcommand structure, see [CLI Subcommand Organization](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/).
 
 </details>
 
@@ -330,6 +330,6 @@ Build a one-time index at tool install time rather than at completion time. A po
 
 ## Related
 
-- [Argument Parsing with Typer for GIS CLI Tools](/cli-architecture-design-patterns/argument-parsing-with-typer/) — parent guide covering type-safe parameter definitions, validators, and help text generation
-- [How to Build a Typer CLI for Shapefile Conversion](/cli-architecture-design-patterns/argument-parsing-with-typer/how-to-build-a-typer-cli-for-shapefile-conversion/) — sibling page that builds the CLI this page adds completion to
-- [CLI Subcommand Organization](/cli-architecture-design-patterns/cli-subcommand-organization/) — structuring multi-command tools so completion works across the full command tree
+- [Argument Parsing with Typer for GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — parent guide covering type-safe parameter definitions, validators, and help text generation
+- [How to Build a Typer CLI for Shapefile Conversion](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/how-to-build-a-typer-cli-for-shapefile-conversion/) — sibling page that builds the CLI this page adds completion to
+- [CLI Subcommand Organization](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) — structuring multi-command tools so completion works across the full command tree

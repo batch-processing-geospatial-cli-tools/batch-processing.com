@@ -2,7 +2,7 @@
 title: "Progress Tracking for Python GIS Batch Pipelines"
 description: "Progress tracking for Python GIS batch jobs: thread-safe counters, async-compatible renderers, persistent checkpointing, and graceful teardown for spatial pipelines."
 slug: "progress-tracking-in-batch-jobs"
-type: "cluster"
+type: "topic"
 breadcrumb: "Progress Tracking in Batch Jobs"
 datePublished: "2024-11-10"
 dateModified: "2026-06-23"
@@ -74,7 +74,7 @@ dateModified: "2026-06-23"
 }
 </script>
 
-Embedding visible, accurate progress state into a spatial batch job transforms a black-box process into a monitorable workflow — and is part of the broader [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) guide on building resilient Python GIS pipelines.
+Embedding visible, accurate progress state into a spatial batch job transforms a black-box process into a monitorable workflow — and is part of the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) guide on building resilient Python GIS pipelines.
 
 ## TL;DR
 
@@ -96,7 +96,7 @@ pip install rich tqdm rasterio pyogrio click
 python -c "import rich; print(rich.__version__)"
 ```
 
-For patterns that structure multi-stage pipelines into composable subcommands, see [CLI Subcommand Organization](/cli-architecture-design-patterns/cli-subcommand-organization/), which covers how to wire progress state across nested command groups.
+For patterns that structure multi-stage pipelines into composable subcommands, see [CLI Subcommand Organization](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/), which covers how to wire progress state across nested command groups.
 
 ## Problem Framing
 
@@ -273,7 +273,7 @@ def run_vector_validation(input_dir: str, max_workers: int = 4) -> int:
 
 ### Step 4 — Async-compatible progress for I/O pipelines
 
-When pipelines rely on [async I/O for raster processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — fetching cloud-optimized GeoTIFFs, querying feature servers, or streaming tile APIs — synchronous workers are replaced by coroutines. `rich.progress.advance()` is thread-safe and non-blocking, so it can be called directly from coroutine context without wrapping.
+When pipelines rely on [async I/O for raster processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — fetching cloud-optimized GeoTIFFs, querying feature servers, or streaming tile APIs — synchronous workers are replaced by coroutines. `rich.progress.advance()` is thread-safe and non-blocking, so it can be called directly from coroutine context without wrapping.
 
 ```python
 import asyncio
@@ -333,7 +333,7 @@ async def batch_fetch_cogs(urls: list[str], out_dir: Path, concurrency: int = 10
 
 ### Step 5 — Persist checkpoint state for long jobs
 
-Geospatial jobs that process hundreds of gigabytes of imagery or millions of vector features run for hours. Spot-instance evictions, OOM kills, and manual interruptions (`SIGINT`) are routine. A checkpoint manifest written at regular intervals lets the pipeline resume from the last safe state rather than restarting from scratch. See [implementing checkpointing for interrupted spatial batches](/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/implementing-checkpointing-for-interrupted-spatial-batches/) for a full treatment of atomic writes, idempotent task execution, and state reconciliation.
+Geospatial jobs that process hundreds of gigabytes of imagery or millions of vector features run for hours. Spot-instance evictions, OOM kills, and manual interruptions (`SIGINT`) are routine. A checkpoint manifest written at regular intervals lets the pipeline resume from the last safe state rather than restarting from scratch. See [implementing checkpointing for interrupted spatial batches](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/implementing-checkpointing-for-interrupted-spatial-batches/) for a full treatment of atomic writes, idempotent task execution, and state reconciliation.
 
 ```python
 import json
@@ -509,7 +509,7 @@ if errors:
     raise ExceptionGroup("batch errors", errors)
 ```
 
-For structured logging patterns that complement progress tracking, see [error handling in spatial pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/), which covers JSON log emission, POSIX exit codes, and retry strategies across synchronous and async execution models.
+For structured logging patterns that complement progress tracking, see [error handling in spatial pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/), which covers JSON log emission, POSIX exit codes, and retry strategies across synchronous and async execution models.
 
 ## Verification
 
@@ -571,7 +571,7 @@ Progress instrumentation adds measurable overhead. At high throughput, the choic
 
 For memory footprint: the `SafeCounter` above uses ~200 bytes. The `CheckpointManager` holds a Python `set` of completed keys in memory — at 1 M tasks with 64-character keys this is roughly 64 MB. For very large task counts, store completed keys in a SQLite table and query with `SELECT COUNT(*)` instead of holding the full set in a `set`.
 
-For deeper parallelism considerations, including how to combine thread-pool progress tracking with process-based concurrency, see [memory management for large datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) and the discussion of `multiprocessing.Manager` proxies in [chunked vector data reading](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/).
+For deeper parallelism considerations, including how to combine thread-pool progress tracking with process-based concurrency, see [memory management for large datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) and the discussion of `multiprocessing.Manager` proxies in [chunked vector data reading](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/).
 
 ## FAQ
 
@@ -612,7 +612,7 @@ Calling `progress.advance()` on every feature costs roughly 5–15 µs. At 1 M f
 
 ## Related
 
-- [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) — parent guide covering task queues, worker pools, and async safety across the full pipeline stack
-- [Implementing checkpointing for interrupted spatial batches](/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/implementing-checkpointing-for-interrupted-spatial-batches/) — atomic writes, idempotent task execution, and state reconciliation for resumable jobs
-- [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — integrating progress tracking with aiohttp + rasterio COG pipelines
-- [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — structured JSON logging and POSIX exit codes that complement progress state
+- [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) — parent guide covering task queues, worker pools, and async safety across the full pipeline stack
+- [Implementing checkpointing for interrupted spatial batches](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/implementing-checkpointing-for-interrupted-spatial-batches/) — atomic writes, idempotent task execution, and state reconciliation for resumable jobs
+- [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — integrating progress tracking with aiohttp + rasterio COG pipelines
+- [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — structured JSON logging and POSIX exit codes that complement progress state

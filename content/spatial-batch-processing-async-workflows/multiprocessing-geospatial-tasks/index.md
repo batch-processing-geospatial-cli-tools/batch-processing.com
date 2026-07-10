@@ -2,7 +2,7 @@
 title: "Multiprocessing Geospatial Tasks in Python"
 description: "Saturate CPU cores for raster mosaics by enforcing stateless workers, the spawn start method, and atomic I/O inside Python's ProcessPoolExecutor."
 slug: "multiprocessing-geospatial-tasks"
-type: "cluster"
+type: "topic"
 breadcrumb: "Spatial Batch Processing & Async Workflows > Multiprocessing Geospatial Tasks"
 datePublished: "2024-11-01"
 dateModified: "2026-06-23"
@@ -80,7 +80,7 @@ dateModified: "2026-06-23"
 - Python 3.10+
 - `pip install rasterio>=1.3 geopandas>=0.14 shapely>=2.0 pyogrio>=0.7 psutil click>=8`
 - GDAL 3.6+ system library (confirm with `gdal-config --version`)
-- This page is part of the [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) guide — read the parent page first for an overview of concurrency strategy and when to choose multiprocessing over async I/O.
+- This page is part of the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) guide — read the parent page first for an overview of concurrency strategy and when to choose multiprocessing over async I/O.
 
 ## Problem Framing
 
@@ -88,7 +88,7 @@ A team runs overnight raster reprojection jobs on 40,000 GeoTIFF tiles. The scri
 
 The bottleneck is Python's Global Interpreter Lock (GIL). Geospatial libraries like GDAL, PROJ, and GEOS rely on C/C++ backends that manage their own thread pools and global state caches. When `threading` attempts to parallelise CPU-heavy reprojection, the GIL forces sequential bytecode execution and leaves cores idle. Process-based parallelism bypasses this by spawning independent interpreter instances — each with its own memory space — so 32 workers can run 32 tile reproductions simultaneously.
 
-For workflows dominated by network fetches or cloud storage latency, [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) often delivers better throughput with lower memory overhead. Reserve multiprocessing for genuinely compute-heavy transformations: reprojection, resampling, raster algebra, vector topology validation, and spatial joins over large datasets.
+For workflows dominated by network fetches or cloud storage latency, [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) often delivers better throughput with lower memory overhead. Reserve multiprocessing for genuinely compute-heavy transformations: reprojection, resampling, raster algebra, vector topology validation, and spatial joins over large datasets.
 
 ## Architecture: Worker Pool Data Flow
 
@@ -185,7 +185,7 @@ def single_tile_reproject(src_path: Path, dst_crs: str = "EPSG:3857") -> None:
 single_tile_reproject(Path("/data/tiles/tile_0001.tif"))
 ```
 
-If `%iowait` exceeds 20% during the run (`iostat -x 2`), multiprocessing will not help — storage latency dominates and spawning extra processes adds context-switching overhead without parallel I/O benefit. In that case, revisit the [async I/O for raster processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) pattern first.
+If `%iowait` exceeds 20% during the run (`iostat -x 2`), multiprocessing will not help — storage latency dominates and spawning extra processes adds context-switching overhead without parallel I/O benefit. In that case, revisit the [async I/O for raster processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) pattern first.
 
 ### Step 2 — Enforce Stateless Worker Boundaries
 
@@ -272,7 +272,7 @@ Placing `set_start_method` inside a function called after argument parsing is to
 
 ### Step 4 — Partition Workloads and Dispatch Pools
 
-Split the workload into chunks that match I/O throughput and core count. For workloads that benefit from [chunked vector data reading](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/), pre-compute bounding boxes or spatial extents to eliminate redundant queries inside workers. Resolve all file paths to absolute strings before serialisation.
+Split the workload into chunks that match I/O throughput and core count. For workloads that benefit from [chunked vector data reading](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/), pre-compute bounding boxes or spatial extents to eliminate redundant queries inside workers. Resolve all file paths to absolute strings before serialisation.
 
 ```python
 import os
@@ -301,7 +301,7 @@ def build_tile_tasks(
     ]
 ```
 
-Dispatch via `concurrent.futures.ProcessPoolExecutor` for cleaner exception handling and future-based aggregation. Prefer `as_completed` over `map` when you need per-result logging and want failures isolated to individual tiles rather than halting the whole batch. For GDAL-specific chunk alignment strategies that prevent overlapping reads and cache thrashing, see [Optimizing GDAL batch operations with multiprocessing pool](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/optimizing-gdal-batch-operations-with-multiprocessing-pool/).
+Dispatch via `concurrent.futures.ProcessPoolExecutor` for cleaner exception handling and future-based aggregation. Prefer `as_completed` over `map` when you need per-result logging and want failures isolated to individual tiles rather than halting the whole batch. For GDAL-specific chunk alignment strategies that prevent overlapping reads and cache thrashing, see [Optimizing GDAL batch operations with multiprocessing pool](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/optimizing-gdal-batch-operations-with-multiprocessing-pool/).
 
 ### Step 5 — Stream Outputs and Handle Failures
 
@@ -404,7 +404,7 @@ Consult the [GDAL configuration options reference](https://gdal.org/en/stable/us
 
 **GDAL driver registration in workers.** On some Linux builds, `gdal.AllRegister()` must be called inside the worker before opening a file. Importing `rasterio` at the top of your worker function triggers this automatically — do not rely on a module-level import in the parent process carrying over into spawned children.
 
-**Memory exhaustion.** When [handling out-of-memory errors in large raster mosaics](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/handling-out-of-memory-errors-in-large-raster-mosaics/), the most common cause in a process pool is oversized tiles. Reduce `tile_size` from 1024 to 512 and re-run `max_safe_workers()` to find the correct balance.
+**Memory exhaustion.** When [handling out-of-memory errors in large raster mosaics](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/handling-out-of-memory-errors-in-large-raster-mosaics/), the most common cause in a process pool is oversized tiles. Reduce `tile_size` from 1024 to 512 and re-run `max_safe_workers()` to find the correct balance.
 
 ## Verification
 
@@ -506,7 +506,7 @@ No. Rasterio dataset objects hold live C-pointers to GDAL dataset handles. Pytho
 
 ## Related
 
-- [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) — parent guide covering the full concurrency decision tree for Python GIS pipelines
-- [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — when I/O latency dominates, async event loops outperform process pools
-- [Chunked Vector Data Reading](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — partition large GeoPackage and Shapefile inputs before dispatching to workers
-- [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — structured logging and exit-code conventions for fault-tolerant batch runs
+- [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) — parent guide covering the full concurrency decision tree for Python GIS pipelines
+- [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — when I/O latency dominates, async event loops outperform process pools
+- [Chunked Vector Data Reading](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — partition large GeoPackage and Shapefile inputs before dispatching to workers
+- [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — structured logging and exit-code conventions for fault-tolerant batch runs

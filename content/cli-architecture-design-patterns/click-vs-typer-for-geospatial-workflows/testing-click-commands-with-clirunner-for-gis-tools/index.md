@@ -2,7 +2,7 @@
 title: "Testing Click Commands with CliRunner for GIS Tools"
 description: "Unit-test a Click shapefile-conversion command with CliRunner: assert exit codes, capture stderr, and inject in-memory rasterio fixtures without touching disk."
 slug: "testing-click-commands-with-clirunner-for-gis-tools"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -76,7 +76,7 @@ dateModified: "2026-07-10"
 
 # Testing Click Commands with CliRunner for GIS Tools
 
-To test a Click-based geospatial CLI command, drive it with `click.testing.CliRunner`: call `runner.invoke(cmd, [...])` inside `runner.isolated_filesystem()`, then assert on `result.exit_code`, `result.output`, and `result.stderr` rather than calling the command function directly. Feeding it a small in-memory rasterio fixture lets you exercise both the success and CRS-mismatch paths without writing files. This page is part of the [Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) guide.
+To test a Click-based geospatial CLI command, drive it with `click.testing.CliRunner`: call `runner.invoke(cmd, [...])` inside `runner.isolated_filesystem()`, then assert on `result.exit_code`, `result.output`, and `result.stderr` rather than calling the command function directly. Feeding it a small in-memory rasterio fixture lets you exercise both the success and CRS-mismatch paths without writing files. This page is part of the [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) guide.
 
 ## Prerequisites
 
@@ -84,7 +84,7 @@ To test a Click-based geospatial CLI command, drive it with `click.testing.CliRu
 - `pip install "click>=8.1" pytest rasterio numpy pyproj`
 - GDAL 3.4+ (rasterio ships manylinux wheels, so no separate system GDAL is required for the raster fixture below)
 
-If you are still choosing a framework, the parent [Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) comparison covers the trade-offs; Typer users get an equivalent harness through the [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) guide, since `typer.testing.CliRunner` wraps this same Click object.
+If you are still choosing a framework, the parent [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) comparison covers the trade-offs; Typer users get an equivalent harness through the [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) guide, since `typer.testing.CliRunner` wraps this same Click object.
 
 ## How CliRunner Isolates a Command
 
@@ -309,7 +309,7 @@ pytest tests/test_reproject_cli.py -v
 # test_missing_target_is_usage_error PASSED
 ```
 
-To prove the failure test is not a false positive, temporarily flip the assertion to `result.exit_code == 0` and confirm it fails — a test that cannot fail is not testing anything. These same tests belong in the pipeline described in the [Packaging & CI/CD](/cli-architecture-design-patterns/packaging-and-cicd/) guide, where they run against the built wheel on every push.
+To prove the failure test is not a false positive, temporarily flip the assertion to `result.exit_code == 0` and confirm it fails — a test that cannot fail is not testing anything. These same tests belong in the pipeline described in the [Packaging & CI/CD](https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/) guide, where they run against the built wheel on every push.
 
 ## FAQ
 
@@ -341,5 +341,5 @@ A `MemoryFile` builds the raster in RAM through GDAL's `/vsimem/` virtual filesy
 
 ## Related
 
-- [Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) — parent guide comparing both frameworks for CRS-aware command design and error handling
-- [Migrating a Click Geospatial CLI to Typer](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/migrating-a-click-geospatial-cli-to-typer/) — how the same test harness carries over once you move commands to Typer
+- [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) — parent guide comparing both frameworks for CRS-aware command design and error handling
+- [Migrating a Click Geospatial CLI to Typer](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/migrating-a-click-geospatial-cli-to-typer/) — how the same test harness carries over once you move commands to Typer

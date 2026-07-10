@@ -2,7 +2,7 @@
 title: "Migrating a Click Geospatial CLI to Typer"
 description: "Port a Click-based GDAL command group to Typer incrementally: map decorators to type hints, preserve exit codes, and keep shell completion working during the switch."
 slug: "migrating-a-click-geospatial-cli-to-typer"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -76,14 +76,14 @@ dateModified: "2026-07-10"
 
 # Migrating a Click Geospatial CLI to Typer
 
-Migrate a Click GIS CLI to Typer command-by-command rather than in one rewrite: Typer is built on Click, so a Typer app can mount your existing Click group with `typer.main.get_command` and keep serving unported commands unchanged. For each command you port, replace `@click.option`/`@click.argument` decorators with type-hinted parameters, convert `ctx.exit(code)` to `raise typer.Exit(code)` to preserve exit codes, and confirm behaviour with `CliRunner`. This page is part of the [Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) guide within the broader [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) reference.
+Migrate a Click GIS CLI to Typer command-by-command rather than in one rewrite: Typer is built on Click, so a Typer app can mount your existing Click group with `typer.main.get_command` and keep serving unported commands unchanged. For each command you port, replace `@click.option`/`@click.argument` decorators with type-hinted parameters, convert `ctx.exit(code)` to `raise typer.Exit(code)` to preserve exit codes, and confirm behaviour with `CliRunner`. This page is part of the [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) guide within the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
 - Python 3.10 or later (for the `X | None` and `list[...]` hints used below)
 - `pip install "typer>=0.12" click` — Typer pulls Click in as a dependency
 - A GDAL install providing `osgeo.gdal` (GDAL 3.4+ from conda-forge or `python3-gdal`)
-- An existing Click CLI whose parsing you already understand; the type-hint conventions carry over from [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/)
+- An existing Click CLI whose parsing you already understand; the type-hint conventions carry over from [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/)
 
 The migration touches only the command-definition layer. Your reprojection logic, GDAL calls, and error taxonomy stay exactly as they are — you are swapping the parser, not the engine.
 
@@ -341,7 +341,7 @@ python -m gis_cli.typer_app reproject --crs EPSG:4326 ./tiles/*.tif
 echo "exit code: $?"   # expect 0 on full success, 12 on partial failure
 ```
 
-Matching exit codes from `CliRunner` and a `--help` listing that still contains the mounted commands confirm the migration preserved behaviour. For the broader testing harness these assertions plug into, see [Testing Click Commands with CliRunner for GIS Tools](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/testing-click-commands-with-clirunner-for-gis-tools/).
+Matching exit codes from `CliRunner` and a `--help` listing that still contains the mounted commands confirm the migration preserved behaviour. For the broader testing harness these assertions plug into, see [Testing Click Commands with CliRunner for GIS Tools](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/testing-click-commands-with-clirunner-for-gis-tools/).
 
 ## FAQ
 
@@ -373,5 +373,5 @@ Yes. Because Typer compiles to a Click command object, the completion machinery 
 
 ## Related
 
-- [Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) — parent guide weighing the two parsers for GDAL and pyproj command groups
-- [Testing Click Commands with CliRunner for GIS Tools](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/testing-click-commands-with-clirunner-for-gis-tools/) — assert exit codes and output for both Click and Typer commands during the port
+- [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) — parent guide weighing the two parsers for GDAL and pyproj command groups
+- [Testing Click Commands with CliRunner for GIS Tools](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/testing-click-commands-with-clirunner-for-gis-tools/) — assert exit codes and output for both Click and Typer commands during the port

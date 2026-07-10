@@ -2,7 +2,7 @@
 title: "GDAL Batch Operations with multiprocessing.Pool"
 description: "High-throughput GDAL batch processing with multiprocessing.Pool: worker isolation, spawn start method, environment variable handling, and I/O bottleneck strategies."
 slug: "optimizing-gdal-batch-operations-with-multiprocessing-pool"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -78,7 +78,7 @@ dateModified: "2026-06-23"
 }
 </script>
 
-Safely parallelising GDAL with `multiprocessing.Pool` requires three things: forcing the `spawn` process start method so workers receive no inherited C-level state, running a per-worker initializer that calls `gdal.UseExceptions()` and caps internal threads to `1`, and explicitly setting dataset references to `None` when a task finishes. Without these steps, fork-based pools produce silent raster corruption and segmentation faults. This page is part of the [Multiprocessing Geospatial Tasks](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) guide inside the broader [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) reference.
+Safely parallelising GDAL with `multiprocessing.Pool` requires three things: forcing the `spawn` process start method so workers receive no inherited C-level state, running a per-worker initializer that calls `gdal.UseExceptions()` and caps internal threads to `1`, and explicitly setting dataset references to `None` when a task finishes. Without these steps, fork-based pools produce silent raster corruption and segmentation faults. This page is part of the [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) guide inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -86,7 +86,7 @@ Safely parallelising GDAL with `multiprocessing.Pool` requires three things: for
 - `gdal` from `python3-gdal` or a conda/mamba GDAL package (GDAL 3.4+)
 - No additional pip install — `multiprocessing` is in the standard library
 
-For broader context on why geospatial workloads need explicit parallelism strategies, read the [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) overview first.
+For broader context on why geospatial workloads need explicit parallelism strategies, read the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) overview first.
 
 ## Why Fork Breaks GDAL
 
@@ -286,7 +286,7 @@ if __name__ == "__main__":
 
 5. **`errorThreshold=0.125`** — Controls the maximum allowed deviation in output pixels during the reprojection warp. Lower values increase accuracy at the cost of CPU; `0.125` is the GDAL default and appropriate for most geospatial workflows. Reduce to `0.05` for high-precision DEMs.
 
-6. **Return dict instead of bool** — Returning a structured dict from each task allows the calling code to aggregate failures, log CRS mismatches, or feed results into the [error-handling pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) pattern without re-parsing log output.
+6. **Return dict instead of bool** — Returning a structured dict from each task allows the calling code to aggregate failures, log CRS mismatches, or feed results into the [error-handling pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) pattern without re-parsing log output.
 
 ## Named Gotcha: Calling `set_start_method` Too Late
 
@@ -315,7 +315,7 @@ EOF
 gdalinfo ./output/scene_001_reprojected.tif | grep "Size is"
 ```
 
-Exit code `0` from the script and a matching EPSG authority code confirm the run completed without silent failures. For [structured JSON logging of per-file outcomes](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/), pipe the returned `results` list to `json.dumps` before the process exits.
+Exit code `0` from the script and a matching EPSG authority code confirm the run completed without silent failures. For [structured JSON logging of per-file outcomes](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/), pipe the returned `results` list to `json.dumps` before the process exits.
 
 ## Troubleshooting
 
@@ -354,7 +354,7 @@ Deadlocks in `multiprocessing.Pool` most often come from a worker process being 
 <details class="faq-item">
 <summary>Does this pattern apply to rasterio batch jobs too?</summary>
 
-Yes. Rasterio wraps GDAL and inherits the same C-level state risks under `fork`. Use the same `spawn` start method and a `rasterio.Env` context manager inside the worker initializer instead of setting raw environment variables. See the [async I/O for raster processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) pattern for how `asyncio` and rasterio compare to multiprocessing for I/O-bound workloads.
+Yes. Rasterio wraps GDAL and inherits the same C-level state risks under `fork`. Use the same `spawn` start method and a `rasterio.Env` context manager inside the worker initializer instead of setting raw environment variables. See the [async I/O for raster processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) pattern for how `asyncio` and rasterio compare to multiprocessing for I/O-bound workloads.
 
 </details>
 
@@ -362,6 +362,6 @@ Yes. Rasterio wraps GDAL and inherits the same C-level state risks under `fork`.
 
 ## Related
 
-- [Multiprocessing Geospatial Tasks](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) — parent guide covering worker pool patterns, task chunking, and shared-memory strategies for geospatial data
-- [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — when to prefer `asyncio` over `multiprocessing` for I/O-bound raster pipelines
-- [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — structured failure capture and retry logic for batch raster and vector workflows
+- [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) — parent guide covering worker pool patterns, task chunking, and shared-memory strategies for geospatial data
+- [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — when to prefer `asyncio` over `multiprocessing` for I/O-bound raster pipelines
+- [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — structured failure capture and retry logic for batch raster and vector workflows

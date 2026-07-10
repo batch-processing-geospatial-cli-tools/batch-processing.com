@@ -2,7 +2,7 @@
 title: "Estimating ETA for Long-Running Raster Batch Jobs"
 description: "Compute a stable ETA for a raster batch job from a rolling throughput average and surface it through a Rich progress bar and structured logs."
 slug: "estimating-eta-for-long-running-raster-batch-jobs"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # Estimating ETA for Long-Running Raster Batch Jobs
 
-A trustworthy ETA for a raster batch comes from measuring recent throughput, not the whole-run average. Time each finished tile with `time.monotonic()`, push the duration into a bounded `collections.deque`, compute an exponentially-weighted tiles-per-second rate, and multiply the remaining tiles by that rate. This tracks current conditions instead of being anchored to warm-up tiles. This page is part of the [Progress Tracking for Python GIS Batch Pipelines](/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) guide within the broader [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) reference.
+A trustworthy ETA for a raster batch comes from measuring recent throughput, not the whole-run average. Time each finished tile with `time.monotonic()`, push the duration into a bounded `collections.deque`, compute an exponentially-weighted tiles-per-second rate, and multiply the remaining tiles by that rate. This tracks current conditions instead of being anchored to warm-up tiles. This page is part of the [Progress Tracking for Python GIS Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) guide within the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -85,7 +85,7 @@ A trustworthy ETA for a raster batch comes from measuring recent throughput, not
 - `pip install rich` for the progress bar and custom column
 - `rasterio` (GDAL 3.4+) only for the worked example that iterates windows; the estimator itself has no geospatial dependency
 
-The estimator is pure standard library plus Rich. For how the progress bar itself is wired into a CLI, see [Rich Console Output & Progress Bars for GIS CLIs](/cli-architecture-design-patterns/rich-console-output-progress-bars/). If your job can be interrupted and resumed, pair this with [Checkpointing for Interrupted Spatial Batch Jobs](/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/implementing-checkpointing-for-interrupted-spatial-batches/) so the ETA restarts from the resumed position rather than from zero.
+The estimator is pure standard library plus Rich. For how the progress bar itself is wired into a CLI, see [Rich Console Output & Progress Bars for GIS CLIs](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/). If your job can be interrupted and resumed, pair this with [Checkpointing for Interrupted Spatial Batch Jobs](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/implementing-checkpointing-for-interrupted-spatial-batches/) so the ETA restarts from the resumed position rather than from zero.
 
 ## Why the Naive Average Lurches
 
@@ -382,5 +382,5 @@ Log the ETA at a fixed interval and check that its predicted finish time converg
 
 ## Related
 
-- [Progress Tracking for Python GIS Batch Pipelines](/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) — parent guide covering progress bars, throughput metrics, and observability for batch raster and vector jobs
-- [Checkpointing for Interrupted Spatial Batch Jobs](/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/implementing-checkpointing-for-interrupted-spatial-batches/) — resume a batch from its last saved position so the ETA restarts from real progress rather than zero
+- [Progress Tracking for Python GIS Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) — parent guide covering progress bars, throughput metrics, and observability for batch raster and vector jobs
+- [Checkpointing for Interrupted Spatial Batch Jobs](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/implementing-checkpointing-for-interrupted-spatial-batches/) — resume a batch from its last saved position so the ETA restarts from real progress rather than zero

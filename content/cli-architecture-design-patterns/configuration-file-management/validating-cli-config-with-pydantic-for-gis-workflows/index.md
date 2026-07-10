@@ -2,7 +2,7 @@
 title: "Validating CLI Config with Pydantic for GIS Workflows"
 description: "Model a geospatial CLI's config with Pydantic so invalid EPSG codes, negative worker counts, and unknown keys fail fast with a clear exit code 2."
 slug: "validating-cli-config-with-pydantic-for-gis-workflows"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # Validating CLI Config with Pydantic for GIS Workflows
 
-Model your geospatial CLI's config as a Pydantic v2 `BaseSettings` class: type `target_epsg`, constrain `max_workers` to `PositiveInt`, use `DirectoryPath` for inputs, set `extra="forbid"` to reject unknown keys, and add a `field_validator` that runs `pyproj.CRS.from_epsg`. Wrap construction in a `try/except ValidationError` that prints each error and exits `2`. This page is part of the [Configuration File Management for GIS CLI Tools](/cli-architecture-design-patterns/configuration-file-management/) guide within the wider [CLI Architecture & Design Patterns for Python GIS](/cli-architecture-design-patterns/) reference.
+Model your geospatial CLI's config as a Pydantic v2 `BaseSettings` class: type `target_epsg`, constrain `max_workers` to `PositiveInt`, use `DirectoryPath` for inputs, set `extra="forbid"` to reject unknown keys, and add a `field_validator` that runs `pyproj.CRS.from_epsg`. Wrap construction in a `try/except ValidationError` that prints each error and exits `2`. This page is part of the [Configuration File Management for GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) guide within the wider [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 The point of a schema is to fail before the batch starts. A raster pipeline that reads `target_epsg: 99999` from a config file, opens 4,000 GeoTIFFs, warps them, and only then discovers the CRS is undefined has wasted an hour and left a half-written output directory. Validation moves that failure to the first millisecond.
 
@@ -87,7 +87,7 @@ The point of a schema is to fail before the batch starts. A raster pipeline that
 - `pip install pydantic>=2.5 pydantic-settings>=2.1 pyproj>=3.6`
 - A working PROJ install (bundled with the `pyproj` wheel; a system GDAL/PROJ 9.x also works)
 
-This page covers schema validation only. For merging defaults, a config file, and environment overrides into one resolved object, see the layering approach linked at the end. To move validated values onto the command line itself, pair this with [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/), and to push overrides in from the shell, see [Environment Variable Sync](/cli-architecture-design-patterns/environment-variable-sync/).
+This page covers schema validation only. For merging defaults, a config file, and environment overrides into one resolved object, see the layering approach linked at the end. To move validated values onto the command line itself, pair this with [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/), and to push overrides in from the shell, see [Environment Variable Sync](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/).
 
 ## Where Validation Sits
 
@@ -346,5 +346,5 @@ Yes. Pydantic ships path types such as `DirectoryPath` and `FilePath` that fail 
 
 ## Related
 
-- [Configuration File Management for GIS CLI Tools](/cli-architecture-design-patterns/configuration-file-management/) — parent guide covering config discovery, precedence, and formats for geospatial command-line tools
-- [Layering TOML and Env Config for Raster Pipelines](/cli-architecture-design-patterns/configuration-file-management/layering-toml-and-env-config-for-raster-pipelines/) — how to merge defaults, a config file, and environment overrides into one resolved object before validation runs
+- [Configuration File Management for GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) — parent guide covering config discovery, precedence, and formats for geospatial command-line tools
+- [Layering TOML and Env Config for Raster Pipelines](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/layering-toml-and-env-config-for-raster-pipelines/) — how to merge defaults, a config file, and environment overrides into one resolved object before validation runs

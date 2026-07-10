@@ -2,7 +2,7 @@
 title: "Detecting Non-TTY Output and Disabling Rich Color"
 description: "Detect when a geospatial CLI's stdout is piped or running in CI and switch Rich to plain, ANSI-free output so log files and CI consoles stay clean."
 slug: "detecting-non-tty-output-and-disabling-rich-color"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # Detecting Non-TTY Output and Disabling Rich Color
 
-Decide Rich's output mode from `sys.stdout.isatty()` plus the `NO_COLOR` and `CI` environment variables, then build `rich.console.Console` with `force_terminal` and `no_color` set accordingly. When the destination is a pipe, a redirected file, or a CI runner, return a plain console with color disabled and skip the live progress bar; when it is an interactive terminal, return the full styled console. This page is part of the [Rich Console Output & Progress Bars for GIS CLIs](/cli-architecture-design-patterns/rich-console-output-progress-bars/) guide within the broader [CLI Architecture & Design Patterns for Python GIS](/cli-architecture-design-patterns/) reference.
+Decide Rich's output mode from `sys.stdout.isatty()` plus the `NO_COLOR` and `CI` environment variables, then build `rich.console.Console` with `force_terminal` and `no_color` set accordingly. When the destination is a pipe, a redirected file, or a CI runner, return a plain console with color disabled and skip the live progress bar; when it is an interactive terminal, return the full styled console. This page is part of the [Rich Console Output & Progress Bars for GIS CLIs](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/) guide within the broader [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
@@ -85,7 +85,7 @@ Decide Rich's output mode from `sys.stdout.isatty()` plus the `NO_COLOR` and `CI
 - `pip install rich` (Rich 13.0+)
 - A GDAL-backed toolchain for the raster examples (`pip install rasterio`), though the detection logic itself has no geospatial dependency
 
-If your tool already reads settings from the shell, pair this with [Environment Variable Sync](/cli-architecture-design-patterns/environment-variable-sync/) so `NO_COLOR` and `CI` are resolved through the same layered configuration as everything else.
+If your tool already reads settings from the shell, pair this with [Environment Variable Sync](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/) so `NO_COLOR` and `CI` are resolved through the same layered configuration as everything else.
 
 ## How the Decision Is Made
 
@@ -300,7 +300,7 @@ if __name__ == "__main__":
 
 5. **`width=100` in plain mode** — Rich normally probes terminal width, which is undefined on a pipe and defaults to 80. Pinning it keeps wrapped log lines byte-for-byte reproducible across local runs and CI artifacts.
 
-6. **Two consoles, two streams** — `console` targets stderr for human logs and progress; `result` targets stdout for the machine summary. This is what lets `mytool ... > data.txt` capture only the payload while progress still reaches the terminal, and it dovetails with the structured logs described in [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/).
+6. **Two consoles, two streams** — `console` targets stderr for human logs and progress; `result` targets stdout for the machine summary. This is what lets `mytool ... > data.txt` capture only the payload while progress still reaches the terminal, and it dovetails with the structured logs described in [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/).
 
 7. **`batch_progress()` degradation** — In plain mode there is no live bar; the closure prints one line per 10% or every five seconds. CI logs then show real advancement without thousands of carriage-return redraws, and exit code `12` still signals a partial batch failure.
 
@@ -372,5 +372,5 @@ Send machine-consumable results to stdout and human-facing logs and progress to 
 
 ## Related
 
-- [Rich Console Output & Progress Bars for GIS CLIs](/cli-architecture-design-patterns/rich-console-output-progress-bars/) — parent guide covering styled tables, live displays, and progress reporting for geospatial command-line tools
-- [Rendering a Live Rich Dashboard for Batch Raster Jobs](/cli-architecture-design-patterns/rich-console-output-progress-bars/rendering-a-live-rich-dashboard-for-batch-raster-jobs/) — the interactive counterpart, showing when a live dashboard is worth the terminal-only complexity
+- [Rich Console Output & Progress Bars for GIS CLIs](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/) — parent guide covering styled tables, live displays, and progress reporting for geospatial command-line tools
+- [Rendering a Live Rich Dashboard for Batch Raster Jobs](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/rendering-a-live-rich-dashboard-for-batch-raster-jobs/) — the interactive counterpart, showing when a live dashboard is worth the terminal-only complexity

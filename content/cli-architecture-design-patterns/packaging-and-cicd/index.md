@@ -2,7 +2,7 @@
 title: "Packaging & CI/CD for Python GIS CLI Tools"
 description: "Package, containerise, and continuously test a Python geospatial CLI: pin GDAL, ship reproducible Docker images, matrix-test across GDAL versions, and publish to PyPI."
 slug: "packaging-and-cicd"
-type: "cluster"
+type: "topic"
 breadcrumb: "CLI Architecture & Design Patterns > Packaging & CI/CD"
 datePublished: "2025-07-10"
 dateModified: "2026-07-10"
@@ -85,7 +85,7 @@ dateModified: "2026-07-10"
 - `pip install build twine pip-tools rasterio>=1.3 pyogrio>=0.7 pyproj>=3.6 shapely>=2.0`
 - A working GDAL toolchain to develop against (`gdal-config --version` should print 3.6 or newer)
 - Docker 24+ and a GitHub repository with Actions enabled
-- This page is part of the [CLI Architecture & Design Patterns for Python GIS](/cli-architecture-design-patterns/) guide — read the parent page first for the overall shape of a production geospatial command-line tool, of which packaging is the final delivery stage.
+- This page is part of the [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) guide — read the parent page first for the overall shape of a production geospatial command-line tool, of which packaging is the final delivery stage.
 
 ## Problem Framing
 
@@ -188,7 +188,7 @@ geowarp = "geowarp_cli.__main__:app"   # `geowarp reproject ...` after install
 Homepage = "https://batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/"
 ```
 
-The `geowarp = "geowarp_cli.__main__:app"` line is what makes the tool feel native: after `pip install geowarp-cli` the shell has a `geowarp` command wired to your Typer or Click application object. Keep the version constraints on `rasterio` and `pyproj` in lockstep — they must be built against the same PROJ. The way that command exposes subcommands like `geowarp reproject` and `geowarp validate` is covered in [CLI Subcommand Organization for GIS Toolchains](/cli-architecture-design-patterns/cli-subcommand-organization/).
+The `geowarp = "geowarp_cli.__main__:app"` line is what makes the tool feel native: after `pip install geowarp-cli` the shell has a `geowarp` command wired to your Typer or Click application object. Keep the version constraints on `rasterio` and `pyproj` in lockstep — they must be built against the same PROJ. The way that command exposes subcommands like `geowarp reproject` and `geowarp validate` is covered in [CLI Subcommand Organization for GIS Toolchains](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/).
 
 ### Step 2 — Choose a GDAL Distribution Strategy
 
@@ -214,7 +214,7 @@ Strategy C — System GDAL (from apt / the base image)
   → Constraint: pip and system GDAL versions must match exactly.
 ```
 
-The fatal mistake is Strategy A and Strategy C at once: a system `libgdal` from apt plus a `rasterio` wheel that bundles its own GDAL. Two GDAL copies then load into one process, two `proj.db` files exist, and coordinate transforms either segfault or return wrong numbers. For a distributable CLI, Strategy A is the default — it needs no system packages and installs cleanly from PyPI. For containers where you want to pin the exact GDAL, Strategy C inside a controlled base image (Step 3) is the reproducible choice. Whichever you pick, the `GDAL_DATA` and `PROJ_LIB` paths must resolve to the data directory of that one GDAL, which is exactly the concern addressed by [Environment Variable Sync for Python GIS CLI Tools](/cli-architecture-design-patterns/environment-variable-sync/).
+The fatal mistake is Strategy A and Strategy C at once: a system `libgdal` from apt plus a `rasterio` wheel that bundles its own GDAL. Two GDAL copies then load into one process, two `proj.db` files exist, and coordinate transforms either segfault or return wrong numbers. For a distributable CLI, Strategy A is the default — it needs no system packages and installs cleanly from PyPI. For containers where you want to pin the exact GDAL, Strategy C inside a controlled base image (Step 3) is the reproducible choice. Whichever you pick, the `GDAL_DATA` and `PROJ_LIB` paths must resolve to the data directory of that one GDAL, which is exactly the concern addressed by [Environment Variable Sync for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/).
 
 ### Step 3 — Build a Reproducible Multi-Stage Docker Image
 
@@ -268,7 +268,7 @@ ENTRYPOINT ["geowarp"]
 CMD ["--help"]
 ```
 
-The image sets `GDAL_DATA` and `PROJ_LIB` once, at the runtime layer, so every invocation of `geowarp` resolves the same `proj.db`. Because only the site-packages and the console script are copied from the builder, the compilers and dev headers never reach the shipped image. The detailed walkthrough — layer caching, shrinking GDAL, and pinning the PROJ grid files — lives in the deep-dive on [building a Docker image with GDAL for a Python CLI](/cli-architecture-design-patterns/packaging-and-cicd/building-a-docker-image-with-gdal-for-a-python-cli/).
+The image sets `GDAL_DATA` and `PROJ_LIB` once, at the runtime layer, so every invocation of `geowarp` resolves the same `proj.db`. Because only the site-packages and the console script are copied from the builder, the compilers and dev headers never reach the shipped image. The detailed walkthrough — layer caching, shrinking GDAL, and pinning the PROJ grid files — lives in the deep-dive on [building a Docker image with GDAL for a Python CLI](https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/building-a-docker-image-with-gdal-for-a-python-cli/).
 
 ### Step 4 — Matrix-Test Across GDAL and Python Versions
 
@@ -313,7 +313,7 @@ jobs:
         run: pytest -q --cov=geowarp_cli
 ```
 
-Using conda-forge to supply each GDAL keeps the whole environment compiled against one `libgdal`, avoiding the mixed-copy trap from Step 2. Pin the matrix to the GDAL versions your users actually run — usually the current release, the previous minor, and whatever ships in the latest Ubuntu LTS. The full treatment, including caching conda environments and asserting numeric transform stability across versions, is in the deep-dive on [matrix testing a geospatial CLI across GDAL versions](/cli-architecture-design-patterns/packaging-and-cicd/matrix-testing-a-geospatial-cli-across-gdal-versions/).
+Using conda-forge to supply each GDAL keeps the whole environment compiled against one `libgdal`, avoiding the mixed-copy trap from Step 2. Pin the matrix to the GDAL versions your users actually run — usually the current release, the previous minor, and whatever ships in the latest Ubuntu LTS. The full treatment, including caching conda environments and asserting numeric transform stability across versions, is in the deep-dive on [matrix testing a geospatial CLI across GDAL versions](https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/matrix-testing-a-geospatial-cli-across-gdal-versions/).
 
 ### Step 5 — Lock the Environment with Hashes
 
@@ -392,7 +392,7 @@ def resolve_gdal_paths(cli_proj_lib: str | None = None) -> dict[str, str]:
     return resolved
 ```
 
-Bake the defaults into the image, let deployment set environment variables, and expose a `--proj-lib` flag for one-off overrides. The broader mechanics of layered settings — file discovery, precedence, and validation — are covered in [Configuration File Management for GIS CLI Tools](/cli-architecture-design-patterns/configuration-file-management/), and the pitfalls of getting `GDAL_DATA` and `PROJ_LIB` to agree across parent and child processes in [Environment Variable Sync for Python GIS CLI Tools](/cli-architecture-design-patterns/environment-variable-sync/).
+Bake the defaults into the image, let deployment set environment variables, and expose a `--proj-lib` flag for one-off overrides. The broader mechanics of layered settings — file discovery, precedence, and validation — are covered in [Configuration File Management for GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/), and the pitfalls of getting `GDAL_DATA` and `PROJ_LIB` to agree across parent and child processes in [Environment Variable Sync for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/).
 
 ## Error Handling and Gotchas
 
@@ -479,6 +479,6 @@ If your package is pure Python and only depends on `rasterio` and `pyogrio`, pub
 
 ## Related
 
-- [CLI Architecture & Design Patterns for Python GIS](/cli-architecture-design-patterns/) — the parent guide this packaging stage completes, from argument parsing through configuration to delivery
-- [Environment Variable Sync for Python GIS CLI Tools](/cli-architecture-design-patterns/environment-variable-sync/) — keep GDAL_DATA and PROJ_LIB pointing at the one GDAL your image ships
-- [Configuration File Management for GIS CLI Tools](/cli-architecture-design-patterns/configuration-file-management/) — the layered defaults → file → env → flag resolution the packaged tool inherits
+- [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) — the parent guide this packaging stage completes, from argument parsing through configuration to delivery
+- [Environment Variable Sync for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/) — keep GDAL_DATA and PROJ_LIB pointing at the one GDAL your image ships
+- [Configuration File Management for GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) — the layered defaults → file → env → flag resolution the packaged tool inherits

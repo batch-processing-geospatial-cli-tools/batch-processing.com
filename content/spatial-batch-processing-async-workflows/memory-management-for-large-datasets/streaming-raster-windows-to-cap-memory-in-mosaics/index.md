@@ -2,7 +2,7 @@
 title: "Streaming Raster Windows to Cap Memory in Mosaics"
 description: "Process a large raster mosaic block by block with rasterio windowed reads so peak memory stays constant no matter how many tiles the mosaic contains."
 slug: "streaming-raster-windows-to-cap-memory-in-mosaics"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # Streaming Raster Windows to Cap Memory in Mosaics
 
-Process a huge raster mosaic without loading it all by iterating its native blocks: open the source with rasterio, walk `src.block_windows(1)` so each `Window` lands on a block boundary, transform that block, and write it straight into the matching window of an output dataset opened in `"w"` mode. Only one block is ever resident, so peak memory is a fixed function of block size, not mosaic size. This page is part of the [Memory Management for Large GIS Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) guide within the broader [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) reference.
+Process a huge raster mosaic without loading it all by iterating its native blocks: open the source with rasterio, walk `src.block_windows(1)` so each `Window` lands on a block boundary, transform that block, and write it straight into the matching window of an output dataset opened in `"w"` mode. Only one block is ever resident, so peak memory is a fixed function of block size, not mosaic size. This page is part of the [Memory Management for Large GIS Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) guide within the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -85,7 +85,7 @@ Process a huge raster mosaic without loading it all by iterating its native bloc
 - `pip install rasterio numpy` (rasterio 1.3+ ships GDAL 3.4+ wheels; no separate GDAL system install needed on Linux/macOS)
 - A tiled GeoTIFF mosaic. If your source is stripped rather than tiled, retile it once with `gdal_translate -co TILED=YES -co BLOCKXSIZE=512 -co BLOCKYSIZE=512 in.tif tiled.tif` so block-aligned reads are cheap.
 
-If your run is already crashing with a `MemoryError` or an OOM kill rather than just running slowly, start with [Handling Out-of-Memory Errors in Large Raster Mosaics](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/handling-out-of-memory-errors-in-large-raster-mosaics/); this page assumes you want to design the streaming write from the start.
+If your run is already crashing with a `MemoryError` or an OOM kill rather than just running slowly, start with [Handling Out-of-Memory Errors in Large Raster Mosaics](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/handling-out-of-memory-errors-in-large-raster-mosaics/); this page assumes you want to design the streaming write from the start.
 
 ## Why Block Alignment Decides Memory and I/O
 
@@ -300,7 +300,7 @@ If the two `Maximum resident set size` values differ by more than the GDAL block
 
 ## Performance Notes
 
-Cap GDAL's own block cache so it does not shadow the memory you saved: export `GDAL_CACHEMAX=128` (MB) before the run, or the cache alone can dwarf your per-block buffers. Larger `--factor` values reduce Python loop overhead but raise the resident buffer linearly, so a `factor` of 4 over a 512-pixel block (a 2048-pixel super-block, ~16 MB for two float32 bands) is a good default. If NDVI throughput is I/O-bound rather than CPU-bound, the streaming loop parallelises cleanly across independent super-blocks — see the multiprocessing patterns in the parent [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) reference.
+Cap GDAL's own block cache so it does not shadow the memory you saved: export `GDAL_CACHEMAX=128` (MB) before the run, or the cache alone can dwarf your per-block buffers. Larger `--factor` values reduce Python loop overhead but raise the resident buffer linearly, so a `factor` of 4 over a 512-pixel block (a 2048-pixel super-block, ~16 MB for two float32 bands) is a good default. If NDVI throughput is I/O-bound rather than CPU-bound, the streaming loop parallelises cleanly across independent super-blocks — see the multiprocessing patterns in the parent [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## FAQ
 
@@ -332,5 +332,5 @@ For the cleanest write path, set the output creation options to tiled with the s
 
 ## Related
 
-- [Memory Management for Large GIS Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) — parent guide covering windowed reads, chunked pipelines, and resident-memory budgeting for oversized rasters and vectors
-- [Handling Out-of-Memory Errors in Large Raster Mosaics](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/handling-out-of-memory-errors-in-large-raster-mosaics/) — diagnosing and recovering from OOM kills once a raster job has already exhausted memory
+- [Memory Management for Large GIS Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) — parent guide covering windowed reads, chunked pipelines, and resident-memory budgeting for oversized rasters and vectors
+- [Handling Out-of-Memory Errors in Large Raster Mosaics](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/handling-out-of-memory-errors-in-large-raster-mosaics/) — diagnosing and recovering from OOM kills once a raster job has already exhausted memory

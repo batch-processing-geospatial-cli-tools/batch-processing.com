@@ -2,7 +2,7 @@
 title: "Memory Management for Large GIS Datasets"
 description: "Keep Python GIS batch pipelines within memory bounds using windowed raster I/O, chunked vector reads, process-level ceilings, and tracemalloc-based drift detection."
 slug: "memory-management-for-large-datasets"
-type: "cluster"
+type: "topic"
 breadcrumb: "Spatial Batch Processing & Async Workflows > Memory Management for Large Datasets"
 datePublished: "2024-11-12"
 dateModified: "2026-06-23"
@@ -80,7 +80,7 @@ dateModified: "2026-06-23"
 - Python 3.9+ (type annotations, `contextlib.contextmanager`, `tracemalloc` in stdlib)
 - `pip install rasterio>=1.3 geopandas>=1.0 shapely>=2.0 pyogrio>=0.7 psutil`
 - GDAL/OGR installed system-wide or via `conda-forge`; `gdal-config --version` should succeed
-- Familiarity with the broader [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) patterns covered in the parent guide
+- Familiarity with the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) patterns covered in the parent guide
 
 Set these two environment variables before any GIS import to cap GDAL's internal cache and prevent it from competing with your Python working arrays:
 
@@ -180,7 +180,7 @@ def process_raster(src_path: Path, dst_path: Path) -> None:
             del normalised
 ```
 
-When you need overlapping reads for edge-aware filters or convolution kernels, pair this pattern with [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) to overlap disk I/O with CPU-bound computation without blocking the main thread.
+When you need overlapping reads for edge-aware filters or convolution kernels, pair this pattern with [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) to overlap disk I/O with CPU-bound computation without blocking the main thread.
 
 ### Step 3 — Chunked Vector Streaming with `pyogrio`
 
@@ -234,7 +234,7 @@ def filter_large_parcels(
     return len(result)
 ```
 
-For a deeper treatment of chunk-size tuning and Arrow schema negotiation, see [Chunked Vector Data Reading](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/).
+For a deeper treatment of chunk-size tuning and Arrow schema negotiation, see [Chunked Vector Data Reading](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/).
 
 ### Step 4 — Explicit Resource Teardown
 
@@ -455,13 +455,13 @@ def check_rss_returned_to_baseline(baseline: dict, tolerance_mb: float = 20.0) -
         )
 ```
 
-For structured JSON logging of these verification events, the [Logging Spatial Transformation Results to Structured JSON](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/) page covers the full log schema.
+For structured JSON logging of these verification events, the [Logging Spatial Transformation Results to Structured JSON](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/) page covers the full log schema.
 
 ## Performance Notes
 
 - **Window size vs I/O calls:** Doubling the window height halves the number of read calls. For network filesystems (S3, NFS) this matters more than on local NVMe. Profile with `GDAL_DEBUG=ON` to count block cache hits.
 - **Arrow vs non-Arrow pyogrio:** On geometry-heavy layers (complex polygons) the Arrow path is roughly 30 % faster because GEOS object construction is deferred until you actually call `.geometry`; attribute filtering before geometry access avoids GEOS allocation entirely.
-- **Parallelism and memory ceilings:** When running N workers in a `multiprocessing.Pool`, total RSS budget is `N × per_worker_peak`. On a 32 GB host with workers peaking at 3 GB each, cap N at 8 and reserve 8 GB for the OS and GDAL shared libraries. The [Multiprocessing Geospatial Tasks](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) page covers worker pool sizing in detail.
+- **Parallelism and memory ceilings:** When running N workers in a `multiprocessing.Pool`, total RSS budget is `N × per_worker_peak`. On a 32 GB host with workers peaking at 3 GB each, cap N at 8 and reserve 8 GB for the OS and GDAL shared libraries. The [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) page covers worker pool sizing in detail.
 - **LZW + predictor=2:** Enabling `predictor=2` with LZW compression on float32 rasters typically reduces file size 40–60 % versus plain LZW, at negligible CPU cost. Smaller output files reduce the write-back bottleneck in chunk loops.
 
 ## FAQ
@@ -503,7 +503,7 @@ When the window is smaller than the raster's native tile or block size, GDAL dec
 
 ## Related
 
-- [Handling Out-of-Memory Errors in Large Raster Mosaics](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/handling-out-of-memory-errors-in-large-raster-mosaics/) — graceful degradation patterns when a worker exceeds its allocation: retry with smaller windows, structured exit codes, and fallback queues
-- [Chunked Vector Data Reading](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — pyogrio chunk-size tuning, Arrow schema negotiation, and strategies for spatially partitioned reads
-- [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — overlap disk reads with CPU-bound transformations using `asyncio` and thread executors to keep workers saturated
-- [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) — parent guide covering the full pipeline: async I/O, multiprocessing, error handling, and progress tracking
+- [Handling Out-of-Memory Errors in Large Raster Mosaics](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/handling-out-of-memory-errors-in-large-raster-mosaics/) — graceful degradation patterns when a worker exceeds its allocation: retry with smaller windows, structured exit codes, and fallback queues
+- [Chunked Vector Data Reading](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — pyogrio chunk-size tuning, Arrow schema negotiation, and strategies for spatially partitioned reads
+- [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — overlap disk reads with CPU-bound transformations using `asyncio` and thread executors to keep workers saturated
+- [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) — parent guide covering the full pipeline: async I/O, multiprocessing, error handling, and progress tracking

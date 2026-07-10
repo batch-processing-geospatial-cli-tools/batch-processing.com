@@ -2,7 +2,7 @@
 title: "How to Build a Typer CLI for Shapefile Conversion"
 description: "Build a Typer CLI that batch-converts Shapefiles to GeoJSON, GeoPackage, FlatGeobuf, or Parquet using pyogrio, with CRS handling and deterministic exit codes."
 slug: "how-to-build-a-typer-cli-for-shapefile-conversion"
-type: "long_tail"
+type: "article"
 breadcrumb: "CLI Architecture > Argument Parsing with Typer > How to Build a Typer CLI for Shapefile Conversion"
 datePublished: "2024-11-14"
 dateModified: "2026-06-23"
@@ -66,7 +66,7 @@ dateModified: "2026-06-23"
 
 # How to Build a Typer CLI for Shapefile Conversion
 
-Combine [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) with `geopandas` (backed by `pyogrio`) to batch-convert ESRI Shapefiles to GeoJSON, GeoPackage, FlatGeobuf, or Parquet. Declare a single `@app.command()` function, resolve globs or directories into an explicit file list before any I/O begins, stream progress via Rich, and return deterministic exit codes that CI/CD pipelines can act on without parsing log text.
+Combine [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) with `geopandas` (backed by `pyogrio`) to batch-convert ESRI Shapefiles to GeoJSON, GeoPackage, FlatGeobuf, or Parquet. Declare a single `@app.command()` function, resolve globs or directories into an explicit file list before any I/O begins, stream progress via Rich, and return deterministic exit codes that CI/CD pipelines can act on without parsing log text.
 
 ## Prerequisites
 
@@ -74,7 +74,7 @@ Combine [Argument Parsing with Typer](/cli-architecture-design-patterns/argument
 pip install "typer[all]" geopandas pyogrio
 ```
 
-GeoPandas ≥ 1.0 defaults to `pyogrio` for all vector I/O, replacing the older `fiona` bindings with a faster, thread-safe C extension built directly on GDAL/OGR. For broader context on structuring spatial command-line tools, this page is part of the [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) guide.
+GeoPandas ≥ 1.0 defaults to `pyogrio` for all vector I/O, replacing the older `fiona` bindings with a faster, thread-safe C extension built directly on GDAL/OGR. For broader context on structuring spatial command-line tools, this page is part of the [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
 
 ## Data-flow overview
 
@@ -296,7 +296,7 @@ rows=3247  crs=4326  geom=['MultiPolygon']
 | `2` | No `.shp` files matched the input path | Fail — check glob or directory |
 | `3` | Partial failure — at least one file errored | Fail — inspect stderr for named failures |
 
-Use `--quiet` in automated pipelines to suppress Rich progress bars, which emit ANSI escape sequences that corrupt log parsers expecting plain text. For more on structuring Rich output to stay pipeline-friendly, see [Rich Console Output and Progress Bars](/cli-architecture-design-patterns/rich-console-output-progress-bars/).
+Use `--quiet` in automated pipelines to suppress Rich progress bars, which emit ANSI escape sequences that corrupt log parsers expecting plain text. For more on structuring Rich output to stay pipeline-friendly, see [Rich Console Output and Progress Bars](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/).
 
 ## FAQ
 
@@ -323,7 +323,7 @@ done
 <details class="faq-item">
 <summary>How do I handle shapefiles larger than available RAM?</summary>
 
-For datasets exceeding available memory, read in chunks using `pyogrio.read_arrow()` with a `where` clause, or use `gpd.read_file()` with the `rows` parameter to page through features. For datasets above 2 GB, consider converting to GeoPackage or FlatGeobuf first (both support streaming writes), then processing in windows. See [Memory Management for Large Geospatial Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) for chunked strategies.
+For datasets exceeding available memory, read in chunks using `pyogrio.read_arrow()` with a `where` clause, or use `gpd.read_file()` with the `rows` parameter to page through features. For datasets above 2 GB, consider converting to GeoPackage or FlatGeobuf first (both support streaming writes), then processing in windows. See [Memory Management for Large Geospatial Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) for chunked strategies.
 
 </details>
 
@@ -338,5 +338,5 @@ The implementation overwrites silently — `to_file()` and `to_parquet()` both r
 
 ## Related
 
-- [Argument Parsing with Typer for GIS CLI Tools](/cli-architecture-design-patterns/argument-parsing-with-typer/) — the parent guide covering type-hint-driven argument parsing, custom validators, and multi-command app structure
-- [Adding Auto-Completion to Python Spatial CLI Tools](/cli-architecture-design-patterns/argument-parsing-with-typer/adding-auto-completion-to-python-spatial-cli-tools/) — extend this converter with dynamic completers for format names and EPSG codes
+- [Argument Parsing with Typer for GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — the parent guide covering type-hint-driven argument parsing, custom validators, and multi-command app structure
+- [Adding Auto-Completion to Python Spatial CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/adding-auto-completion-to-python-spatial-cli-tools/) — extend this converter with dynamic completers for format names and EPSG codes

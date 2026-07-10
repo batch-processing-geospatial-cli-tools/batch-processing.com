@@ -2,7 +2,7 @@
 title: "Customizing Rich Tables for Coordinate System Outputs"
 description: "Render EPSG codes, WKT strings, and bounding boxes in a Rich table without layout collapse — column constraints, conditional styling, and pyproj integration."
 slug: "customizing-rich-tables-for-coordinate-system-outputs"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "CLI Architecture & Design Patterns"
     url: "/cli-architecture-design-patterns/"
@@ -69,7 +69,7 @@ dateModified: "2026-06-23"
 }
 </script>
 
-Use `add_column()` with explicit `width`, `max_width`, and `overflow` constraints and delegate CRS parsing to `pyproj.CRS.from_user_input()`. Without those column constraints a Rich table collapses or overflows when EPSG names, WKT strings, or four-decimal bounding-box values hit a narrow CI terminal. This task is a focused extension of the broader [Rich Console Output & Progress Bars](/cli-architecture-design-patterns/rich-console-output-progress-bars/) pattern, which sits within the [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) guide.
+Use `add_column()` with explicit `width`, `max_width`, and `overflow` constraints and delegate CRS parsing to `pyproj.CRS.from_user_input()`. Without those column constraints a Rich table collapses or overflows when EPSG names, WKT strings, or four-decimal bounding-box values hit a narrow CI terminal. This task is a focused extension of the broader [Rich Console Output & Progress Bars](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/) pattern, which sits within the [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
 
 ## Prerequisites
 
@@ -278,6 +278,6 @@ Rich's `Table` does not have a built-in footer row concept. The closest approach
 
 ## Related
 
-- [Rich Console Output & Progress Bars](/cli-architecture-design-patterns/rich-console-output-progress-bars/) — the parent guide covering `Console` initialization, progress bar integration, and theme configuration for geospatial batch workflows.
-- [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) — the top-level reference for structuring Python GIS command-line tools with subcommands, config layering, and structured logging.
-- [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) — covers type-safe CLI option definitions that feed directly into the CRS input validation pattern shown above.
+- [Rich Console Output & Progress Bars](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/) — the parent guide covering `Console` initialization, progress bar integration, and theme configuration for geospatial batch workflows.
+- [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) — the top-level reference for structuring Python GIS command-line tools with subcommands, config layering, and structured logging.
+- [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — covers type-safe CLI option definitions that feed directly into the CRS input validation pattern shown above.

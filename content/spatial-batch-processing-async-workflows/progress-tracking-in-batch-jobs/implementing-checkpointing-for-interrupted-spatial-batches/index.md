@@ -2,7 +2,7 @@
 title: "Checkpointing for Interrupted Spatial Batch Jobs"
 description: "Persist atomic checkpoints for Python spatial batch jobs — resume GeoPackage, Shapefile, and raster pipelines where they stopped after OOM kills or SIGTERM."
 slug: "implementing-checkpointing-for-interrupted-spatial-batches"
-type: "long_tail"
+type: "article"
 breadcrumb: "Checkpointing Interrupted Spatial Batches"
 datePublished: "2024-11-20"
 dateModified: "2026-06-23"
@@ -72,7 +72,7 @@ dateModified: "2026-06-23"
 
 To implement checkpointing for interrupted spatial batches, persist a lightweight atomic state file that maps each spatial asset — file path, feature ID, or tile coordinate — to a completion flag. Wrap the processing loop in a `SIGINT`/`SIGTERM` handler that flushes state before exit, and on restart deserialize the file, filter out completed items, and resume from the exact offset. This eliminates redundant I/O and prevents partial writes in formats like GeoPackage and Shapefile.
 
-This page is part of the [Progress Tracking in Batch Jobs](/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) guide, which sits inside the broader [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) reference.
+This page is part of the [Progress Tracking in Batch Jobs](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) guide, which sits inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -83,7 +83,7 @@ This page is part of the [Progress Tracking in Batch Jobs](/spatial-batch-proces
 | Spatial I/O (optional) | `pyogrio` or `rasterio` for the actual processing steps; `pip install pyogrio rasterio` |
 | POSIX OS | `os.replace` atomic rename is guaranteed on Linux/macOS; on Windows it is also atomic since Python 3.3 |
 
-For the async variant of this pattern — processing GeoJSON concurrently while checkpointing — see [Processing 100k GeoJSON Files with Python asyncio](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/processing-100k-geojson-files-with-python-asyncio/).
+For the async variant of this pattern — processing GeoJSON concurrently while checkpointing — see [Processing 100k GeoJSON Files with Python asyncio](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/processing-100k-geojson-files-with-python-asyncio/).
 
 ## Checkpoint Lifecycle
 
@@ -301,16 +301,16 @@ if __name__ == "__main__":
    The handler sets `self.interrupted = True` and calls `_save()` but does *not* call `sys.exit()`. This lets the current iteration of the loop finish its `process_one_asset` call (including the SQLite COMMIT) before the loop's `if checkpoint.interrupted` check exits cleanly. Forcing an immediate exit from inside a signal handler risks leaving a half-written GeoPackage on disk.
 
 3. **`pyogrio.read_dataframe(..., use_arrow=True)` — columnar I/O for large feature sets.**
-   Arrow-backed reads via `pyogrio` load feature attribute tables directly into columnar memory without the row-by-row Python overhead of `fiona`. For files with hundreds of thousands of features and wide attribute schemas — common in parcel or building footprint datasets — this is 5–10x faster than `fiona.open`. The [Chunked Vector Data Reading](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) guide covers how to extend this pattern for datasets that exceed available RAM.
+   Arrow-backed reads via `pyogrio` load feature attribute tables directly into columnar memory without the row-by-row Python overhead of `fiona`. For files with hundreds of thousands of features and wide attribute schemas — common in parcel or building footprint datasets — this is 5–10x faster than `fiona.open`. The [Chunked Vector Data Reading](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) guide covers how to extend this pattern for datasets that exceed available RAM.
 
 4. **`gdf.to_crs(TARGET_CRS)` — explicit EPSG:4326 coercion before write.**
-   Spatial format corruption frequently originates from silent CRS mismatches: a source file in EPSG:32632 (UTM zone 32N) written to a GeoPackage without reprojection, then consumed by a downstream tool that assumes EPSG:4326. Checking `gdf.crs is None` and reprojecting explicitly eliminates this class of corruption. See [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) for a structured approach to logging CRS mismatches across a batch.
+   Spatial format corruption frequently originates from silent CRS mismatches: a source file in EPSG:32632 (UTM zone 32N) written to a GeoPackage without reprojection, then consumed by a downstream tool that assumes EPSG:4326. Checking `gdf.crs is None` and reprojecting explicitly eliminates this class of corruption. See [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) for a structured approach to logging CRS mismatches across a batch.
 
 5. **`checkpoint.mark_complete(asset)` placed *after* `process_one_asset` returns.**
    `pyogrio.write_dataframe` issues its SQLite COMMIT before returning. So by the time `mark_complete` is called, the on-disk GeoPackage is in a consistent state. If you use a lower-level `sqlite3` connection directly, call `con.commit()` explicitly before `mark_complete` — never inside a `finally` block that also calls `mark_complete`, as a failed COMMIT would then incorrectly mark the asset as done.
 
 6. **`return 1` on `checkpoint.interrupted`, `return 2` on no input, `return 0` on success.**
-   These follow the POSIX convention used throughout [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/): exit 0 = success, 1 = runtime interruption or non-fatal error, 2 = bad arguments or missing input. Orchestrators (Airflow, Prefect, shell scripts) can test `$?` to distinguish a clean resume-ready stop from a configuration problem.
+   These follow the POSIX convention used throughout [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/): exit 0 = success, 1 = runtime interruption or non-fatal error, 2 = bad arguments or missing input. Orchestrators (Airflow, Prefect, shell scripts) can test `$?` to distinguish a clean resume-ready stop from a configuration problem.
 
 ## Named Gotcha: Shapefiles and Orphaned Sidecars
 
@@ -424,7 +424,7 @@ Always use absolute paths (`str(Path(asset).resolve())`). Relative paths break w
 <details class="faq-item">
 <summary>How do I handle assets that should be skipped permanently (not retried)?</summary>
 
-Add a separate `failed` key to the state dict alongside the `completed` key, or use a tri-value state (`"pending"`, `"done"`, `"failed"`). Update `get_pending` to filter out both `"done"` and `"failed"` entries. Log failures to a structured JSON error log (see [Logging Spatial Transformation Results to Structured JSON](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/)) so they can be audited separately from the checkpoint state.
+Add a separate `failed` key to the state dict alongside the `completed` key, or use a tri-value state (`"pending"`, `"done"`, `"failed"`). Update `get_pending` to filter out both `"done"` and `"failed"` entries. Log failures to a structured JSON error log (see [Logging Spatial Transformation Results to Structured JSON](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/)) so they can be audited separately from the checkpoint state.
 
 </details>
 
@@ -432,6 +432,6 @@ Add a separate `failed` key to the state dict alongside the `completed` key, or 
 
 ## Related
 
-- [Progress Tracking in Batch Jobs](/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) — the parent guide covering thread-safe counters, Rich progress dashboards, and async-compatible renderers for the pipelines this checkpointing pattern protects
-- [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — structured logging, retry strategies, and exit-code conventions that complement checkpoint-based resumption
-- [Chunked Vector Data Reading](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — how to stream large vector datasets in fixed-size batches, a natural companion to per-chunk checkpointing
+- [Progress Tracking in Batch Jobs](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) — the parent guide covering thread-safe counters, Rich progress dashboards, and async-compatible renderers for the pipelines this checkpointing pattern protects
+- [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — structured logging, retry strategies, and exit-code conventions that complement checkpoint-based resumption
+- [Chunked Vector Data Reading](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — how to stream large vector datasets in fixed-size batches, a natural companion to per-chunk checkpointing

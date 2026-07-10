@@ -2,7 +2,7 @@
 title: "Handling Missing Dependencies Gracefully in Click Apps"
 description: "Defer heavy geospatial imports with lazy loaders and Click's exception hierarchy so help text and fallback commands work even when rasterio or GDAL are absent."
 slug: "handling-missing-dependencies-gracefully-in-click-apps"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "CLI Architecture & Design Patterns"
     url: "/cli-architecture-design-patterns/"
@@ -86,13 +86,13 @@ dateModified: "2026-06-23"
 }
 </script>
 
-Wrap each compiled geospatial import in a dedicated lazy-loader function and call that function inside the command body rather than at module level. When the import fails, raise `click.UsageError` with an install hint. This keeps `--help`, tab completion, and pure-Python subcommands fully operational in environments where `rasterio`, `GDAL`, or `geopandas` are absent — a key resilience pattern within the broader [Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) guide.
+Wrap each compiled geospatial import in a dedicated lazy-loader function and call that function inside the command body rather than at module level. When the import fails, raise `click.UsageError` with an install hint. This keeps `--help`, tab completion, and pure-Python subcommands fully operational in environments where `rasterio`, `GDAL`, or `geopandas` are absent — a key resilience pattern within the broader [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) guide.
 
 ## Prerequisites
 
 - Python 3.9+, `click>=8.1`
 - No GIS package required at import time — that is the point of this pattern
-- For broader CLI design context see [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/)
+- For broader CLI design context see [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/)
 
 ## Why Geospatial CLIs Crash Before Argument Parsing
 
@@ -101,7 +101,7 @@ Compiled extensions (`rasterio`, `GDAL`, `shapely`, `pyproj`) load shared librar
 The result is that three developer workflows break simultaneously:
 
 - `--help` and subcommand discovery fail, blocking onboarding and self-documentation.
-- Shell completion scripts crash at tab-press, degrading the experience for power users who rely on [adding auto-completion to Python spatial CLI tools](/cli-architecture-design-patterns/argument-parsing-with-typer/adding-auto-completion-to-python-spatial-cli-tools/).
+- Shell completion scripts crash at tab-press, degrading the experience for power users who rely on [adding auto-completion to Python spatial CLI tools](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/adding-auto-completion-to-python-spatial-cli-tools/).
 - Container portability collapses — lightweight base images cannot run `inspect` or `validate-path` utilities that have no real GIS dependency at all.
 
 The diagram below shows how a module-level import fails the entire process versus how a lazy loader isolates the failure to the one command that actually needs the library.
@@ -318,7 +318,7 @@ if __name__ == "__main__":
 
 1. **`_require_rasterio()` / `_require_geopandas()`** — Each loader wraps its import in `try/except ImportError` and re-raises as `click.UsageError`. Click catches `UsageError`, prints the message without a traceback, and exits with code 2 — the POSIX convention for bad usage rather than a runtime error (exit 1).
 
-2. **`click.Path(path_type=Path)`** — Coerces the argument string to `pathlib.Path` at parse time. Downstream code uses `Path` methods directly without manual `str()` wrapping, which is the pattern favoured in the [CLI subcommand organization](/cli-architecture-design-patterns/cli-subcommand-organization/) guide for keeping command signatures clean.
+2. **`click.Path(path_type=Path)`** — Coerces the argument string to `pathlib.Path` at parse time. Downstream code uses `Path` methods directly without manual `str()` wrapping, which is the pattern favoured in the [CLI subcommand organization](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) guide for keeping command signatures clean.
 
 3. **`click.FloatRange(0.0, 1.0)`** — Validates the threshold at parse time so the lazy-loaded `rasterio` is never reached with an out-of-range value. This avoids a confusing processing error after a potentially slow import.
 
@@ -396,7 +396,7 @@ For one-shot CLI invocations the overhead of re-importing is negligible — Pyth
 <details class="faq-item">
 <summary>Does Typer support the same lazy-loading pattern?</summary>
 
-Yes. Typer wraps Click and surfaces the same `click.UsageError` and `click.ClickException` types, so the identical lazy-loader functions work unchanged. The only difference is that Typer infers parameter types from annotations, adding a small parse-time overhead even before a command body runs. For startup-sensitive tooling see the [Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) comparison for a quantified breakdown.
+Yes. Typer wraps Click and surfaces the same `click.UsageError` and `click.ClickException` types, so the identical lazy-loader functions work unchanged. The only difference is that Typer infers parameter types from annotations, adding a small parse-time overhead even before a command body runs. For startup-sensitive tooling see the [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) comparison for a quantified breakdown.
 </details>
 
 <details class="faq-item">
@@ -407,5 +407,5 @@ Add a `ruff` rule to the project's `pyproject.toml`. The `PLC0415` rule (import-
 
 ## Related
 
-- [Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) — parent guide covering the full framework comparison for spatial data pipelines
-- [Adding Auto-Completion to Python Spatial CLI Tools](/cli-architecture-design-patterns/argument-parsing-with-typer/adding-auto-completion-to-python-spatial-cli-tools/) — shell completion setup that depends on Click initialising cleanly without GIS crashes
+- [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) — parent guide covering the full framework comparison for spatial data pipelines
+- [Adding Auto-Completion to Python Spatial CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/adding-auto-completion-to-python-spatial-cli-tools/) — shell completion setup that depends on Click initialising cleanly without GIS crashes

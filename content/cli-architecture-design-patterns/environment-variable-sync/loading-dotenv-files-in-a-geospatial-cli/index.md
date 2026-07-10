@@ -2,7 +2,7 @@
 title: "Loading .env Files in a Geospatial CLI"
 description: "Load a .env file with python-dotenv at CLI startup so GDAL, PROJ, and cloud-credential variables are set before rasterio imports, without leaking secrets into logs."
 slug: "loading-dotenv-files-in-a-geospatial-cli"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # Loading .env Files in a Geospatial CLI
 
-Load the `.env` file at the very top of your entry module with `python-dotenv` — `load_dotenv(find_dotenv(), override=False)` — before any `import rasterio` or `from osgeo import gdal`. GDAL and PROJ read `GDAL_DATA`, `PROJ_DATA`, `GDAL_CACHEMAX`, and the `AWS_*` credentials for `/vsis3/` at their own import time, so a late load leaves them stale. This page is part of the [Environment Variable Sync for Python GIS CLI Tools](/cli-architecture-design-patterns/environment-variable-sync/) guide within the broader [CLI Architecture & Design Patterns for Python GIS](/cli-architecture-design-patterns/) reference.
+Load the `.env` file at the very top of your entry module with `python-dotenv` — `load_dotenv(find_dotenv(), override=False)` — before any `import rasterio` or `from osgeo import gdal`. GDAL and PROJ read `GDAL_DATA`, `PROJ_DATA`, `GDAL_CACHEMAX`, and the `AWS_*` credentials for `/vsis3/` at their own import time, so a late load leaves them stale. This page is part of the [Environment Variable Sync for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/) guide within the broader [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
@@ -86,7 +86,7 @@ Load the `.env` file at the very top of your entry module with `python-dotenv` �
 - A working GDAL, either from the rasterio wheel or a conda/mamba install
 - A `.env` file at your project root, listed in `.gitignore`
 
-This page focuses on the `.env` file itself — locating it, loading it in the right order, and keeping secrets out of logs. For the separate question of exporting the same variables as shell profiles or systemd units, see the sibling page on [managing GDAL and PROJ environment variables across shells](/cli-architecture-design-patterns/environment-variable-sync/managing-gdal-and-proj-env-vars-across-shells/). For how `.env` values slot into a wider defaults-then-file-then-flag chain, see [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/).
+This page focuses on the `.env` file itself — locating it, loading it in the right order, and keeping secrets out of logs. For the separate question of exporting the same variables as shell profiles or systemd units, see the sibling page on [managing GDAL and PROJ environment variables across shells](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/managing-gdal-and-proj-env-vars-across-shells/). For how `.env` values slot into a wider defaults-then-file-then-flag chain, see [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/).
 
 ## The Import-Order Problem
 
@@ -292,7 +292,7 @@ AWS_SECRET_ACCESS_KEY=changeme-do-not-commit
 
 5. **`s3://` URI to `/vsis3/`** — rasterio translates an `s3://` URI to GDAL's `/vsis3/` virtual filesystem handler, which reads `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_REGION` from the environment on first access. Because bootstrap ran first, those values are present.
 
-6. **Return codes** — `0` for success, `10` for a missing source CRS. This keeps the tool composable in a batch loop, matching the domain exit-code convention used across the [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/) tooling.
+6. **Return codes** — `0` for success, `10` for a missing source CRS. This keeps the tool composable in a batch loop, matching the domain exit-code convention used across the [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) tooling.
 
 ## Named Gotcha: A Late Import Silently Wins
 
@@ -359,5 +359,5 @@ Use `find_dotenv()`, which walks up the directory tree from the current working 
 
 ## Related
 
-- [Environment Variable Sync for Python GIS CLI Tools](/cli-architecture-design-patterns/environment-variable-sync/) — parent guide covering how GDAL, PROJ, and cloud variables stay consistent across a CLI's runtime surfaces
-- [Managing GDAL and PROJ Environment Variables Across Shells](/cli-architecture-design-patterns/environment-variable-sync/managing-gdal-and-proj-env-vars-across-shells/) — the shell-export counterpart for setting the same variables in profiles, containers, and systemd units
+- [Environment Variable Sync for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/) — parent guide covering how GDAL, PROJ, and cloud variables stay consistent across a CLI's runtime surfaces
+- [Managing GDAL and PROJ Environment Variables Across Shells](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/managing-gdal-and-proj-env-vars-across-shells/) — the shell-export counterpart for setting the same variables in profiles, containers, and systemd units

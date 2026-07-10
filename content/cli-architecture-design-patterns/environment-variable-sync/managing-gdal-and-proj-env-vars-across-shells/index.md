@@ -2,7 +2,7 @@
 title: "Managing GDAL and PROJ Environment Variables Across Shells"
 description: "Keep GDAL_DATA, PROJ_LIB, and GDAL_CACHEMAX consistent across bash, zsh, Docker, and CI so a geospatial CLI behaves identically in every environment."
 slug: "managing-gdal-and-proj-env-vars-across-shells"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -76,7 +76,7 @@ dateModified: "2026-07-10"
 
 # Managing GDAL and PROJ Environment Variables Across Shells
 
-Your GDAL and PROJ variables differ between shells because each shell sources a different startup file, and a Docker or CI environment sources none of them. The fix is to stop hardcoding paths in `.bashrc` and instead detect the correct directories at runtime with `pyproj.datadir.get_data_dir()` and rasterio, then set `os.environ` defaults before `osgeo.gdal` initialises. This page is part of the [Environment Variable Sync for Python GIS CLI Tools](/cli-architecture-design-patterns/environment-variable-sync/) guide within the broader [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) reference.
+Your GDAL and PROJ variables differ between shells because each shell sources a different startup file, and a Docker or CI environment sources none of them. The fix is to stop hardcoding paths in `.bashrc` and instead detect the correct directories at runtime with `pyproj.datadir.get_data_dir()` and rasterio, then set `os.environ` defaults before `osgeo.gdal` initialises. This page is part of the [Environment Variable Sync for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/) guide within the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
@@ -84,7 +84,7 @@ Your GDAL and PROJ variables differ between shells because each shell sources a 
 - `pip install pyproj rasterio` (both bundle a matching PROJ/GDAL build)
 - A system or conda GDAL 3.4+ install; the helper works with either
 
-If your paths already live in a config file, pair this with [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/) so the detected values become documented defaults rather than hidden shell state.
+If your paths already live in a config file, pair this with [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) so the detected values become documented defaults rather than hidden shell state.
 
 ## What Each Variable Controls
 
@@ -293,7 +293,7 @@ print("%.4f %.4f" % t.transform(15.0, 50.0))   # deterministic across machines
 PY
 ```
 
-If `projinfo EPSG:4326` prints a CRS block instead of a "Cannot find proj.db" error, and the transform prints the same two numbers in every environment, the sync is correct. To see which files the C library chose, run any command with `CPL_DEBUG=ON` and grep for `PROJ` and `GDAL_DATA` in the output. For turning this into a build-time check, wire the same commands into your [Packaging & CI/CD](/cli-architecture-design-patterns/packaging-and-cicd/) pipeline so a drifted image fails the job before release.
+If `projinfo EPSG:4326` prints a CRS block instead of a "Cannot find proj.db" error, and the transform prints the same two numbers in every environment, the sync is correct. To see which files the C library chose, run any command with `CPL_DEBUG=ON` and grep for `PROJ` and `GDAL_DATA` in the output. For turning this into a build-time check, wire the same commands into your [Packaging & CI/CD](https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/) pipeline so a drifted image fails the job before release.
 
 ## FAQ
 
@@ -325,5 +325,5 @@ PROJ 9 reads `PROJ_DATA` and treats `PROJ_LIB` as a deprecated alias that still 
 
 ## Related
 
-- [Environment Variable Sync for Python GIS CLI Tools](/cli-architecture-design-patterns/environment-variable-sync/) — parent guide covering how GDAL, PROJ, and CLI settings stay consistent across shells, containers, and CI
-- [Loading .env Files in a Geospatial CLI](/cli-architecture-design-patterns/environment-variable-sync/loading-dotenv-files-in-a-geospatial-cli/) — layer operator-supplied overrides on top of the detected GDAL and PROJ defaults
+- [Environment Variable Sync for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/) — parent guide covering how GDAL, PROJ, and CLI settings stay consistent across shells, containers, and CI
+- [Loading .env Files in a Geospatial CLI](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/loading-dotenv-files-in-a-geospatial-cli/) — layer operator-supplied overrides on top of the detected GDAL and PROJ defaults

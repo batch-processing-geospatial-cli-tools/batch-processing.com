@@ -2,7 +2,7 @@
 title: "Reporting Batch Progress to Prometheus from Python"
 description: "Expose tiles-processed, failures, and throughput as Prometheus metrics from a long-running geospatial batch job so dashboards and alerts track progress live."
 slug: "reporting-batch-progress-to-prometheus-from-python"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -76,7 +76,7 @@ dateModified: "2026-07-10"
 
 # Reporting Batch Progress to Prometheus from Python
 
-Expose progress by defining `prometheus_client` metric objects in the parent process — a `Counter` for `tiles_processed_total` and `tiles_failed_total`, a `Gauge` for `tiles_remaining` and `throughput_tiles_per_second`, and a `Histogram` for `tile_duration_seconds` — then update them as `ProcessPoolExecutor` futures complete. For a long-running daemon call `start_http_server(8000)` so Prometheus scrapes it; for a short batch push to the Pushgateway on exit. This page is part of the [Progress Tracking for Python GIS Batch Pipelines](/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) guide within the wider [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) reference.
+Expose progress by defining `prometheus_client` metric objects in the parent process — a `Counter` for `tiles_processed_total` and `tiles_failed_total`, a `Gauge` for `tiles_remaining` and `throughput_tiles_per_second`, and a `Histogram` for `tile_duration_seconds` — then update them as `ProcessPoolExecutor` futures complete. For a long-running daemon call `start_http_server(8000)` so Prometheus scrapes it; for a short batch push to the Pushgateway on exit. This page is part of the [Progress Tracking for Python GIS Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) guide within the wider [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -85,7 +85,7 @@ Expose progress by defining `prometheus_client` metric objects in the parent pro
 - A raster job that already yields tiles or windows; rasterio 1.3+ if you use `Window` reads
 - A running Prometheus server only for end-to-end scraping — not required to emit or `curl` the metrics locally
 
-If you are new to why long batch runs need external observability rather than a progress bar, start with the [Progress Tracking for Python GIS Batch Pipelines](/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) overview. The parallelism model referenced here builds on [Multiprocessing Geospatial Tasks](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/).
+If you are new to why long batch runs need external observability rather than a progress bar, start with the [Progress Tracking for Python GIS Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) overview. The parallelism model referenced here builds on [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/).
 
 ## How Metrics Flow Out of a Multiprocess Batch
 
@@ -273,7 +273,7 @@ if __name__ == "__main__":
 
 5. **`Gauge.set()` for remaining and throughput** — a gauge holds an absolute point-in-time value, so `tiles_remaining` is set to `total - done` and `throughput_tiles_per_second` is set to the rolling `done / elapsed`. Counters, by contrast, only ever `inc()`.
 
-6. **Exit code `12` on partial failure** — reading `TILES_FAILED` back and exiting `12` follows the batch convention for partial failure, so a supervising scheduler can distinguish a clean run from one with dropped tiles. Feed the per-tile error strings into [structured JSON logging](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/) for the full failure record.
+6. **Exit code `12` on partial failure** — reading `TILES_FAILED` back and exiting `12` follows the batch convention for partial failure, so a supervising scheduler can distinguish a clean run from one with dropped tiles. Feed the per-tile error strings into [structured JSON logging](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/) for the full failure record.
 
 ## Named Gotcha: Updating Metrics Inside Worker Processes
 
@@ -341,5 +341,5 @@ A `Counter` only ever increases and is right for cumulative totals like `tiles_p
 
 ## Related
 
-- [Progress Tracking for Python GIS Batch Pipelines](/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) — parent guide covering progress bars, checkpoints, and observability for long batch runs
-- [Estimating ETA for Long-Running Raster Batch Jobs](/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/estimating-eta-for-long-running-raster-batch-jobs/) — turn the same throughput signal into a remaining-time estimate
+- [Progress Tracking for Python GIS Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) — parent guide covering progress bars, checkpoints, and observability for long batch runs
+- [Estimating ETA for Long-Running Raster Batch Jobs](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/estimating-eta-for-long-running-raster-batch-jobs/) — turn the same throughput signal into a remaining-time estimate

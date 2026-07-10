@@ -2,7 +2,7 @@
 title: "Click vs Typer for Geospatial Workflows"
 description: "Compare Click and Typer for building geospatial Python CLIs: type safety, CRS validation, batch processing patterns, and production deployment trade-offs."
 slug: "click-vs-typer-for-geospatial-workflows"
-type: "cluster"
+type: "topic"
 breadcrumb: "Click vs Typer"
 datePublished: "2024-03-15"
 dateModified: "2026-06-23"
@@ -74,11 +74,11 @@ dateModified: "2026-06-23"
 }
 </script>
 
-**TL;DR:** For greenfield geospatial tooling choose [Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) — its native type hints eliminate boilerplate CRS validation; for legacy code or intricate parameter interdependencies, Click's explicit callback chain gives finer control with no surprises.
+**TL;DR:** For greenfield geospatial tooling choose [Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — its native type hints eliminate boilerplate CRS validation; for legacy code or intricate parameter interdependencies, Click's explicit callback chain gives finer control with no surprises.
 
 ## Prerequisites
 
-This page is part of the [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) guide.
+This page is part of the [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
 
 - Python 3.10 or later (required for `match` statements and `typing.Annotated`)
 - `click>=8.1` or `typer>=0.12` (Typer 0.12 targets Click 8.1 internally)
@@ -176,7 +176,7 @@ The foundational difference is where parameter resolution and type coercion live
 | Migration path | Native — Click is stable | Incremental: `typer.main.get_command(app)` exposes a Click group |
 | Learning curve | Steeper; explicit every step | Shallower; Pythonic defaults |
 
-For teams comparing options, the [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) page covers type-driven annotation patterns in depth, while Click's strengths become clearer in the [CLI Subcommand Organization](/cli-architecture-design-patterns/cli-subcommand-organization/) discussion.
+For teams comparing options, the [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) page covers type-driven annotation patterns in depth, while Click's strengths become clearer in the [CLI Subcommand Organization](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) discussion.
 
 ## Step-by-Step Implementation
 
@@ -201,7 +201,7 @@ except ImportError as exc:
     )
 ```
 
-See [Handling missing dependencies gracefully in Click apps](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/handling-missing-dependencies-gracefully-in-click-apps/) for an extended pattern that intercepts `OSError` raised during GDAL driver initialisation and wraps it in a structured diagnostic message.
+See [Handling missing dependencies gracefully in Click apps](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/handling-missing-dependencies-gracefully-in-click-apps/) for an extended pattern that intercepts `OSError` raised during GDAL driver initialisation and wraps it in a structured diagnostic message.
 
 ### Step 2 — Define Command Groups by Data Type
 
@@ -224,7 +224,7 @@ app.add_typer(vector_app, name="vector", help="Vector file operations (GeoJSON, 
 app.add_typer(raster_app, name="raster", help="Raster file operations (GeoTIFF, COG, NetCDF).")
 ```
 
-For a deep dive into structuring complex command hierarchies, consult [CLI Subcommand Organization](/cli-architecture-design-patterns/cli-subcommand-organization/), which covers shared context, command aliases, and lazy-load patterns.
+For a deep dive into structuring complex command hierarchies, consult [CLI Subcommand Organization](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/), which covers shared context, command aliases, and lazy-load patterns.
 
 ### Step 3 — Validate CRS Inputs at the CLI Boundary
 
@@ -360,7 +360,7 @@ def reproject_vectors(
 
 ### Step 5 — Wire in Layered Configuration
 
-Hard-coding `--epsg 4326` in every invocation is fragile. Apply the config cascade pattern documented in [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/): defaults in code → YAML file → environment variable → CLI flag. The environment-variable layer is covered in [Environment Variable Sync](/cli-architecture-design-patterns/environment-variable-sync/).
+Hard-coding `--epsg 4326` in every invocation is fragile. Apply the config cascade pattern documented in [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/): defaults in code → YAML file → environment variable → CLI flag. The environment-variable layer is covered in [Environment Variable Sync](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/).
 
 ```python
 # geo_cli/config.py
@@ -413,7 +413,7 @@ def reproject_vectors(
     ...
 ```
 
-For YAML-based configuration management patterns including schema validation with `pydantic`, see [Managing YAML configs for geospatial CLI workflows](/cli-architecture-design-patterns/configuration-file-management/managing-yaml-configs-for-geospatial-cli-workflows/).
+For YAML-based configuration management patterns including schema validation with `pydantic`, see [Managing YAML configs for geospatial CLI workflows](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/managing-yaml-configs-for-geospatial-cli-workflows/).
 
 ## Error Handling and Gotchas
 
@@ -486,7 +486,7 @@ Expected: exit code `0` and `CRS verified: EPSG:32633`. A non-zero exit code com
 
 **Memory footprint.** `gpd.read_file()` loads the entire layer into RAM. For files larger than ~500 MB, read in chunks with `pyogrio.read_dataframe(path, max_features=50_000, skip_features=offset)` and process each chunk independently.
 
-**I/O bottleneck on network storage.** When `input_dir` is an NFS mount or S3-backed filesystem (via `s3fs`), GPKG reads are limited by round-trip latency. Pre-stage files to a local temporary directory and process from there. The [Async I/O for raster processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) pattern applies directly to this scenario.
+**I/O bottleneck on network storage.** When `input_dir` is an NFS mount or S3-backed filesystem (via `s3fs`), GPKG reads are limited by round-trip latency. Pre-stage files to a local temporary directory and process from there. The [Async I/O for raster processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) pattern applies directly to this scenario.
 
 ## FAQ
 
@@ -521,7 +521,7 @@ Typer ships `typer.testing.CliRunner` (a thin wrapper around Click's test runner
 <details class="faq-item">
 <summary>How do I add shell auto-completion for EPSG codes?</summary>
 
-For Typer, implement a completion callback that queries `pyproj.get_codes("EPSG", pyproj.enums.PJType.PROJECTED_CRS)` and returns matching strings. Wire it to `typer.Option(autocompletion=epsg_completer)`. Run `geocli --install-completion` to register the generated completion script. The [Adding auto-completion to Python spatial CLI tools](/cli-architecture-design-patterns/argument-parsing-with-typer/adding-auto-completion-to-python-spatial-cli-tools/) page provides a full implementation including fuzzy EPSG name matching.
+For Typer, implement a completion callback that queries `pyproj.get_codes("EPSG", pyproj.enums.PJType.PROJECTED_CRS)` and returns matching strings. Wire it to `typer.Option(autocompletion=epsg_completer)`. Run `geocli --install-completion` to register the generated completion script. The [Adding auto-completion to Python spatial CLI tools](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/adding-auto-completion-to-python-spatial-cli-tools/) page provides a full implementation including fuzzy EPSG name matching.
 
 </details>
 
@@ -529,7 +529,7 @@ For Typer, implement a completion callback that queries `pyproj.get_codes("EPSG"
 
 ## Related
 
-- [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) — type-driven parameter definitions, subcommand routing, and shared context injection for geospatial CLIs
-- [Handling missing dependencies gracefully in Click apps](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/handling-missing-dependencies-gracefully-in-click-apps/) — structured diagnostics for GDAL `OSError` and `ImportError` at startup
-- [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/) — layered YAML config with environment-variable overrides for spatial defaults
-- [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) — parent guide covering the full design space of production Python GIS tooling
+- [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — type-driven parameter definitions, subcommand routing, and shared context injection for geospatial CLIs
+- [Handling missing dependencies gracefully in Click apps](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/handling-missing-dependencies-gracefully-in-click-apps/) — structured diagnostics for GDAL `OSError` and `ImportError` at startup
+- [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) — layered YAML config with environment-variable overrides for spatial defaults
+- [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) — parent guide covering the full design space of production Python GIS tooling

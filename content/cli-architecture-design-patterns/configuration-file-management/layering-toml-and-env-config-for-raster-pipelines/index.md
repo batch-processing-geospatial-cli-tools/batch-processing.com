@@ -2,7 +2,7 @@
 title: "Layering TOML and Env Config for Raster Pipelines"
 description: "Resolve raster pipeline settings across defaults, a TOML file, environment variables, and CLI flags with a deterministic, testable precedence chain."
 slug: "layering-toml-and-env-config-for-raster-pipelines"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # Layering TOML and Env Config for Raster Pipelines
 
-To layer configuration for a raster CLI, resolve settings in a fixed order: built-in defaults, then a `[tool.mytool]` TOML table read with `tomllib`, then `MYTOOL_`-prefixed environment variables, then explicit command-line flags. Each layer overwrites only the keys it actually supplies, and the last writer wins per field. This page is part of the [Configuration File Management for GIS CLI Tools](/cli-architecture-design-patterns/configuration-file-management/) guide within the broader CLI Architecture & Design Patterns reference.
+To layer configuration for a raster CLI, resolve settings in a fixed order: built-in defaults, then a `[tool.mytool]` TOML table read with `tomllib`, then `MYTOOL_`-prefixed environment variables, then explicit command-line flags. Each layer overwrites only the keys it actually supplies, and the last writer wins per field. This page is part of the [Configuration File Management for GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) guide within the broader CLI Architecture & Design Patterns reference.
 
 The hard part is not reading a file. It is making precedence deterministic and testable so a `target_epsg` set in a deployment env var never gets silently reset by a stale default, and so a single `--max-workers` flag on the command line always wins.
 
@@ -87,7 +87,7 @@ The hard part is not reading a file. It is making precedence deterministic and t
 - No third-party parser needed for reading; `tomllib` is read-only by design
 - GDAL / rasterio only matters at run time — the loader here is pure standard library, which keeps it trivial to unit-test without a raster fixture
 
-For the wider file-versus-flag trade-offs, start with the [Configuration File Management for GIS CLI Tools](/cli-architecture-design-patterns/configuration-file-management/) overview. This page focuses narrowly on the TOML-plus-env precedence chain rather than file format choice.
+For the wider file-versus-flag trade-offs, start with the [Configuration File Management for GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) overview. This page focuses narrowly on the TOML-plus-env precedence chain rather than file format choice.
 
 ## The Precedence Chain
 
@@ -279,9 +279,9 @@ output_dir = "./reprojected"
 
 3. **`_load_toml` opens in binary mode** — `tomllib.load` requires a file opened with `"rb"`; passing a text handle raises `TypeError`. Walking the `("tool", "mytool")` path with `.get(..., {})` means a missing file or missing table yields an empty dict rather than an exception, so the layer simply contributes nothing.
 
-4. **`_load_env` strips the prefix and lowercases** — `MYTOOL_MAX_WORKERS` becomes `max_workers`, aligning with the dataclass field name. Namespacing with `MYTOOL_` avoids collisions with unrelated environment variables such as `GDAL_NUM_THREADS`, a point covered in depth by [Environment Variable Sync](/cli-architecture-design-patterns/environment-variable-sync/).
+4. **`_load_env` strips the prefix and lowercases** — `MYTOOL_MAX_WORKERS` becomes `max_workers`, aligning with the dataclass field name. Namespacing with `MYTOOL_` avoids collisions with unrelated environment variables such as `GDAL_NUM_THREADS`, a point covered in depth by [Environment Variable Sync](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/).
 
-5. **CLI flags default to `None`** — The merge applies a flag only when its value is not `None`. This is what makes an *omitted* `--max-workers` leave the TOML value intact instead of resetting it. Coupling the parser with a typed config layer is exactly the boundary [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) is built to enforce; here plain `argparse` mirrors the same discipline.
+5. **CLI flags default to `None`** — The merge applies a flag only when its value is not `None`. This is what makes an *omitted* `--max-workers` leave the TOML value intact instead of resetting it. Coupling the parser with a typed config layer is exactly the boundary [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) is built to enforce; here plain `argparse` mirrors the same discipline.
 
 6. **The provenance map** — Each layer updates `provenance[name]` as it overwrites a field. Printing field, value, and source together turns "why is my output CRS wrong?" into a one-line answer.
 
@@ -360,5 +360,5 @@ Track provenance while you merge. Record the source name alongside each field as
 
 ## Related
 
-- [Configuration File Management for GIS CLI Tools](/cli-architecture-design-patterns/configuration-file-management/) — parent guide covering file formats, precedence, and reload strategies for geospatial CLI tools
-- [Managing YAML Configs for Geospatial CLI Workflows](/cli-architecture-design-patterns/configuration-file-management/managing-yaml-configs-for-geospatial-cli-workflows/) — the YAML counterpart when your pipeline needs anchors, comments, or nested profiles instead of TOML
+- [Configuration File Management for GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) — parent guide covering file formats, precedence, and reload strategies for geospatial CLI tools
+- [Managing YAML Configs for Geospatial CLI Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/managing-yaml-configs-for-geospatial-cli-workflows/) — the YAML counterpart when your pipeline needs anchors, comments, or nested profiles instead of TOML

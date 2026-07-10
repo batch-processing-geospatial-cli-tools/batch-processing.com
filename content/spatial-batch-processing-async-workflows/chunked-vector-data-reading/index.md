@@ -2,7 +2,7 @@
 title: "Chunked Vector Data Reading for Spatial Pipelines"
 description: "Stream multi-gigabyte shapefiles and GeoJSON without OOM errors using pyogrio offset/limit reads, memory-aware chunk sizing, and incremental columnar output."
 slug: "chunked-vector-data-reading"
-type: "cluster"
+type: "topic"
 breadcrumb: "Spatial Batch Processing > Chunked Vector Data Reading"
 datePublished: "2024-03-15"
 dateModified: "2026-06-23"
@@ -76,7 +76,7 @@ dateModified: "2026-06-23"
 
 Stream multi-gigabyte vector datasets into a predictable memory footprint using `pyogrio` offset/limit cursor reads, memory-aware chunk sizing, and incremental GeoParquet output — without ever materializing the full `GeoDataFrame`.
 
-This page is part of the [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) guide.
+This page is part of the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) guide.
 
 ## Prerequisites
 
@@ -285,7 +285,7 @@ def clear_checkpoint() -> None:
 
 ## Configuration Integration
 
-Chunked ingestion plugs directly into a layered config stack. Defaults live in code, a YAML config overrides them, environment variables override the YAML, and CLI flags take final precedence. This mirrors the pattern described in [Configuration File Management for Geospatial CLI Workflows](/cli-architecture-design-patterns/configuration-file-management/).
+Chunked ingestion plugs directly into a layered config stack. Defaults live in code, a YAML config overrides them, environment variables override the YAML, and CLI flags take final precedence. This mirrors the pattern described in [Configuration File Management for Geospatial CLI Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/).
 
 ```python
 import os
@@ -312,7 +312,7 @@ def load_config(config_path: Path | None) -> dict:
     return cfg
 ```
 
-The CLI flag layer (implemented with [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/)) then overrides any value from the YAML/env layer when the user explicitly provides it.
+The CLI flag layer (implemented with [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/)) then overrides any value from the YAML/env layer when the user explicitly provides it.
 
 ## Data-Flow Diagram
 
@@ -641,11 +641,11 @@ test ! -f output/.buildings_state.json && echo "Checkpoint cleaned up — OK"
 
 The `use_arrow=True` flag accounts for the 30–50% RSS reduction in the polygon and multipolygon rows above. Enabling it is essentially free — there is no throughput penalty on pyogrio 0.7+.
 
-For CPU-bound downstream work (spatial joins, coordinate reprojection, geometry simplification), decouple ingestion from compute: the ingestion loop writes raw chunks to a queue directory, and a pool of worker processes consumes them independently. This pattern is detailed in [Multiprocessing Geospatial Tasks](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/).
+For CPU-bound downstream work (spatial joins, coordinate reprojection, geometry simplification), decouple ingestion from compute: the ingestion loop writes raw chunks to a queue directory, and a pool of worker processes consumes them independently. This pattern is detailed in [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/).
 
-For raster counterparts — where the cursor concept maps to window-based tile reads rather than row offsets — see [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/). The [Memory Management for Large Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) page covers cross-format strategies for keeping RSS bounded across both vector and raster pipelines.
+For raster counterparts — where the cursor concept maps to window-based tile reads rather than row offsets — see [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/). The [Memory Management for Large Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) page covers cross-format strategies for keeping RSS bounded across both vector and raster pipelines.
 
-If the ingestion job fails mid-run, the error handling strategies in [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) cover retry semantics, structured failure logging, and partial-result recovery.
+If the ingestion job fails mid-run, the error handling strategies in [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) cover retry semantics, structured failure logging, and partial-result recovery.
 
 ## FAQ
 
@@ -673,7 +673,7 @@ Arrow caches memory pool allocations internally. After `del chunk`, call `pyarro
 <details class="faq-item">
 <summary>What POSIX exit codes should a chunked ingestion CLI return?</summary>
 
-Follow the convention established in the [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) guide: `0` for success, `1` for runtime error (schema drift, write failure, CRS mismatch), `2` for bad arguments (missing path, invalid chunk size), `3` for partial completion (checkpoint exists but run did not finish cleanly).
+Follow the convention established in the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) guide: `0` for success, `1` for runtime error (schema drift, write failure, CRS mismatch), `2` for bad arguments (missing path, invalid chunk size), `3` for partial completion (checkpoint exists but run did not finish cleanly).
 
 </details>
 
@@ -686,7 +686,7 @@ Prefix the path with `/vsis3/bucket/key` and set `AWS_NO_SIGN_REQUEST=YES` for p
 
 ## Related
 
-- [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) — parent guide covering the full pipeline from ingestion to output
-- [Memory Management for Large Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) — RSS budgeting, swap avoidance, and cross-format memory strategies
-- [Multiprocessing Geospatial Tasks](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) — offloading CPU-bound spatial joins and reprojections to worker pools
-- [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — retry logic, structured failure logs, and partial-result recovery
+- [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) — parent guide covering the full pipeline from ingestion to output
+- [Memory Management for Large Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) — RSS budgeting, swap avoidance, and cross-format memory strategies
+- [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) — offloading CPU-bound spatial joins and reprojections to worker pools
+- [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — retry logic, structured failure logs, and partial-result recovery

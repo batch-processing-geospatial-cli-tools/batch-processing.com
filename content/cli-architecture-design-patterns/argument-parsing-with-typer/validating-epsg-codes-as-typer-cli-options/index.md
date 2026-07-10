@@ -2,7 +2,7 @@
 title: "Validating EPSG Codes as Typer CLI Options"
 description: "Add a Typer callback that rejects invalid EPSG codes at the CLI boundary with pyproj, returning exit code 2 before any raster or vector I/O begins."
 slug: "validating-epsg-codes-as-typer-cli-options"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # Validating EPSG Codes as Typer CLI Options
 
-To reject a bad EPSG code before any file is touched, attach a `callback=` to your Typer `--crs` option that normalises the value and resolves it through `pyproj.CRS.from_epsg`; on any failure raise `typer.BadParameter`, which prints a usage message and exits with code `2`. Because a callback runs before the command body, invalid input never reaches a `gdal.Open` or `pyogrio.read_dataframe` call. This page is part of the [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) guide within the broader [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) reference.
+To reject a bad EPSG code before any file is touched, attach a `callback=` to your Typer `--crs` option that normalises the value and resolves it through `pyproj.CRS.from_epsg`; on any failure raise `typer.BadParameter`, which prints a usage message and exits with code `2`. Because a callback runs before the command body, invalid input never reaches a `gdal.Open` or `pyogrio.read_dataframe` call. This page is part of the [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) guide within the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
@@ -85,7 +85,7 @@ To reject a bad EPSG code before any file is touched, attach a `callback=` to yo
 - `pip install "typer>=0.12" "pyproj>=3.6"`
 - pyproj ships its own bundled PROJ database, so no system GDAL is required for validation itself; the downstream I/O in your command may still need GDAL 3.4+
 
-A CRS value is the most error-prone argument a geospatial command accepts, because a typo like `EPSG:4362` is a perfectly valid string that silently designates the wrong planet-scale projection. Enforcing it at the boundary keeps the rest of your pipeline honest. For how options and callbacks fit together, and where CRS validation sits relative to config-file defaults, see [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/).
+A CRS value is the most error-prone argument a geospatial command accepts, because a typo like `EPSG:4362` is a perfectly valid string that silently designates the wrong planet-scale projection. Enforcing it at the boundary keeps the rest of your pipeline honest. For how options and callbacks fit together, and where CRS validation sits relative to config-file defaults, see [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/).
 
 ## Where Validation Runs in the Call Order
 
@@ -314,5 +314,5 @@ Validate in the callback. A callback runs before the command body, so a bad EPSG
 
 ## Related
 
-- [Argument Parsing with Typer for Python GIS CLIs](/cli-architecture-design-patterns/argument-parsing-with-typer/) — parent guide covering options, arguments, and callback-based validation at the CLI boundary
-- [How to Build a Typer CLI for Shapefile Conversion](/cli-architecture-design-patterns/argument-parsing-with-typer/how-to-build-a-typer-cli-for-shapefile-conversion/) — a full Typer command that consumes a validated CRS to convert and reproject vector data
+- [Argument Parsing with Typer for Python GIS CLIs](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — parent guide covering options, arguments, and callback-based validation at the CLI boundary
+- [How to Build a Typer CLI for Shapefile Conversion](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/how-to-build-a-typer-cli-for-shapefile-conversion/) — a full Typer command that consumes a validated CRS to convert and reproject vector data

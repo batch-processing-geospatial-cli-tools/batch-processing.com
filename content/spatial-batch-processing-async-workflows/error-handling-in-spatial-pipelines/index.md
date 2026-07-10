@@ -2,7 +2,7 @@
 title: "Error Handling in Spatial Pipelines"
 description: "Isolate CRS mismatches, GDAL driver failures, and geometry corruption in Python GIS batch jobs — production patterns with structured telemetry and graceful shutdown."
 slug: "error-handling-in-spatial-pipelines"
-type: "cluster"
+type: "topic"
 breadcrumb: "Error Handling in Spatial Pipelines"
 datePublished: "2024-03-15"
 dateModified: "2026-06-23"
@@ -92,13 +92,13 @@ dateModified: "2026-06-23"
 
 ## Prerequisites
 
-This page is part of the [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) guide. Before continuing, you should have:
+This page is part of the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) guide. Before continuing, you should have:
 
 - Python 3.10+ (`asyncio`, `concurrent.futures`, `logging`, `signal` from the standard library)
 - `rasterio`, `geopandas`, `shapely`, and `pyogrio` installed; GDAL ≥ 3.4 on the `PATH`
 - `click` or `typer` for CLI wiring; `tenacity` for retry logic
 - `GDAL_DATA` and `PROJ_LIB` pointing at valid data directories
-- A working mental model of the event loop from [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — the cancellation and retry patterns below build on those foundations
+- A working mental model of the event loop from [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — the cancellation and retry patterns below build on those foundations
 
 ```bash
 pip install rasterio geopandas shapely pyogrio click tenacity
@@ -364,7 +364,7 @@ def run_batch(
     return results
 ```
 
-For CPU-bound raster operations the `ProcessPoolExecutor` pattern aligns with the patterns described in [Multiprocessing Geospatial Tasks](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/), where GDAL context isolation is equally critical for avoiding silent corruption across workers.
+For CPU-bound raster operations the `ProcessPoolExecutor` pattern aligns with the patterns described in [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/), where GDAL context isolation is equally critical for avoiding silent corruption across workers.
 
 ### Step 3 — Retry Envelope for Transient I/O
 
@@ -444,7 +444,7 @@ def with_retry(
 
 ### Step 4 — Structured Telemetry with Spatial Context
 
-Traditional log lines are adequate for interactive debugging but collapse under the weight of a 20,000-file batch. [Logging spatial transformation results to structured JSON](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/) describes the full schema, but the minimum viable record must include the source extent, source and destination EPSG codes, processing duration, and a machine-readable status tag.
+Traditional log lines are adequate for interactive debugging but collapse under the weight of a 20,000-file batch. [Logging spatial transformation results to structured JSON](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/) describes the full schema, but the minimum viable record must include the source extent, source and destination EPSG codes, processing duration, and a machine-readable status tag.
 
 ```python
 import json
@@ -589,7 +589,7 @@ if __name__ == "__main__":
 
 ## Configuration Integration
 
-The pipeline respects the layered config precedence described in [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/): defaults baked into `click.option`, overridden by a YAML config file (via `--config`), then by environment variables, then by explicit flags.
+The pipeline respects the layered config precedence described in [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/): defaults baked into `click.option`, overridden by a YAML config file (via `--config`), then by environment variables, then by explicit flags.
 
 Critical GDAL/PROJ options that should live in the environment layer, not hardcoded:
 
@@ -630,7 +630,7 @@ async def reproject_async(src_path: Path, out_dir: Path, epsg: int) -> dict:
 ```
 
 **Chunked vector reading and partial failures**  
-When iterating large vector datasets with [Chunked Vector Data Reading](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/), a corrupted record mid-chunk will raise before the remaining valid records are written. Use `pyogrio.read_dataframe(path, skip_features=[bad_idx])` to skip known-bad feature indices on retry rather than abandoning the entire chunk.
+When iterating large vector datasets with [Chunked Vector Data Reading](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/), a corrupted record mid-chunk will raise before the remaining valid records are written. Use `pyogrio.read_dataframe(path, skip_features=[bad_idx])` to skip known-bad feature indices on retry rather than abandoning the entire chunk.
 
 ## Verification
 
@@ -658,7 +658,7 @@ find output/ -name "*.tmp" -print
 
 Exit code from step 1 is `0` (all succeeded) or `1` (at least one failure), matching the POSIX conventions set by the CLI entry point.
 
-For [progress tracking across long-running batches](/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/), the manifest file doubles as a live checkpoint: re-reads can skip any file whose `status` is already `"success"`, enabling resume-from-failure without reprocessing completed work.
+For [progress tracking across long-running batches](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/), the manifest file doubles as a live checkpoint: re-reads can skip any file whose `status` is already `"success"`, enabling resume-from-failure without reprocessing completed work.
 
 ## Performance Notes
 
@@ -667,7 +667,7 @@ For [progress tracking across long-running batches](/spatial-batch-processing-as
 - **COG range requests and retry amplification:** each retry on a COG issues a new HTTP range request, which can trigger CDN rate limiting. Set `GDAL_HTTP_MAX_RETRY=0` and handle retries in the Python layer only — otherwise GDAL and your retry decorator both retry independently.
 - **Structured JSON telemetry I/O overhead:** flushing a `JsonLineHandler` on every record adds minimal overhead (< 1 ms per record) but can become significant at > 10,000 records/second. Buffer records in memory and flush every 500 records if I/O throughput is a bottleneck.
 
-For deeper guidance on staying within Python's memory budget across large raster mosaics, see [Memory Management for Large Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/).
+For deeper guidance on staying within Python's memory budget across large raster mosaics, see [Memory Management for Large Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/).
 
 ## FAQ
 
@@ -708,7 +708,7 @@ Yes. Use `tenacity.AsyncRetrying` as a context manager inside your coroutine, or
 
 ## Related
 
-- [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) — parent guide covering async I/O, multiprocessing, and memory management for Python GIS batch jobs
-- [Logging Spatial Transformation Results to Structured JSON](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/) — extend the telemetry patterns here with a full JSON schema and Elasticsearch ingestion pipeline
-- [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — overlap network latency with CPU decompression while keeping the retry logic bounded
-- [Chunked Vector Data Reading](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — apply the same partial-failure isolation patterns to large vector datasets using pyogrio batch reads
+- [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) — parent guide covering async I/O, multiprocessing, and memory management for Python GIS batch jobs
+- [Logging Spatial Transformation Results to Structured JSON](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/) — extend the telemetry patterns here with a full JSON schema and Elasticsearch ingestion pipeline
+- [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — overlap network latency with CPU decompression while keeping the retry logic bounded
+- [Chunked Vector Data Reading](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — apply the same partial-failure isolation patterns to large vector datasets using pyogrio batch reads

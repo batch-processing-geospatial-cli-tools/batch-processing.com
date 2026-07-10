@@ -2,7 +2,7 @@
 title: "CLI Architecture & Design Patterns for Python GIS"
 description: "CLI architecture patterns for Python GIS developers: layered separation, subcommand routing, chunked raster I/O, and idempotent batch processing."
 slug: "cli-architecture-design-patterns"
-type: "pillar"
+type: "guide"
 breadcrumb: "CLI Architecture & Design Patterns"
 datePublished: "2024-01-15"
 dateModified: "2026-06-23"
@@ -298,7 +298,7 @@ The pipeline below shows how the interface, orchestration, and engine layers int
 
 ## Command Routing & Subcommand Organisation
 
-As geospatial toolkits grow, flat command structures become unmanageable. Grouping related operations into logical subcommands through [CLI Subcommand Organization](/cli-architecture-design-patterns/cli-subcommand-organization/) improves discoverability, reduces namespace collisions, and enables modular testing. A typical GIS CLI organises commands around data lifecycle stages: ingestion, transformation, analysis, and export.
+As geospatial toolkits grow, flat command structures become unmanageable. Grouping related operations into logical subcommands through [CLI Subcommand Organization](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) improves discoverability, reduces namespace collisions, and enables modular testing. A typical GIS CLI organises commands around data lifecycle stages: ingestion, transformation, analysis, and export.
 
 ```python
 # cli/app.py — hierarchical command tree with lazy imports
@@ -325,7 +325,7 @@ def vector_buffer(src: str, distance: float) -> None:
 
 Effective routing relies on a hierarchical command tree. Top-level commands act as namespaces while leaf commands execute specific operations. `geo raster clip` and `geo vector buffer` share a parent but execute entirely different domain logic. This structure allows lazy-loading of heavy dependencies — GDAL bindings, machine learning libraries — only when their respective subcommands are invoked, keeping startup time under 200 ms even in complex toolchains.
 
-When evaluating routing frameworks, the trade-offs between decorator-based routing and type-hinted command definitions matter at scale. [Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) provides a comparative analysis of both paradigms; the choice typically hinges on whether your team prioritises explicit configuration (Click) or developer velocity through type inference (Typer). For the type-driven approach, [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) demonstrates how type hints replace verbose manual validation blocks and automatically enable shell completion.
+When evaluating routing frameworks, the trade-offs between decorator-based routing and type-hinted command definitions matter at scale. [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) provides a comparative analysis of both paradigms; the choice typically hinges on whether your team prioritises explicit configuration (Click) or developer velocity through type inference (Typer). For the type-driven approach, [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) demonstrates how type hints replace verbose manual validation blocks and automatically enable shell completion.
 
 ## Configuration & State Management
 
@@ -374,7 +374,7 @@ def load_config(config_path: Path | None = None) -> AppConfig:
     return AppConfig(**data)
 ```
 
-Configuration files should be versioned, schema-validated, and environment-agnostic. YAML works well for nested structures like processing windows, CRS overrides, or batch scheduling parameters. For a deeper treatment of YAML schema design and fallback chains, see [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/). Environment variables handle secrets, API endpoints, and runtime toggles (`GDAL_CACHEMAX`, `DEBUG`); secure precedence chains that keep these distinct from file-based config are covered in [Environment Variable Sync](/cli-architecture-design-patterns/environment-variable-sync/).
+Configuration files should be versioned, schema-validated, and environment-agnostic. YAML works well for nested structures like processing windows, CRS overrides, or batch scheduling parameters. For a deeper treatment of YAML schema design and fallback chains, see [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/). Environment variables handle secrets, API endpoints, and runtime toggles (`GDAL_CACHEMAX`, `DEBUG`); secure precedence chains that keep these distinct from file-based config are covered in [Environment Variable Sync](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/).
 
 State management extends beyond configuration. Geospatial batch jobs generate intermediate files, lock records, and processing checkpoints. Write outputs atomically using `os.replace()` on a same-directory temporary path to prevent partial outputs from being consumed by downstream steps. Track job state in a lightweight SQLite or JSON manifest to enable deterministic resume after node failure.
 
@@ -432,7 +432,7 @@ def exit_with_crs_mismatch(src_epsg: int, expected_epsg: int) -> None:
     sys.exit(10)  # domain-specific exit code; triggers correct CI/CD branch
 ```
 
-Progress reporting requires careful design. For long-running batch jobs, users need visibility into throughput, estimated completion, and current operation. [Rich Console Output & Progress Bars](/cli-architecture-design-patterns/rich-console-output-progress-bars/) covers terminal UI patterns that render dynamic progress bars and status tables without cluttering `stdout`. Always detect TTY presence before rendering ANSI escape codes — log aggregators, CI runners, and piped consumers will receive corrupted output otherwise.
+Progress reporting requires careful design. For long-running batch jobs, users need visibility into throughput, estimated completion, and current operation. [Rich Console Output & Progress Bars](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/) covers terminal UI patterns that render dynamic progress bars and status tables without cluttering `stdout`. Always detect TTY presence before rendering ANSI escape codes — log aggregators, CI runners, and piped consumers will receive corrupted output otherwise.
 
 ## Testing Strategy
 
@@ -513,25 +513,25 @@ Key testing principles for this toolchain:
 - **CRS validation assertions.** Assert that transformations preserve topology and that mismatched projections raise explicit, actionable errors rather than silently producing shifted output.
 - **Idempotency checks.** Run the same command twice and assert that outputs are byte-identical (or that checksums match). Any second run that changes output indicates state leakage.
 
-In CI/CD pipelines, pin Python versions, lock dependency hashes, and cache downloaded spatial datasets. The full discipline of reproducible builds, containerised GDAL, and version-matrix testing is covered in [Packaging & CI/CD for Python GIS CLI Tools](/cli-architecture-design-patterns/packaging-and-cicd/): use matrix testing across operating systems and GDAL releases to catch platform-specific binding issues early, containerise your CLI with minimal base images — `python:slim` plus pre-compiled GDAL wheels — and verify startup time, memory footprint, and `--help` output as smoke tests on every build.
+In CI/CD pipelines, pin Python versions, lock dependency hashes, and cache downloaded spatial datasets. The full discipline of reproducible builds, containerised GDAL, and version-matrix testing is covered in [Packaging & CI/CD for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/): use matrix testing across operating systems and GDAL releases to catch platform-specific binding issues early, containerise your CLI with minimal base images — `python:slim` plus pre-compiled GDAL wheels — and verify startup time, memory footprint, and `--help` output as smoke tests on every build.
 
-## Topic Guide: Clusters Under This Section
+## Topics in This Guide
 
 This section organises seven focused topic areas. Each addresses a distinct architectural challenge in production GIS tooling:
 
-**[Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/)** compares the two dominant Python CLI frameworks across routing paradigms, plugin architecture, testing ergonomics, and completion generation — grounded in spatial toolchain requirements rather than toy examples.
+**[Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/)** compares the two dominant Python CLI frameworks across routing paradigms, plugin architecture, testing ergonomics, and completion generation — grounded in spatial toolchain requirements rather than toy examples.
 
-**[Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/)** demonstrates how Python type annotations replace verbose manual validation blocks, automatically infer argument types for `Path`, EPSG strings, and numeric ranges, and generate shell completion scripts for Bash and Zsh.
+**[Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/)** demonstrates how Python type annotations replace verbose manual validation blocks, automatically infer argument types for `Path`, EPSG strings, and numeric ranges, and generate shell completion scripts for Bash and Zsh.
 
-**[CLI Subcommand Organization](/cli-architecture-design-patterns/cli-subcommand-organization/)** covers hierarchical command trees, lazy dependency loading, namespace isolation, and patterns for grouping operations by data lifecycle stage in spatial toolkits that span dozens of commands.
+**[CLI Subcommand Organization](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/)** covers hierarchical command trees, lazy dependency loading, namespace isolation, and patterns for grouping operations by data lifecycle stage in spatial toolkits that span dozens of commands.
 
-**[Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/)** covers YAML/TOML schema validation, Pydantic-based config models, fallback chains, and secure credential injection — the patterns that make a CLI behave consistently across local development, staging, and production.
+**[Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/)** covers YAML/TOML schema validation, Pydantic-based config models, fallback chains, and secure credential injection — the patterns that make a CLI behave consistently across local development, staging, and production.
 
-**[Environment Variable Sync](/cli-architecture-design-patterns/environment-variable-sync/)** explains how to synchronise explicit config files with runtime environment overrides, manage `GDAL_CACHEMAX` and other GDAL environment hooks, and prevent brittle deployments in containerised or serverless runtimes.
+**[Environment Variable Sync](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/)** explains how to synchronise explicit config files with runtime environment overrides, manage `GDAL_CACHEMAX` and other GDAL environment hooks, and prevent brittle deployments in containerised or serverless runtimes.
 
-**[Rich Console Output & Progress Bars](/cli-architecture-design-patterns/rich-console-output-progress-bars/)** covers terminal UI patterns for batch jobs: dynamic progress bars, multi-column status tables, spinner animations, and TTY detection that strips ANSI codes cleanly in non-interactive environments.
+**[Rich Console Output & Progress Bars](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/)** covers terminal UI patterns for batch jobs: dynamic progress bars, multi-column status tables, spinner animations, and TTY detection that strips ANSI codes cleanly in non-interactive environments.
 
-**[Packaging & CI/CD for Python GIS CLI Tools](/cli-architecture-design-patterns/packaging-and-cicd/)** covers the last mile: declaring console-script entry points, pinning the fragile GDAL stack, shipping reproducible multi-stage Docker images, and matrix-testing across GDAL and Python versions so the tool installs and runs identically everywhere.
+**[Packaging & CI/CD for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/)** covers the last mile: declaring console-script entry points, pinning the fragile GDAL stack, shipping reproducible multi-stage Docker images, and matrix-testing across GDAL and Python versions so the tool installs and runs identically everywhere.
 
 ## Conclusion
 
@@ -542,7 +542,7 @@ Building resilient geospatial command-line tools requires deliberate architectur
 <details class="faq-item">
 <summary><strong>Should I use Click or Typer for a new GIS CLI project?</strong></summary>
 
-Choose Typer when your team uses Python 3.9+ type hints throughout and wants automatic argument inference and shell completion without extra decorator boilerplate. Choose Click when you need fine-grained control over decorators, a mature plugin ecosystem, or compatibility with frameworks that already depend on Click. Both frameworks produce structurally identical CLIs; the decision is typically about team ergonomics and existing dependencies. See [Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) for a side-by-side comparison grounded in spatial toolchain requirements.
+Choose Typer when your team uses Python 3.9+ type hints throughout and wants automatic argument inference and shell completion without extra decorator boilerplate. Choose Click when you need fine-grained control over decorators, a mature plugin ecosystem, or compatibility with frameworks that already depend on Click. Both frameworks produce structurally identical CLIs; the decision is typically about team ergonomics and existing dependencies. See [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) for a side-by-side comparison grounded in spatial toolchain requirements.
 </details>
 
 <details class="faq-item">
@@ -567,7 +567,7 @@ Write outputs to a temporary path (same directory as the destination to ensure a
 
 ## Related
 
-- [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) — async I/O patterns, multiprocessing strategies, and memory management for large-scale raster and vector pipelines
-- [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) — type-driven command definitions and auto-completion for geospatial CLIs
-- [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/) — YAML schema validation, Pydantic config models, and layered precedence chains
-- [Rich Console Output & Progress Bars](/cli-architecture-design-patterns/rich-console-output-progress-bars/) — terminal UI patterns for long-running batch jobs
+- [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) — async I/O patterns, multiprocessing strategies, and memory management for large-scale raster and vector pipelines
+- [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — type-driven command definitions and auto-completion for geospatial CLIs
+- [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) — YAML schema validation, Pydantic config models, and layered precedence chains
+- [Rich Console Output & Progress Bars](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/) — terminal UI patterns for long-running batch jobs

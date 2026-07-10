@@ -2,7 +2,7 @@
 title: "Logging Spatial Transformations to Structured JSON"
 description: "Configure JSONSpatialFormatter to capture CRS, geometry counts, bounding boxes, and error traces as machine-readable JSON for Click CLIs and async batch pipelines."
 slug: "logging-spatial-transformation-results-to-structured-json"
-type: "long_tail"
+type: "article"
 breadcrumb: "Spatial Batch Processing > Error Handling in Spatial Pipelines > Logging to Structured JSON"
 datePublished: "2024-11-01"
 dateModified: "2026-06-23"
@@ -69,7 +69,7 @@ dateModified: "2026-06-23"
 }
 </script>
 
-Configuring a custom `logging.Formatter` that serializes Python `logging.LogRecord` objects to JSON — and injecting spatial context via the `extra` parameter — gives every CRS transformation, geometry validation step, or clipping operation a deterministic, machine-readable audit trail. This is part of the [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) guide.
+Configuring a custom `logging.Formatter` that serializes Python `logging.LogRecord` objects to JSON — and injecting spatial context via the `extra` parameter — gives every CRS transformation, geometry validation step, or clipping operation a deterministic, machine-readable audit trail. This is part of the [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) guide.
 
 ## Prerequisites
 
@@ -79,7 +79,7 @@ pip install geopandas pyproj shapely click pyogrio
 
 - Python 3.10+, GDAL 3.4+
 - Familiarity with the `logging` module's `Logger → Handler → Formatter` chain
-- Basic [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) experience — event loop lifecycle, `asyncio` task scheduling
+- Basic [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) experience — event loop lifecycle, `asyncio` task scheduling
 
 No third-party JSON logging library is required. The implementation below uses only the standard library plus your geospatial stack.
 
@@ -322,7 +322,7 @@ Iterating only the declared keys prevents accidental serialization of large obje
 GEOS raises `TopologyException` for self-intersecting rings during projection. Calling `make_valid` on every geometry before `to_crs` eliminates this class of failure. The cost is roughly 0.1 ms per feature for well-formed polygons and is worth paying unconditionally.
 
 **5 — `engine="pyogrio"` in `gpd.read_file`**
-`pyogrio` vectorises I/O at the C layer and is 3–10× faster than `fiona` for large files. It is the default engine in geopandas ≥ 0.14. Passing it explicitly documents the dependency and makes the choice auditable. For [async I/O for raster processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/), the equivalent is `rasterio.open` with a `CPL_VSIL_USE_TEMP_FILE_FOR_RANDOM_WRITE=YES` environment variable rather than blocking file handles.
+`pyogrio` vectorises I/O at the C layer and is 3–10× faster than `fiona` for large files. It is the default engine in geopandas ≥ 0.14. Passing it explicitly documents the dependency and makes the choice auditable. For [async I/O for raster processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/), the equivalent is `rasterio.open` with a `CPL_VSIL_USE_TEMP_FILE_FOR_RANDOM_WRITE=YES` environment variable rather than blocking file handles.
 
 **6 — `stderr` for logs, `stdout` for the output path**
 `click.echo(str(out_path))` goes to stdout. Every `logger.*` call goes to stderr. A downstream shell pipeline like `python reproject.py input.gpkg | xargs ogr2ogr ...` works correctly because the tool the pipeline feeds receives only the clean file path, not JSON log lines interspersed with it.
@@ -390,7 +390,7 @@ python reproject.py data/counties.gpkg --output-crs EPSG:3857 2>&1 >/dev/null \
 
 ## Performance Notes for High-Volume Pipelines
 
-When scaling this pattern across distributed workers or [async batch workflows](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/), the `StreamHandler` and `FileHandler` both perform synchronous I/O on the calling thread. At high event rates — thousands of features per second across many concurrent workers — this creates measurable contention.
+When scaling this pattern across distributed workers or [async batch workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/), the `StreamHandler` and `FileHandler` both perform synchronous I/O on the calling thread. At high event rates — thousands of features per second across many concurrent workers — this creates measurable contention.
 
 Replace the direct handlers with a `QueueHandler` / `QueueListener` pair to offload serialization and disk writes to a background thread:
 
@@ -459,5 +459,5 @@ EPSG short codes (`EPSG:4326`) are compact, human-readable, and round-trip clean
 
 ## Related
 
-- [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — the parent guide covering retry logic, exit codes, and fault-tolerant pipeline architecture
-- [Processing 100k GeoJSON Files with Python asyncio](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/processing-100k-geojson-files-with-python-asyncio/) — applies the same structured logging pattern inside a bounded-concurrency asyncio pipeline
+- [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — the parent guide covering retry logic, exit codes, and fault-tolerant pipeline architecture
+- [Processing 100k GeoJSON Files with Python asyncio](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/processing-100k-geojson-files-with-python-asyncio/) — applies the same structured logging pattern inside a bounded-concurrency asyncio pipeline

@@ -2,7 +2,7 @@
 title: "Spatial Batch Processing & Async Workflows"
 description: "Python GIS guide: async I/O, chunked vector reading, multiprocessing, memory management, and fault-tolerant batch pipelines for terabyte-scale spatial datasets."
 slug: "spatial-batch-processing-async-workflows"
-type: "pillar"
+type: "guide"
 breadcrumb: "Spatial Batch Processing & Async Workflows"
 datePublished: "2024-01-15"
 dateModified: "2026-06-23"
@@ -324,7 +324,7 @@ Key decisions annotated above:
 - `asyncio.gather(return_exceptions=True)` isolates individual task failures so a single bad tile does not cancel the entire batch.
 - `os.replace()` makes output writes atomic. If the process is killed mid-write the old file remains intact.
 
-For a complete walkthrough of wrapping synchronous GDAL calls safely within an event loop, including driver thread-safety edge cases, see [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/).
+For a complete walkthrough of wrapping synchronous GDAL calls safely within an event loop, including driver thread-safety edge cases, see [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/).
 
 ## Core Pattern 2: CPU-Bound Work via ProcessPoolExecutor
 
@@ -434,10 +434,10 @@ Annotations:
 
 - `ProcessPoolExecutor` is created as a context manager so workers are cleanly joined on exit, even if the async task is cancelled.
 - `_reproject_worker` opens its own dataset handle inside the worker process — never shared from the orchestrator.
-- `pyogrio` is preferred over `fiona` here because it exposes a direct GDAL/OGR layer with significantly lower overhead per feature read. For a detailed comparison, see [Chunked Vector Data Reading](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/).
+- `pyogrio` is preferred over `fiona` here because it exposes a direct GDAL/OGR layer with significantly lower overhead per feature read. For a detailed comparison, see [Chunked Vector Data Reading](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/).
 - `os.replace()` guarantees atomic output — a killed worker leaves the source shapefile intact.
 
-For benchmarks comparing `ProcessPoolExecutor` versus `asyncio.to_thread()` across raster and vector workloads, see [Multiprocessing Geospatial Tasks](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/).
+For benchmarks comparing `ProcessPoolExecutor` versus `asyncio.to_thread()` across raster and vector workloads, see [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/).
 
 ## Configuration & State Management
 
@@ -501,7 +501,7 @@ def load_config(config_path: Path | None = None) -> BatchConfig:
     #    load_config(); they overwrite individual fields directly.
 ```
 
-For full YAML configuration patterns including schema validation and CRS override chains, see [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/) in the CLI architecture guide. For managing cloud credentials and `GDAL_CACHEMAX` via environment variables, see [Environment Variable Sync](/cli-architecture-design-patterns/environment-variable-sync/).
+For full YAML configuration patterns including schema validation and CRS override chains, see [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) in the CLI architecture guide. For managing cloud credentials and `GDAL_CACHEMAX` via environment variables, see [Environment Variable Sync](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/).
 
 ## Observability & Error Handling
 
@@ -573,7 +573,7 @@ def configure_logging(log_format: str = "json") -> None:
 
 ### Progress tracking
 
-For long-running jobs, integrate progress reporting from the async pipeline into a `rich` progress bar without blocking the event loop. For detailed implementation, including async-safe progress callbacks and estimated time remaining per chunk batch, see [Progress Tracking in Batch Jobs](/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/).
+For long-running jobs, integrate progress reporting from the async pipeline into a `rich` progress bar without blocking the event loop. For detailed implementation, including async-safe progress callbacks and estimated time remaining per chunk batch, see [Progress Tracking in Batch Jobs](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/).
 
 ## Testing Strategy
 
@@ -671,12 +671,12 @@ def test_rejects_mismatched_crs():
 
 The following topics expand on specific problem domains within spatial batch pipelines:
 
-- **[Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/)** — Detailed patterns for wrapping GDAL reads in `asyncio.to_thread()`, managing driver thread safety, and streaming Cloud-Optimised GeoTIFF ranges without blocking the event loop.
-- **[Multiprocessing Geospatial Tasks](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/)** — When CPU-bound GDAL operations dominate, this topic covers `ProcessPoolExecutor` initialisation, per-worker GDAL environments, and benchmark comparisons against thread-based approaches.
-- **[Chunked Vector Data Reading](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/)** — Offset/limit feature reads via `pyogrio`, async generator patterns for bounded feature batches, and spatial index strategies that avoid full-file scans on large GeoJSON collections.
-- **[Memory Management for Large Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/)** — Techniques for memory-mapped arrays, explicit C-buffer release, `asyncio.Semaphore` limits on open file handles, and diagnosing native memory leaks in rasterio/GDAL pipelines.
-- **[Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/)** — Dead-letter queue patterns, structured exception hierarchies for GIS-specific failures, and idempotent retry strategies that prevent duplicate output on reprocessing.
-- **[Progress Tracking in Batch Jobs](/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/)** — Async-safe `rich` progress bars, throughput metrics (features/sec, tiles/sec), ETA estimation, and checkpoint manifests that survive process restarts.
+- **[Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/)** — Detailed patterns for wrapping GDAL reads in `asyncio.to_thread()`, managing driver thread safety, and streaming Cloud-Optimised GeoTIFF ranges without blocking the event loop.
+- **[Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/)** — When CPU-bound GDAL operations dominate, this topic covers `ProcessPoolExecutor` initialisation, per-worker GDAL environments, and benchmark comparisons against thread-based approaches.
+- **[Chunked Vector Data Reading](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/)** — Offset/limit feature reads via `pyogrio`, async generator patterns for bounded feature batches, and spatial index strategies that avoid full-file scans on large GeoJSON collections.
+- **[Memory Management for Large Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/)** — Techniques for memory-mapped arrays, explicit C-buffer release, `asyncio.Semaphore` limits on open file handles, and diagnosing native memory leaks in rasterio/GDAL pipelines.
+- **[Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/)** — Dead-letter queue patterns, structured exception hierarchies for GIS-specific failures, and idempotent retry strategies that prevent duplicate output on reprocessing.
+- **[Progress Tracking in Batch Jobs](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/)** — Async-safe `rich` progress bars, throughput metrics (features/sec, tiles/sec), ETA estimation, and checkpoint manifests that survive process restarts.
 
 ## Conclusion
 
@@ -688,7 +688,7 @@ Start with the patterns in this guide, profile your existing scripts to locate b
 
 ## Related
 
-- [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) — Argument parsing, subcommand organisation, and layered configuration for the CLI layer that drives these pipelines
-- [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — Deep dive into non-blocking Cloud-Optimised GeoTIFF reads and GDAL thread safety
-- [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — Structured exception handling, dead-letter queues, and resilient retry patterns for GIS batch jobs
-- [Memory Management for Large Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) — Strategies for keeping multi-terabyte raster and point-cloud pipelines within predictable memory bounds
+- [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) — Argument parsing, subcommand organisation, and layered configuration for the CLI layer that drives these pipelines
+- [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — Deep dive into non-blocking Cloud-Optimised GeoTIFF reads and GDAL thread safety
+- [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — Structured exception handling, dead-letter queues, and resilient retry patterns for GIS batch jobs
+- [Memory Management for Large Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) — Strategies for keeping multi-terabyte raster and point-cloud pipelines within predictable memory bounds

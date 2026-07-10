@@ -2,7 +2,7 @@
 title: "Managing YAML Configs for Geospatial CLI Workflows"
 description: "Load, validate, and apply YAML configs in Python GIS CLIs using PyYAML and Pydantic v2 — schema enforcement, CRS validation, GDAL env injection, and override chains."
 slug: "managing-yaml-configs-for-geospatial-cli-workflows"
-type: "long_tail"
+type: "article"
 breadcrumb: "Managing YAML Configs"
 datePublished: "2025-03-10"
 dateModified: "2026-06-23"
@@ -77,7 +77,7 @@ dateModified: "2026-06-23"
 
 # Managing YAML Configs for Geospatial CLI Workflows
 
-Use `PyYAML` with `Pydantic` v2 to load, validate, and apply a YAML config in a Python GIS CLI: parse the file with `yaml.safe_load`, construct a typed `BatchConfig` model, apply GDAL environment variables before any I/O, and inject CLI flag overrides into the raw dict before model construction so that the flag always wins. This self-contained pattern — part of the [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/) guide — prevents silent CRS errors and coordinate corruptions that only surface after hours of raster processing.
+Use `PyYAML` with `Pydantic` v2 to load, validate, and apply a YAML config in a Python GIS CLI: parse the file with `yaml.safe_load`, construct a typed `BatchConfig` model, apply GDAL environment variables before any I/O, and inject CLI flag overrides into the raw dict before model construction so that the flag always wins. This self-contained pattern — part of the [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) guide — prevents silent CRS errors and coordinate corruptions that only surface after hours of raster processing.
 
 ## Prerequisites
 
@@ -85,11 +85,11 @@ Use `PyYAML` with `Pydantic` v2 to load, validate, and apply a YAML config in a 
 pip install "pyyaml>=6.0" "pydantic>=2.0" "click>=8.1"
 ```
 
-You need Python 3.11+, a working GDAL installation visible to the shell, and a basic grasp of [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/). If you are still choosing between Click and Typer for your project, review [Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) before committing to the CLI layer shown here.
+You need Python 3.11+, a working GDAL installation visible to the shell, and a basic grasp of [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/). If you are still choosing between Click and Typer for your project, review [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) before committing to the CLI layer shown here.
 
 ## Config Precedence: How the Override Chain Works
 
-Before writing any code it helps to see how the four layers compose. CLI flags override environment variables, which override the YAML file, which overrides schema defaults — the same four-layer model described in [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/#core-resolution-architecture).
+Before writing any code it helps to see how the four layers compose. CLI flags override environment variables, which override the YAML file, which overrides schema defaults — the same four-layer model described in [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/#core-resolution-architecture).
 
 <svg viewBox="0 0 640 220" role="img" aria-label="Configuration precedence chain: CLI flags override env vars, which override YAML file, which override schema defaults" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto; display:block; margin:1.5rem auto;" >
   <title>Configuration override precedence for geospatial CLI workflows</title>
@@ -372,7 +372,7 @@ Add `schema_version: int = Field(default=1)` to your model. In a `@model_validat
 
 ## Related
 
-- [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/) — the parent guide covering TOML vs YAML, schema evolution, and `pydantic-settings` environment-variable precedence
-- [Managing YAML configs for geospatial CLI workflows](/cli-architecture-design-patterns/configuration-file-management/managing-yaml-configs-for-geospatial-cli-workflows/) — you are here
-- [Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) — choosing the right CLI framework before wiring in a config loader
-- [Handling Missing Dependencies Gracefully in Click Apps](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/handling-missing-dependencies-gracefully-in-click-apps/) — how to guard optional GDAL/rasterio imports that your config may activate
+- [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) — the parent guide covering TOML vs YAML, schema evolution, and `pydantic-settings` environment-variable precedence
+- [Managing YAML configs for geospatial CLI workflows](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/managing-yaml-configs-for-geospatial-cli-workflows/) — you are here
+- [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) — choosing the right CLI framework before wiring in a config loader
+- [Handling Missing Dependencies Gracefully in Click Apps](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/handling-missing-dependencies-gracefully-in-click-apps/) — how to guard optional GDAL/rasterio imports that your config may activate

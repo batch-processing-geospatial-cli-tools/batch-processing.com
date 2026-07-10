@@ -2,7 +2,7 @@
 title: "Retrying Transient GDAL I/O Errors with Exponential Backoff"
 description: "Wrap remote GDAL reads in a tenacity retry with exponential backoff and jitter so transient S3 and network errors don't kill an otherwise healthy batch run."
 slug: "retrying-transient-gdal-io-errors-with-exponential-backoff"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # Retrying Transient GDAL I/O Errors with Exponential Backoff
 
-Wrap the remote read in a `tenacity` retry that fires only on transient failures — `RasterioIOError` carrying an HTTP 5xx or throttling signal — using `wait_exponential` plus `wait_random` jitter and `stop_after_attempt`, and let permanent failures like a missing key, a CRS mismatch, or an unsupported format raise straight through with exit code `10` or `11`. That single distinction keeps a flaky S3 backend from killing an otherwise healthy batch. This page is part of the [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) guide inside the broader [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) reference.
+Wrap the remote read in a `tenacity` retry that fires only on transient failures — `RasterioIOError` carrying an HTTP 5xx or throttling signal — using `wait_exponential` plus `wait_random` jitter and `stop_after_attempt`, and let permanent failures like a missing key, a CRS mismatch, or an unsupported format raise straight through with exit code `10` or `11`. That single distinction keeps a flaky S3 backend from killing an otherwise healthy batch. This page is part of the [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) guide inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -85,7 +85,7 @@ Wrap the remote read in a `tenacity` retry that fires only on transient failures
 - `pip install tenacity rasterio` (rasterio 1.3+ bundles GDAL 3.4+)
 - GDAL virtual filesystem access configured for your backend: AWS credentials for `/vsis3/`, or a plain `/vsicurl/` URL for public HTTPS objects
 
-When a network read fails inside a worker, the exception surfaces from GDAL's C layer as a rasterio `RasterioIOError`. The retry logic here lives entirely around the read call, so it composes cleanly with the concurrency model described in [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) and with the recovery path in [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/).
+When a network read fails inside a worker, the exception surfaces from GDAL's C layer as a rasterio `RasterioIOError`. The retry logic here lives entirely around the read call, so it composes cleanly with the concurrency model described in [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) and with the recovery path in [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/).
 
 ## Transient vs Permanent: the decision that drives everything
 
@@ -289,7 +289,7 @@ python read_with_retry.py /vsis3/my-bucket/scenes/missing.tif
 echo "exit=$?"    # 1, and no "before sleep" WARNING appears
 ```
 
-A correct run against a flaky object prints lines like `Retrying read_window in 2.3 seconds as it raised RasterioIOError` up to four times, then `read ... block: shape=(512, 512)`. A permanent `404` prints no retry warnings at all — that absence is the proof that classification worked. To capture the exhausted-retry case in a structured feed for a [dead-letter queue](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/building-a-dead-letter-queue-for-failed-geometry-transforms/), catch the re-raised `RasterioIOError` in `main` and serialize the URL and message before exiting.
+A correct run against a flaky object prints lines like `Retrying read_window in 2.3 seconds as it raised RasterioIOError` up to four times, then `read ... block: shape=(512, 512)`. A permanent `404` prints no retry warnings at all — that absence is the proof that classification worked. To capture the exhausted-retry case in a structured feed for a [dead-letter queue](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/building-a-dead-letter-queue-for-failed-geometry-transforms/), catch the re-raised `RasterioIOError` in `main` and serialize the URL and message before exiting.
 
 ## FAQ
 
@@ -321,5 +321,5 @@ Use `stop_after_attempt(5)` combined with a per-call ceiling from `wait_exponent
 
 ## Related
 
-- [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — parent guide covering failure capture, exit-code conventions, and recovery patterns for batch raster and vector workflows
-- [Building a Dead-Letter Queue for Failed Geometry Transforms](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/building-a-dead-letter-queue-for-failed-geometry-transforms/) — where to route reads that exhaust their retry budget instead of losing them
+- [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — parent guide covering failure capture, exit-code conventions, and recovery patterns for batch raster and vector workflows
+- [Building a Dead-Letter Queue for Failed Geometry Transforms](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/building-a-dead-letter-queue-for-failed-geometry-transforms/) — where to route reads that exhaust their retry budget instead of losing them

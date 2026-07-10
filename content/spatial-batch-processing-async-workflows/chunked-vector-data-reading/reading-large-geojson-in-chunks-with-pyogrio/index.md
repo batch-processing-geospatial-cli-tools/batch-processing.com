@@ -2,7 +2,7 @@
 title: "Reading Large GeoJSON in Chunks with pyogrio"
 description: "Stream a multi-gigabyte GeoJSON in bounded feature batches using pyogrio skip/max_features so memory stays flat regardless of file size."
 slug: "reading-large-geojson-in-chunks-with-pyogrio"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # Reading Large GeoJSON in Chunks with pyogrio
 
-To read a multi-gigabyte GeoJSON without loading it all into RAM, drive `pyogrio.read_dataframe(path, skip_features=offset, max_features=batch_size)` in a loop, advancing `offset` by `batch_size` each pass until a read returns fewer than `batch_size` features. Each batch arrives as a small `GeoDataFrame` you reproject, process, and release, so peak memory tracks one batch instead of the file. This page is part of the [Chunked Vector Data Reading for Spatial Pipelines](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) guide inside the broader [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) reference.
+To read a multi-gigabyte GeoJSON without loading it all into RAM, drive `pyogrio.read_dataframe(path, skip_features=offset, max_features=batch_size)` in a loop, advancing `offset` by `batch_size` each pass until a read returns fewer than `batch_size` features. Each batch arrives as a small `GeoDataFrame` you reproject, process, and release, so peak memory tracks one batch instead of the file. This page is part of the [Chunked Vector Data Reading for Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) guide inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -85,7 +85,7 @@ To read a multi-gigabyte GeoJSON without loading it all into RAM, drive `pyogrio
 - `pip install pyogrio geopandas pyproj` (pyogrio 0.7+ ships GDAL wheels, so no separate system GDAL is required; a conda GDAL 3.4+ also works)
 - A large GeoJSON to test against — any FeatureCollection with hundreds of thousands of features
 
-For the memory model behind why one batch must be released before the next is read, pair this with [Memory Management for Large GIS Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/). For the wider batch-processing context, start from the [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) overview.
+For the memory model behind why one batch must be released before the next is read, pair this with [Memory Management for Large GIS Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/). For the wider batch-processing context, start from the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) overview.
 
 ## How Windowed Reads Bound Memory
 
@@ -281,7 +281,7 @@ gdf = pyogrio.read_dataframe("./data/large.geojson")
 pyogrio.write_dataframe(gdf, "./data/large.fgb", driver="FlatGeobuf")
 ```
 
-If the source itself is too large to load for the conversion, stream the conversion batch-by-batch with the same windowed loop (paying the O(n squared) cost once), writing each batch to the FlatGeobuf output with `append=True`. After that, all downstream chunked reads run against the indexed `.fgb`. For the deeper comparison of driver behaviour under large reads, see [pyogrio vs Fiona for Large Vector Datasets](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/pyogrio-vs-fiona-for-large-vector-datasets/).
+If the source itself is too large to load for the conversion, stream the conversion batch-by-batch with the same windowed loop (paying the O(n squared) cost once), writing each batch to the FlatGeobuf output with `append=True`. After that, all downstream chunked reads run against the indexed `.fgb`. For the deeper comparison of driver behaviour under large reads, see [pyogrio vs Fiona for Large Vector Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/pyogrio-vs-fiona-for-large-vector-datasets/).
 
 ## Verification
 
@@ -338,5 +338,5 @@ Start at `50000` features and tune from measured RSS. Larger batches amortise th
 
 ## Related
 
-- [Chunked Vector Data Reading for Spatial Pipelines](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — parent guide covering windowed reads, driver choice, and streaming strategies for large vector data
-- [pyogrio vs Fiona for Large Vector Datasets](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/pyogrio-vs-fiona-for-large-vector-datasets/) — how the two readers differ on throughput and memory for multi-gigabyte vector files
+- [Chunked Vector Data Reading for Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — parent guide covering windowed reads, driver choice, and streaming strategies for large vector data
+- [pyogrio vs Fiona for Large Vector Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/pyogrio-vs-fiona-for-large-vector-datasets/) — how the two readers differ on throughput and memory for multi-gigabyte vector files

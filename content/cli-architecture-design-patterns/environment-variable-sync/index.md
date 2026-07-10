@@ -2,7 +2,7 @@
 title: "Environment Variable Sync for Python GIS CLI Tools"
 description: "Schema-driven validation, cross-platform path normalization, and subprocess propagation patterns for synchronizing environment variables in Python geospatial CLIs."
 slug: "environment-variable-sync"
-type: "cluster"
+type: "topic"
 breadcrumb: "Environment Variable Sync"
 datePublished: "2024-11-12"
 dateModified: "2026-06-23"
@@ -93,7 +93,7 @@ dateModified: "2026-06-23"
 
 Schema-driven environment variable sync gives your Python GIS CLI a validated, normalized configuration layer before any GDAL driver opens a file — eliminating the silent CRS mismatches, `libproj` segfaults, and credential leaks that plague unmanaged environment inheritance.
 
-This page is part of the [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) guide.
+This page is part of the [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
 
 ---
 
@@ -156,7 +156,7 @@ This page is part of the [CLI Architecture & Design Patterns](/cli-architecture-
 - **Geospatial stack** — `rasterio`, `geopandas`, or `pyproj` (all rely on GDAL/PROJ C libraries whose runtime behavior is controlled by the variables managed here).
 - **CI/CD awareness** — basic understanding of how GitHub Actions, GitLab CI, or Jenkins inject secrets as environment variables.
 
-For CLI framework choices that interact directly with this configuration layer, compare the trade-offs in [Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/).
+For CLI framework choices that interact directly with this configuration layer, compare the trade-offs in [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/).
 
 ```bash
 pip install "pydantic-settings>=2.0" "typer[all]" rasterio geopandas pyproj
@@ -267,7 +267,7 @@ def load_and_sync_config(env_file: Path = Path(".env")) -> GISRuntimeConfig:
 
 ### Step 3: Wire into the CLI Entry Point
 
-Use a [Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) callback to synchronize the environment before any subcommand executes. Storing the config on `ctx.obj` gives every subcommand access without global state.
+Use a [Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) callback to synchronize the environment before any subcommand executes. Storing the config on `ctx.obj` gives every subcommand access without global state.
 
 ```python
 import typer
@@ -345,7 +345,7 @@ Environment variable sync occupies the second layer in the standard precedence c
 | `.env` file | `SettingsConfigDict(env_file=".env")` | Local development; must be `.gitignore`d |
 | Coded defaults | Field default values in the model | Safe non-sensitive fallbacks only |
 
-Setting `env_ignore_empty=True` ensures that an empty `GDAL_DATA=""` exported by a misconfigured CI profile does not shadow a meaningful value coming from a later source. The [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/) pattern extends this chain upward with TOML/YAML file sources for project-level defaults.
+Setting `env_ignore_empty=True` ensures that an empty `GDAL_DATA=""` exported by a misconfigured CI profile does not shadow a meaningful value coming from a later source. The [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) pattern extends this chain upward with TOML/YAML file sources for project-level defaults.
 
 ## Error Handling & Gotchas
 
@@ -587,9 +587,9 @@ The parent process's `os.environ` remains unchanged, and the override is scoped 
 
 ## Related
 
-- [Managing GDAL and PROJ Environment Variables Across Shells](/cli-architecture-design-patterns/environment-variable-sync/managing-gdal-and-proj-env-vars-across-shells/) — keep `GDAL_DATA`, `PROJ_LIB`, and `GDAL_CACHEMAX` consistent across bash, zsh, Docker, and CI.
-- [Loading .env Files in a Geospatial CLI](/cli-architecture-design-patterns/environment-variable-sync/loading-dotenv-files-in-a-geospatial-cli/) — load a `.env` before rasterio imports so GDAL and PROJ variables take effect without leaking secrets.
-- [Configuration File Management for GIS CLI Tools](/cli-architecture-design-patterns/configuration-file-management/) — extend the precedence chain with TOML/YAML project-level config files that layer beneath environment variables.
-- [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) — wire CLI flags into the top of the precedence chain so explicit user arguments always override synced environment values.
-- [Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) — framework comparison that influences how you expose `--env-file` and config-check subcommands.
-- [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) — parent guide covering the full configuration layer, subcommand organization, and observability patterns for production GIS toolchains.
+- [Managing GDAL and PROJ Environment Variables Across Shells](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/managing-gdal-and-proj-env-vars-across-shells/) — keep `GDAL_DATA`, `PROJ_LIB`, and `GDAL_CACHEMAX` consistent across bash, zsh, Docker, and CI.
+- [Loading .env Files in a Geospatial CLI](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/loading-dotenv-files-in-a-geospatial-cli/) — load a `.env` before rasterio imports so GDAL and PROJ variables take effect without leaking secrets.
+- [Configuration File Management for GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) — extend the precedence chain with TOML/YAML project-level config files that layer beneath environment variables.
+- [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — wire CLI flags into the top of the precedence chain so explicit user arguments always override synced environment values.
+- [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) — framework comparison that influences how you expose `--env-file` and config-check subcommands.
+- [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) — parent guide covering the full configuration layer, subcommand organization, and observability patterns for production GIS toolchains.

@@ -2,7 +2,7 @@
 title: "Building a Docker Image with GDAL for a Python CLI"
 description: "Write a slim, reproducible multi-stage Dockerfile that installs a pinned GDAL and your Python geospatial CLI so it runs identically in CI and production."
 slug: "building-a-docker-image-with-gdal-for-a-python-cli"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -78,13 +78,13 @@ dateModified: "2026-07-10"
 
 # Building a Docker Image with GDAL for a Python CLI
 
-To Dockerise a Python CLI that needs GDAL, build from a pinned OSGeo GDAL image in a multi-stage `Dockerfile`: compile your wheel into a virtual environment in the build stage, copy that venv into a slim runtime stage from the same base, export `GDAL_DATA` and `PROJ_LIB`, add a non-root user, and set the console script as the `ENTRYPOINT`. This page is part of the [Packaging & CI/CD for Python GIS CLI Tools](/cli-architecture-design-patterns/packaging-and-cicd/) guide within the broader [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) reference.
+To Dockerise a Python CLI that needs GDAL, build from a pinned OSGeo GDAL image in a multi-stage `Dockerfile`: compile your wheel into a virtual environment in the build stage, copy that venv into a slim runtime stage from the same base, export `GDAL_DATA` and `PROJ_LIB`, add a non-root user, and set the console script as the `ENTRYPOINT`. This page is part of the [Packaging & CI/CD for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/) guide within the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
 - Python 3.10 or later, packaged with a `pyproject.toml` that declares a console script entry point (the thing that becomes `mytool` on the command line).
 - Docker 24+ with BuildKit enabled (the default), so multi-stage builds cache each stage independently.
-- A working knowledge of how your CLI reads configuration; container images pass most settings through the environment, which the [Environment Variable Sync](/cli-architecture-design-patterns/environment-variable-sync/) guide covers in depth.
+- A working knowledge of how your CLI reads configuration; container images pass most settings through the environment, which the [Environment Variable Sync](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/) guide covers in depth.
 
 The hardest part is not writing Docker syntax — it is keeping the C-level GDAL library, its data files, and the `osgeo.gdal` Python bindings all pinned to one version so the image behaves identically in CI and production.
 
@@ -206,7 +206,7 @@ build/
 
 ## Step Annotations
 
-1. **`ARG GDAL_TAG` used in both `FROM` lines** — declaring the tag once and referencing it in the build and runtime stages guarantees they descend from the same `libgdal`. Overriding it at build time (`docker build --build-arg GDAL_TAG=ubuntu-small-3.9.2`) is how you feed a matrix of GDAL versions, which pairs with [matrix testing across GDAL versions](/cli-architecture-design-patterns/packaging-and-cicd/matrix-testing-a-geospatial-cli-across-gdal-versions/).
+1. **`ARG GDAL_TAG` used in both `FROM` lines** — declaring the tag once and referencing it in the build and runtime stages guarantees they descend from the same `libgdal`. Overriding it at build time (`docker build --build-arg GDAL_TAG=ubuntu-small-3.9.2`) is how you feed a matrix of GDAL versions, which pairs with [matrix testing across GDAL versions](https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/matrix-testing-a-geospatial-cli-across-gdal-versions/).
 2. **`pip install "gdal==$(gdal-config --version)"`** — this is the single most important line. `gdal-config` reports the version of the system library baked into the base image, so the bindings compile against the exact `libgdal` present at runtime. Hard-coding a version, or omitting this and letting a dependency pull a PyPI wheel, is what produces version-mismatch crashes.
 3. **The virtual environment as the sole artifact** — everything the app needs ends up in `/opt/venv`. The runtime stage copies that one directory, so build-only packages (`build-essential`, `python3-dev`) never inflate the shipped image.
 4. **`GDAL_DATA`, `PROJ_LIB`, and `PROJ_DATA`** — GDAL resolves coordinate-system definitions from `GDAL_DATA` and PROJ resolves `proj.db` and datum grids from `PROJ_LIB`. PROJ 9 reads `PROJ_DATA` instead of `PROJ_LIB`, so setting both keeps the image working across PROJ major versions. Miss these and any reprojection raises a CRS error even though `libgdal` loaded fine.
@@ -304,5 +304,5 @@ The `manylinux` rasterio wheel bundles its own copy of GDAL, which clashes with 
 
 ## Related
 
-- [Packaging & CI/CD for Python GIS CLI Tools](/cli-architecture-design-patterns/packaging-and-cicd/) — parent guide covering wheels, entry points, and release automation for geospatial command-line tools
-- [Matrix Testing a Geospatial CLI Across GDAL Versions](/cli-architecture-design-patterns/packaging-and-cicd/matrix-testing-a-geospatial-cli-across-gdal-versions/) — run the same image build against several pinned GDAL tags in CI to catch version drift early
+- [Packaging & CI/CD for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/) — parent guide covering wheels, entry points, and release automation for geospatial command-line tools
+- [Matrix Testing a Geospatial CLI Across GDAL Versions](https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/matrix-testing-a-geospatial-cli-across-gdal-versions/) — run the same image build against several pinned GDAL tags in CI to catch version drift early

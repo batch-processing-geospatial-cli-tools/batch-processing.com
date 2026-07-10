@@ -2,7 +2,7 @@
 title: "Choosing Chunk Size for Multiprocessing Raster Warps"
 description: "Pick a tile chunk size for a multiprocessing raster warp by aligning to the source block shape and balancing worker memory against scheduling overhead."
 slug: "choosing-chunk-size-for-multiprocessing-raster-warps"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # Choosing Chunk Size for Multiprocessing Raster Warps
 
-Pick a chunk size that is an integer multiple of the source raster's native block edge, typically 512 or 1024 pixels square, then cap the worker count so `chunk_bytes * workers` stays under your RAM budget. Block alignment removes read amplification, and the memory cap prevents out-of-memory kills. This page is part of the [Multiprocessing Geospatial Tasks in Python](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) guide inside the broader [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) reference.
+Pick a chunk size that is an integer multiple of the source raster's native block edge, typically 512 or 1024 pixels square, then cap the worker count so `chunk_bytes * workers` stays under your RAM budget. Block alignment removes read amplification, and the memory cap prevents out-of-memory kills. This page is part of the [Multiprocessing Geospatial Tasks in Python](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) guide inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 The core trade-off is simple: chunks that are too small drown the pool in scheduling overhead and repeated compression setup, while chunks that are too large exhaust memory and leave workers idle at the tail of the job. The helper below reads `block_shapes`, snaps a requested chunk edge to a block multiple, estimates memory, and derives a safe `(chunk_size, workers)` pair before dispatching windows.
 
@@ -88,7 +88,7 @@ The core trade-off is simple: chunks that are too small drown the pool in schedu
 - `psutil` for reading available RAM: `pip install psutil`
 - A tiled source raster. Untiled (striped) GeoTIFFs have a block shape of one full row, which defeats chunk alignment. Convert first with `gdal_translate -co TILED=YES`.
 
-For how the pool itself should be built and isolated, read [GDAL Batch Operations with multiprocessing.Pool](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/optimizing-gdal-batch-operations-with-multiprocessing-pool/). For the memory-budget reasoning behind the worker cap, see [Memory Management for Large GIS Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/).
+For how the pool itself should be built and isolated, read [GDAL Batch Operations with multiprocessing.Pool](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/optimizing-gdal-batch-operations-with-multiprocessing-pool/). For the memory-budget reasoning behind the worker cap, see [Memory Management for Large GIS Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/).
 
 ## The Sizing Decision
 
@@ -318,13 +318,13 @@ if __name__ == "__main__":
 
 3. **`estimate_chunk_bytes()`** — The footprint is `edge * edge * bands * dtype_size`. A `1024` chunk of a 4-band `uint16` raster is `1024 * 1024 * 4 * 2 = 8 MB` of pixel data per chunk, before warp buffers.
 
-4. **`MEMORY_SAFETY_FACTOR = 3.0`** — The reproject call holds the source array, the destination array, and internal GDAL scratch simultaneously. Budgeting three times the raw pixel bytes keeps the box off swap. See [Memory Management for Large GIS Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) for how to tune this factor per dtype.
+4. **`MEMORY_SAFETY_FACTOR = 3.0`** — The reproject call holds the source array, the destination array, and internal GDAL scratch simultaneously. Budgeting three times the raw pixel bytes keeps the box off swap. See [Memory Management for Large GIS Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) for how to tune this factor per dtype.
 
 5. **`safe_workers = budget // footprint`** — The worker count is derived, not guessed. It is the RAM budget divided by the padded per-chunk footprint, then capped at the physical core count so CPU-bound warps do not oversubscribe.
 
 6. **`iter_windows()` clipping** — `min(edge, width - col_off)` shrinks the final column and row to the true remainder so no window reads past the raster edge. This is the fix for the remainder gotcha below.
 
-7. **`num_threads=1`** — Each window is warped by exactly one thread because parallelism already lives at the process level. Letting GDAL spin its own thread pool per worker reproduces the oversubscription problem covered in [GDAL Batch Operations with multiprocessing.Pool](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/optimizing-gdal-batch-operations-with-multiprocessing-pool/).
+7. **`num_threads=1`** — Each window is warped by exactly one thread because parallelism already lives at the process level. Letting GDAL spin its own thread pool per worker reproduces the oversubscription problem covered in [GDAL Batch Operations with multiprocessing.Pool](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/optimizing-gdal-batch-operations-with-multiprocessing-pool/).
 
 ## Named Gotcha: Non-Block-Aligned and Remainder Chunks
 
@@ -389,5 +389,5 @@ Yes. Raster dimensions are rarely an exact multiple of the chunk size, so the la
 
 ## Related
 
-- [Multiprocessing Geospatial Tasks in Python](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) — parent guide covering worker pools, task chunking, and shared-memory strategies for geospatial data
-- [GDAL Batch Operations with multiprocessing.Pool](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/optimizing-gdal-batch-operations-with-multiprocessing-pool/) — worker isolation, the spawn start method, and thread capping that this chunked warp depends on
+- [Multiprocessing Geospatial Tasks in Python](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) — parent guide covering worker pools, task chunking, and shared-memory strategies for geospatial data
+- [GDAL Batch Operations with multiprocessing.Pool](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/optimizing-gdal-batch-operations-with-multiprocessing-pool/) — worker isolation, the spawn start method, and thread capping that this chunked warp depends on

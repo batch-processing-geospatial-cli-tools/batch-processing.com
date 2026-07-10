@@ -2,7 +2,7 @@
 title: "Structuring a Multi-Command GDAL CLI with Typer Sub-Apps"
 description: "Organise raster, vector, and inspect commands into separate Typer sub-apps mounted on one root app so each subcommand module stays independently testable."
 slug: "structuring-a-multi-command-gdal-cli-with-typer-sub-apps"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # Structuring a Multi-Command GDAL CLI with Typer Sub-Apps
 
-Split a growing GDAL CLI by giving each command group its own `typer.Typer()` instance in a separate module — `commands/raster.py`, `commands/vector.py`, `commands/inspect.py` — then mount them on one root app with `app.add_typer(raster_app, name="raster")`. That produces namespaced commands such as `mytool raster warp` and `mytool vector reproject` while keeping every module independently importable and testable. This page is part of the [CLI Subcommand Organization for GIS Toolchains](/cli-architecture-design-patterns/cli-subcommand-organization/) guide within the wider [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) reference.
+Split a growing GDAL CLI by giving each command group its own `typer.Typer()` instance in a separate module — `commands/raster.py`, `commands/vector.py`, `commands/inspect.py` — then mount them on one root app with `app.add_typer(raster_app, name="raster")`. That produces namespaced commands such as `mytool raster warp` and `mytool vector reproject` while keeping every module independently importable and testable. This page is part of the [CLI Subcommand Organization for GIS Toolchains](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) guide within the wider [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
@@ -85,7 +85,7 @@ Split a growing GDAL CLI by giving each command group its own `typer.Typer()` in
 - `pip install "typer>=0.12" pyogrio`
 - `gdal` from a conda/mamba GDAL package or `python3-gdal` (GDAL 3.4+) for the raster commands
 
-If you are still deciding how each command declares its options and arguments, read [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) first — this page assumes you already know how to annotate a single command and focuses purely on how many commands compose into one tool.
+If you are still deciding how each command declares its options and arguments, read [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) first — this page assumes you already know how to annotate a single command and focuses purely on how many commands compose into one tool.
 
 ## Why One App Per Group
 
@@ -256,7 +256,7 @@ if __name__ == "__main__":
 
 5. **Domain exit codes** — `warp` exits `1` on a GDAL runtime failure, while `reproject` and `crs` exit `10` when a CRS is missing. Consistent codes let shell wrappers and CI distinguish a genuine data problem from a crash.
 
-6. **`run()` as the entry point** — Registering `mytool = "mytool.main:run"` under `[project.scripts]` gives users the `mytool` command after `pip install`. Loading shared defaults here — for example from a project config file — lets every subcommand inherit them; see [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/) for the layering pattern.
+6. **`run()` as the entry point** — Registering `mytool = "mytool.main:run"` under `[project.scripts]` gives users the `mytool` command after `pip install`. Loading shared defaults here — for example from a project config file — lets every subcommand inherit them; see [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) for the layering pattern.
 
 ## Named Gotcha: The Root App Import Cycle
 
@@ -314,5 +314,5 @@ No. `add_typer(raster_app, name="raster")` only prefixes the namespace. A comman
 
 ## Related
 
-- [CLI Subcommand Organization for GIS Toolchains](/cli-architecture-design-patterns/cli-subcommand-organization/) — parent guide covering how to group, name, and namespace commands as a GDAL tool grows
-- [Sharing Global Options Across Geospatial Subcommands](/cli-architecture-design-patterns/cli-subcommand-organization/sharing-global-options-across-geospatial-subcommands/) — pass verbosity, config paths, and CRS defaults down into every mounted sub-app
+- [CLI Subcommand Organization for GIS Toolchains](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) — parent guide covering how to group, name, and namespace commands as a GDAL tool grows
+- [Sharing Global Options Across Geospatial Subcommands](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/sharing-global-options-across-geospatial-subcommands/) — pass verbosity, config paths, and CRS defaults down into every mounted sub-app

@@ -2,7 +2,7 @@
 title: "pyogrio vs Fiona for Large Vector Datasets"
 description: "Benchmark pyogrio against Fiona for reading large Shapefiles and GeoPackages, and choose based on Arrow throughput, memory, and per-feature access needs."
 slug: "pyogrio-vs-fiona-for-large-vector-datasets"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # pyogrio vs Fiona for Large Vector Datasets
 
-For reading large Shapefiles and GeoPackages, choose **pyogrio** when you want the whole layer as a `GeoDataFrame` fast — it moves data through GDAL's Arrow interface and is commonly 5–20x quicker than Fiona. Choose **Fiona** when you need true record-by-record streaming at constant memory. This page is part of the [Chunked Vector Data Reading for Spatial Pipelines](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) guide inside the broader [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) reference.
+For reading large Shapefiles and GeoPackages, choose **pyogrio** when you want the whole layer as a `GeoDataFrame` fast — it moves data through GDAL's Arrow interface and is commonly 5–20x quicker than Fiona. Choose **Fiona** when you need true record-by-record streaming at constant memory. This page is part of the [Chunked Vector Data Reading for Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) guide inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -85,7 +85,7 @@ For reading large Shapefiles and GeoPackages, choose **pyogrio** when you want t
 - `pip install pyogrio fiona geopandas pyproj shapely`
 - A GDAL 3.6+ build; pyogrio's fastest path needs GDAL compiled with the Arrow (columnar) read API
 
-Both libraries wrap the same GDAL/OGR drivers, so they read identical formats — the difference is entirely in how each hands features back to Python. For memory strategy across the whole pipeline, read [Memory Management for Large GIS Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/); for a windowed streaming pattern in depth, see [Reading Large GeoJSON in Chunks with pyogrio](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/reading-large-geojson-in-chunks-with-pyogrio/).
+Both libraries wrap the same GDAL/OGR drivers, so they read identical formats — the difference is entirely in how each hands features back to Python. For memory strategy across the whole pipeline, read [Memory Management for Large GIS Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/); for a windowed streaming pattern in depth, see [Reading Large GeoJSON in Chunks with pyogrio](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/reading-large-geojson-in-chunks-with-pyogrio/).
 
 ## How the Two Readers Differ
 
@@ -262,7 +262,7 @@ if __name__ == "__main__":
 
 5. **`pyogrio.list_layers(...)[0][0]`** — Shapefiles have a single implicit layer; GeoPackages can carry many. Defaulting to the first layer name lets the same script handle both formats without a required `--layer` flag.
 
-6. **Exit codes** — the script returns `2` for a missing source (usage error), `1` when the two readers disagree on feature count (runtime error), and `0` on success, matching the domain convention used across [the batch pipeline error-handling patterns](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/).
+6. **Exit codes** — the script returns `2` for a missing source (usage error), `1` when the two readers disagree on feature count (runtime error), and `0` on success, matching the domain convention used across [the batch pipeline error-handling patterns](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/).
 
 ## Named Gotcha: pyogrio Loads the Whole Layer by Default
 
@@ -306,7 +306,7 @@ A matching feature count and a printed speedup confirm both paths read the same 
 
 ## Performance Notes
 
-pyogrio's advantage scales with attribute width: the more columns a layer carries, the more the columnar Arrow transfer beats building a dict per feature. On a narrow, geometry-only layer the gap shrinks. Fiona's cost is dominated by Python object allocation, so pushing filtering into the OGR layer with `fiona.open(..., where="...")` or a bounding-box `bbox=` reduces the number of dicts it ever builds. For pipelines that read many files, combine either reader with the strategies in [Memory Management for Large GIS Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) to keep aggregate RSS bounded.
+pyogrio's advantage scales with attribute width: the more columns a layer carries, the more the columnar Arrow transfer beats building a dict per feature. On a narrow, geometry-only layer the gap shrinks. Fiona's cost is dominated by Python object allocation, so pushing filtering into the OGR layer with `fiona.open(..., where="...")` or a bounding-box `bbox=` reduces the number of dicts it ever builds. For pipelines that read many files, combine either reader with the strategies in [Memory Management for Large GIS Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) to keep aggregate RSS bounded.
 
 ## FAQ
 
@@ -338,5 +338,5 @@ Yes, both wrap the same GDAL/OGR drivers, so a correctly written read returns id
 
 ## Related
 
-- [Chunked Vector Data Reading for Spatial Pipelines](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — parent guide covering windowed reads, layer filtering, and bounded-memory vector ingestion
-- [Reading Large GeoJSON in Chunks with pyogrio](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/reading-large-geojson-in-chunks-with-pyogrio/) — the windowed pyogrio pattern applied to oversized GeoJSON sources
+- [Chunked Vector Data Reading for Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — parent guide covering windowed reads, layer filtering, and bounded-memory vector ingestion
+- [Reading Large GeoJSON in Chunks with pyogrio](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/reading-large-geojson-in-chunks-with-pyogrio/) — the windowed pyogrio pattern applied to oversized GeoJSON sources

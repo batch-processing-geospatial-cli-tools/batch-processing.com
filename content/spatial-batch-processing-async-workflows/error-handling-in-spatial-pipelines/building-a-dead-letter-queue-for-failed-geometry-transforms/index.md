@@ -2,7 +2,7 @@
 title: "Building a Dead-Letter Queue for Failed Geometry Transforms"
 description: "Quarantine invalid geometries and CRS mismatches into a JSON dead-letter file so a batch pipeline finishes clean features and you can replay failures later."
 slug: "building-a-dead-letter-queue-for-failed-geometry-transforms"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -78,7 +78,7 @@ dateModified: "2026-07-10"
 
 # Building a Dead-Letter Queue for Failed Geometry Transforms
 
-To keep a batch running when some geometries fail to transform, process the GeoDataFrame one feature at a time, wrap each `to_crs` call in a try/except, and route any feature that raises into a JSON dead-letter file recording its id, `error_class`, and original geometry as WKT. Clean features flow straight to the output; the run finishes and returns exit code `12` to signal a partial failure you can replay later. This page is part of the [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) guide inside the broader [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) reference.
+To keep a batch running when some geometries fail to transform, process the GeoDataFrame one feature at a time, wrap each `to_crs` call in a try/except, and route any feature that raises into a JSON dead-letter file recording its id, `error_class`, and original geometry as WKT. Clean features flow straight to the output; the run finishes and returns exit code `12` to signal a partial failure you can replay later. This page is part of the [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) guide inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -86,7 +86,7 @@ To keep a batch running when some geometries fail to transform, process the GeoD
 - `pip install geopandas shapely pyproj pyogrio`
 - GDAL 3.4+ available to pyogrio (installed automatically by the geopandas wheels on most platforms)
 
-The dead-letter pattern borrows the same idea message queues use: a message that cannot be processed is set aside rather than blocking the queue. For the full failure-capture picture, read the [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) overview, and pair this page with [Logging Spatial Transformations to Structured JSON](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/) so every quarantined feature also lands in your run log.
+The dead-letter pattern borrows the same idea message queues use: a message that cannot be processed is set aside rather than blocking the queue. For the full failure-capture picture, read the [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) overview, and pair this page with [Logging Spatial Transformations to Structured JSON](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/) so every quarantined feature also lands in your run log.
 
 ## How a Feature Is Routed
 
@@ -365,7 +365,7 @@ EOF
 echo "exit code was: $?"   # 12 means partial failure with a populated queue
 ```
 
-If clean plus dead-letter equals the source total and the exit code is `12`, the queue captured every failure and the clean layer is safe to hand downstream. Pair this with [structured JSON logging of each transformation result](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/) so the same counts appear in your run log.
+If clean plus dead-letter equals the source total and the exit code is `12`, the queue captured every failure and the clean layer is safe to hand downstream. Pair this with [structured JSON logging of each transformation result](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/) so the same counts appear in your run log.
 
 ## FAQ
 
@@ -397,5 +397,5 @@ Return exit code `12` for partial batch failure: some features were written clea
 
 ## Related
 
-- [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — parent guide covering failure capture, retries, and structured error reporting for batch vector and raster workflows
-- [Logging Spatial Transformations to Structured JSON](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/) — record every per-feature outcome, including dead-letter entries, in a machine-readable run log
+- [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — parent guide covering failure capture, retries, and structured error reporting for batch vector and raster workflows
+- [Logging Spatial Transformations to Structured JSON](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/) — record every per-feature outcome, including dead-letter entries, in a machine-readable run log

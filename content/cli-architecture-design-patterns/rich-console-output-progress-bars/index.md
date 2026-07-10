@@ -2,7 +2,7 @@
 title: "Rich Console Output & Progress Bars for GIS CLIs"
 description: "Add structured progress bars, themed tables, and error-safe console output to geospatial batch CLIs using Python's Rich library — with full CI/CD compatibility."
 slug: "rich-console-output-progress-bars"
-type: "cluster"
+type: "topic"
 breadcrumb: "CLI Architecture & Design Patterns > Rich Console Output & Progress Bars"
 datePublished: "2024-03-15"
 dateModified: "2026-06-23"
@@ -73,13 +73,13 @@ dateModified: "2026-06-23"
 }
 </script>
 
-Adding terminal feedback to geospatial batch CLIs turns opaque multi-minute raster runs into observable, debuggable pipelines — this page is part of the [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) guide.
+Adding terminal feedback to geospatial batch CLIs turns opaque multi-minute raster runs into observable, debuggable pipelines — this page is part of the [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
 
 ## Prerequisites
 
 - Python 3.9+ (required for stable `concurrent.futures` behavior and modern type hints)
 - `rich>=13.0.0` — progress tracking, themed tables, ANSI color management, auto terminal detection
-- A CLI dispatch layer: use [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) for type-safe entry points that accept `Path` and EPSG arguments
+- A CLI dispatch layer: use [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) for type-safe entry points that accept `Path` and EPSG arguments
 - Geospatial stack: `rasterio`, `geopandas`, or `pyproj` for real data operations
 - Terminal with ANSI support (Windows Terminal, iTerm2, GNOME Terminal, modern CI runners with `TERM=xterm-256color`)
 
@@ -262,7 +262,7 @@ def render_summary(results: list[tuple[Path, bool]]) -> int:
     return 1 if failures else 0
 ```
 
-For richer CRS-aware column formatting — displaying EPSG authority codes, axis order badges, and projection type labels — see [Customizing Rich tables for coordinate system outputs](/cli-architecture-design-patterns/rich-console-output-progress-bars/customizing-rich-tables-for-coordinate-system-outputs/).
+For richer CRS-aware column formatting — displaying EPSG authority codes, axis order badges, and projection type labels — see [Customizing Rich tables for coordinate system outputs](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/customizing-rich-tables-for-coordinate-system-outputs/).
 
 ### Step 5 — Wire the console layer into the Typer command
 
@@ -296,7 +296,7 @@ def reproject(
     raise typer.Exit(code=exit_code)
 ```
 
-Exit code `0` means all files succeeded; exit code `1` means at least one file failed. This follows POSIX conventions and allows CI pipelines to treat partial failures as build errors. For command dispatch patterns that structure multiple subcommands with shared option groups, see [CLI Subcommand Organization](/cli-architecture-design-patterns/cli-subcommand-organization/).
+Exit code `0` means all files succeeded; exit code `1` means at least one file failed. This follows POSIX conventions and allows CI pipelines to treat partial failures as build errors. For command dispatch patterns that structure multiple subcommands with shared option groups, see [CLI Subcommand Organization](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/).
 
 ## Configuration integration
 
@@ -323,7 +323,7 @@ def build_console() -> Console:
     )
 ```
 
-For layered YAML/TOML configuration that governs defaults like `default_epsg`, `log_level`, and `output_format`, [Managing YAML configs for geospatial CLI workflows](/cli-architecture-design-patterns/configuration-file-management/managing-yaml-configs-for-geospatial-cli-workflows/) shows how to merge file, environment, and flag layers into a single config object that your console layer can read at startup.
+For layered YAML/TOML configuration that governs defaults like `default_epsg`, `log_level`, and `output_format`, [Managing YAML configs for geospatial CLI workflows](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/managing-yaml-configs-for-geospatial-cli-workflows/) shows how to merge file, environment, and flag layers into a single config object that your console layer can read at startup.
 
 ## Data-flow diagram: the progress lifecycle
 
@@ -466,13 +466,13 @@ Alternatively, pass `--quiet` on the CI command line — the Typer entry point s
 <details class="faq-item">
 <summary>Can I render CRS metadata tables alongside the progress output?</summary>
 
-Yes. Because `Console` is passed explicitly, you can call `console.print(table)` at any point inside the `Progress` context — Rich will render the table above the live progress bar. For full EPSG column configuration, axis order badges, and overflow handling, see [Customizing Rich tables for coordinate system outputs](/cli-architecture-design-patterns/rich-console-output-progress-bars/customizing-rich-tables-for-coordinate-system-outputs/).
+Yes. Because `Console` is passed explicitly, you can call `console.print(table)` at any point inside the `Progress` context — Rich will render the table above the live progress bar. For full EPSG column configuration, axis order badges, and overflow handling, see [Customizing Rich tables for coordinate system outputs](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/customizing-rich-tables-for-coordinate-system-outputs/).
 
 </details>
 
 ## Related
 
-- [Customizing Rich tables for coordinate system outputs](/cli-architecture-design-patterns/rich-console-output-progress-bars/customizing-rich-tables-for-coordinate-system-outputs/) — map `pyproj.CRS` objects into terminal tables with EPSG badges and axis order indicators
-- [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) — parent guide covering the full CLI toolcraft stack for Python GIS practitioners
-- [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) — type-safe CLI entry points that integrate cleanly with the progress manager patterns shown above
-- [Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) — comparison of callback-heavy and type-driven dispatch, including how each framework handles progress manager injection
+- [Customizing Rich tables for coordinate system outputs](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/customizing-rich-tables-for-coordinate-system-outputs/) — map `pyproj.CRS` objects into terminal tables with EPSG badges and axis order indicators
+- [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) — parent guide covering the full CLI toolcraft stack for Python GIS practitioners
+- [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — type-safe CLI entry points that integrate cleanly with the progress manager patterns shown above
+- [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) — comparison of callback-heavy and type-driven dispatch, including how each framework handles progress manager injection

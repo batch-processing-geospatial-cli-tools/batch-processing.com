@@ -2,7 +2,7 @@
 title: "Processing 100k GeoJSON Files with Python asyncio"
 description: "Process 100,000 GeoJSON files with Python asyncio: bounded concurrency, backpressure queues, CPU offloading, and batched writes — with a copy-paste implementation."
 slug: "processing-100k-geojson-files-with-python-asyncio"
-type: "long_tail"
+type: "article"
 breadcrumb: "Processing 100k GeoJSON Files"
 datePublished: "2024-11-15"
 dateModified: "2026-06-23"
@@ -67,7 +67,7 @@ dateModified: "2026-06-23"
 
 Processing 100,000 GeoJSON files with Python asyncio requires decoupling disk I/O from CPU-bound JSON parsing. The bottleneck is rarely raw disk bandwidth — it is uncontrolled concurrency that exhausts file descriptors, triggers memory thrashing, or blocks the event loop during deserialization. A bounded `asyncio.Semaphore`, a capped `asyncio.Queue`, and batched output writes keep peak memory under 200 MB while delivering 3–5x throughput over a synchronous script.
 
-This page is part of the [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) guide, which sits inside the broader [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) reference.
+This page is part of the [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) guide, which sits inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -78,7 +78,7 @@ This page is part of the [Async I/O for Raster Processing](/spatial-batch-proces
 | `orjson` (optional) | `pip install orjson` — 2–3x faster JSON parsing for large payloads |
 | OS file-descriptor limit | `ulimit -n 65536` before running; persistent via `/etc/security/limits.conf` |
 
-No GDAL installation is needed for pure GeoJSON work. If your pipeline feeds validated features into a rasterio or pyogrio stage, see [Chunked Vector Data Reading](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) for downstream integration patterns.
+No GDAL installation is needed for pure GeoJSON work. If your pipeline feeds validated features into a rasterio or pyogrio stage, see [Chunked Vector Data Reading](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) for downstream integration patterns.
 
 ## Pipeline Architecture
 
@@ -116,7 +116,7 @@ The three-stage design below keeps every layer independently bounded, so a slow 
   <text x="490" y="103" text-anchor="middle" font-size="10" font-family="inherit" fill="currentColor" opacity="0.6">features</text>
 </svg>
 
-Unlike [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — which requires chunked binary streaming and GDAL bindings — vector GeoJSON processing is text-heavy and thrives on pure-Python async I/O with minimal C-extension overhead.
+Unlike [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — which requires chunked binary streaming and GDAL bindings — vector GeoJSON processing is text-heavy and thrives on pure-Python async I/O with minimal C-extension overhead.
 
 ## Complete Working Implementation
 
@@ -301,7 +301,7 @@ if __name__ == "__main__":
    Source files are each a `FeatureCollection`. Extending `pending` with their individual features — rather than nesting collections — produces output files that any GIS tool can ingest directly without an extra unwrap step.
 
 6. **`sys.exit(asyncio.run(main(...)))` — POSIX exit codes.**
-   `main` returns `0` on success and `2` when no input files are found. Any uncaught exception propagates through `asyncio.run` and exits with code `1`. These follow the POSIX convention (0 = OK, 1 = runtime error, 2 = usage / bad input) used throughout [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/).
+   `main` returns `0` on success and `2` when no input files are found. Any uncaught exception propagates through `asyncio.run` and exits with code `1`. These follow the POSIX convention (0 = OK, 1 = runtime error, 2 = usage / bad input) used throughout [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/).
 
 ## Named Gotcha: OSError 24 — Too Many Open Files
 
@@ -387,6 +387,6 @@ Newline-delimited GeoJSON (`.geojsonl` or `.ndjson`) stores one Feature per line
 
 ## Related
 
-- [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — the parent guide covering event-loop safety, GDAL bridge patterns, and semaphore sizing for binary raster formats
-- [Chunked Vector Data Reading](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — how to feed validated GeoJSON features into pyogrio or geopandas in memory-safe chunks
-- [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — structured logging, retry strategies, and exit-code conventions for the kind of pipeline built on this page
+- [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — the parent guide covering event-loop safety, GDAL bridge patterns, and semaphore sizing for binary raster formats
+- [Chunked Vector Data Reading](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — how to feed validated GeoJSON features into pyogrio or geopandas in memory-safe chunks
+- [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — structured logging, retry strategies, and exit-code conventions for the kind of pipeline built on this page

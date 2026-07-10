@@ -2,7 +2,7 @@
 title: "Streaming Cloud-Optimized GeoTIFFs with Async Range Requests"
 description: "Fetch only the tiles you need from a remote COG using async HTTP range requests, decoding each block with rasterio without downloading the whole file."
 slug: "streaming-cloud-optimized-geotiffs-with-async-range-requests"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # Streaming Cloud-Optimized GeoTIFFs with Async Range Requests
 
-To stream just the blocks you need from a remote Cloud-Optimized GeoTIFF, point GDAL's `/vsicurl/` driver at the object's URL and read a `rasterio.windows.Window`; GDAL parses the header once, then issues HTTP range requests for only the tiles the window overlaps. Wrapping each blocking read in `asyncio.to_thread()` under a `Semaphore` lets you pull many windows concurrently without downloading whole files. This page is part of the [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) guide inside the broader [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/) reference.
+To stream just the blocks you need from a remote Cloud-Optimized GeoTIFF, point GDAL's `/vsicurl/` driver at the object's URL and read a `rasterio.windows.Window`; GDAL parses the header once, then issues HTTP range requests for only the tiles the window overlaps. Wrapping each blocking read in `asyncio.to_thread()` under a `Semaphore` lets you pull many windows concurrently without downloading whole files. This page is part of the [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) guide inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -86,7 +86,7 @@ To stream just the blocks you need from a remote Cloud-Optimized GeoTIFF, point 
 - GDAL 3.4+ with curl support (`gdalinfo --formats | grep vsicurl` or check that `/vsicurl/` is usable)
 - A COG reachable over HTTPS with an origin that honours `Range:` headers (S3, GCS, Azure Blob, and most CDNs do)
 
-If your inputs are large enough that a single window still strains RAM, pair this with [Memory Management for Large GIS Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) so per-block arrays stay bounded.
+If your inputs are large enough that a single window still strains RAM, pair this with [Memory Management for Large GIS Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) so per-block arrays stay bounded.
 
 ## How COG Layout Enables Range Reads
 
@@ -265,7 +265,7 @@ if __name__ == "__main__":
 
 6. **`asyncio.Semaphore(MAX_CONCURRENCY)`** — Each window read holds one connection to the origin. The semaphore caps simultaneous connections at eight, which keeps you under typical per-host connection limits and avoids `429 Too Many Requests` throttling from object stores.
 
-7. **`asyncio.to_thread(read_window_blocking, ...)`** — rasterio reads are blocking C calls that release the GIL during I/O. Offloading them to the default thread pool lets the event loop keep other window reads in flight, giving genuine concurrency for network-bound work described in the [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) guide.
+7. **`asyncio.to_thread(read_window_blocking, ...)`** — rasterio reads are blocking C calls that release the GIL during I/O. Offloading them to the default thread pool lets the event loop keep other window reads in flight, giving genuine concurrency for network-bound work described in the [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) guide.
 
 ## Named Gotcha: A Non-COG or Overview-less File Forces Full-File Reads
 
@@ -354,5 +354,5 @@ Build the bounding box in EPSG:3857 and pass it through `rasterio.warp.transform
 
 ## Related
 
-- [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — parent guide covering asyncio patterns, thread offloading, and connection limits for network-bound raster work
-- [Processing 100k GeoJSON Files with Python asyncio](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/processing-100k-geojson-files-with-python-asyncio/) — the vector counterpart: fan out many small async reads under a bounded semaphore
+- [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — parent guide covering asyncio patterns, thread offloading, and connection limits for network-bound raster work
+- [Processing 100k GeoJSON Files with Python asyncio](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/processing-100k-geojson-files-with-python-asyncio/) — the vector counterpart: fan out many small async reads under a bounded semaphore

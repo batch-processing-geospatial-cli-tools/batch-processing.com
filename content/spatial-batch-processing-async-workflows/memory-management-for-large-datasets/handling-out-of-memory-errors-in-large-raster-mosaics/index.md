@@ -2,7 +2,7 @@
 title: "Handling Out-of-Memory Errors in Large Raster Mosaics"
 description: "Fix OOM crashes when merging large raster mosaics in Python. Use VRT-backed windowed I/O with rasterio to cap RAM to a single chunk regardless of mosaic size."
 slug: "handling-out-of-memory-errors-in-large-raster-mosaics"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Spatial Batch Processing & Async Workflows"
     url: "/spatial-batch-processing-async-workflows/"
@@ -104,7 +104,7 @@ dateModified: "2026-06-23"
 
 The fix for OOM crashes in raster mosaic pipelines is to replace any full-extent allocation — including `rasterio.merge()` — with a VRT-backed windowed I/O loop that reads and writes one spatial tile at a time, capping peak RAM to `chunk_size × bands × dtype_bytes` plus a bounded GDAL cache, regardless of mosaic dimensions.
 
-This page is part of the [Memory Management for Large Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) guide within [Spatial Batch Processing & Async Workflows](/spatial-batch-processing-async-workflows/).
+This page is part of the [Memory Management for Large Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) guide within [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/).
 
 ## Prerequisites
 
@@ -129,7 +129,7 @@ Three mechanics combine to exhaust RAM in naive mosaic workflows:
 
 1. **Eager full-extent allocation.** `rasterio.merge()` and similar helpers allocate a contiguous NumPy array sized to the union of all input extents before a single pixel is composited. A 10 000×10 000 three-band `uint16` mosaic requires ~600 MB raw; with NumPy object headers and GDAL's internal block cache the working footprint routinely triples.
 2. **GDAL cache growth without a ceiling.** GDAL caches recently decoded blocks to speed re-reads. Without an explicit `GDAL_CACHEMAX`, the cache grows until the kernel OOM killer terminates the process.
-3. **Worker multiplication.** When a CLI tool spawns a process pool for parallelism — a common pattern described in [Multiprocessing Geospatial Tasks](/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) — each worker inherits a full copy of the dataset handle and its cache state, causing exponential RAM multiplication under concurrent loads.
+3. **Worker multiplication.** When a CLI tool spawns a process pool for parallelism — a common pattern described in [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) — each worker inherits a full copy of the dataset handle and its cache state, causing exponential RAM multiplication under concurrent loads.
 
 The streaming architecture below breaks all three failure modes.
 
@@ -316,7 +316,7 @@ if __name__ == "__main__":
 
 4. **Window boundary clamping with `min(chunk_size, remaining)`.** Without this, the final column and row of tiles would generate `Window` objects extending beyond `src.width` or `src.height`. GDAL would fill the out-of-bounds region with the nodata value, silently corrupting edge pixels.
 
-5. **`blockxsize`/`blockysize` in output `meta` must match `chunk_size`.** When a subsequent process re-opens the output GeoTIFF with windowed reads — as in [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — aligned block sizes eliminate read-amplification (reading more data than requested to satisfy a block boundary). Misalignment can multiply I/O cost by the ratio `block_size / request_size`.
+5. **`blockxsize`/`blockysize` in output `meta` must match `chunk_size`.** When a subsequent process re-opens the output GeoTIFF with windowed reads — as in [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — aligned block sizes eliminate read-amplification (reading more data than requested to satisfy a block boundary). Misalignment can multiply I/O cost by the ratio `block_size / request_size`.
 
 6. **`del data` + `gc.collect()` inside the inner loop.** Python's reference counting should free `data` when it goes out of scope, but fragmented heaps in long-running loops accumulate small objects between collection cycles. Explicit `del` + `gc.collect()` keeps RSS flat across millions of tile iterations.
 
@@ -384,7 +384,7 @@ QGIS may not stretch the histogram for `uint16` data by default. Right-click the
 <details class="faq-item">
 <summary>Can I use this pattern on cloud-optimised GeoTIFFs (COGs) stored on S3?</summary>
 
-Yes. Pass `s3://bucket/prefix/file.tif` directly to `gdal.BuildVRT()`. GDAL's `/vsis3/` virtual filesystem handles HTTP range requests transparently. Set `GDAL_HTTP_MAX_RETRY=3` and `GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES` as environment variables to reduce per-tile round-trips on slow connections. For GDAL environment-variable syntax, see the [GDAL Configuration Options](https://gdal.org/en/stable/user/configoptions.html) reference. The [chunked vector data reading](/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) guide covers the equivalent pattern for cloud-hosted vector datasets.
+Yes. Pass `s3://bucket/prefix/file.tif` directly to `gdal.BuildVRT()`. GDAL's `/vsis3/` virtual filesystem handles HTTP range requests transparently. Set `GDAL_HTTP_MAX_RETRY=3` and `GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES` as environment variables to reduce per-tile round-trips on slow connections. For GDAL environment-variable syntax, see the [GDAL Configuration Options](https://gdal.org/en/stable/user/configoptions.html) reference. The [chunked vector data reading](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) guide covers the equivalent pattern for cloud-hosted vector datasets.
 
 </details>
 
@@ -406,6 +406,6 @@ For chunk sizes of 512–2048 pixels, `gc.collect()` typically adds 0.5–2 ms p
 
 ## Related
 
-- [Memory Management for Large Datasets](/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) — parent guide covering profiling, GDAL cache configuration, and process-level memory ceilings
-- [Async I/O for Raster Processing](/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — dispatch windowed tiles as async tasks to overlap I/O and CPU work across large tile grids
-- [Error Handling in Spatial Pipelines](/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — structured error recovery and structured JSON logging for long-running mosaic jobs
+- [Memory Management for Large Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) — parent guide covering profiling, GDAL cache configuration, and process-level memory ceilings
+- [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — dispatch windowed tiles as async tasks to overlap I/O and CPU work across large tile grids
+- [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — structured error recovery and structured JSON logging for long-running mosaic jobs

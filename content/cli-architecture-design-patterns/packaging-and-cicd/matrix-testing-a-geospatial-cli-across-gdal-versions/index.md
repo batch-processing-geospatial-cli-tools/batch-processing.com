@@ -2,7 +2,7 @@
 title: "Matrix Testing a Geospatial CLI Across GDAL Versions"
 description: "Configure a GitHub Actions matrix that runs your CLI test suite against multiple GDAL and Python versions to catch driver and API regressions before release."
 slug: "matrix-testing-a-geospatial-cli-across-gdal-versions"
-type: "long_tail"
+type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
@@ -77,7 +77,7 @@ dateModified: "2026-07-10"
 
 # Matrix Testing a Geospatial CLI Across GDAL Versions
 
-To test a geospatial CLI across GDAL versions, define a GitHub Actions `strategy.matrix` over `python-version` and `gdal-version`, run each job inside the matching `ghcr.io/osgeo/gdal` container (or a conda-forge `gdal=<ver>` pin), install your package, run `pytest`, and upload coverage per job. Set `fail-fast: false` so one red combination does not cancel the rest. This page is part of the [Packaging & CI/CD for Python GIS CLI Tools](/cli-architecture-design-patterns/packaging-and-cicd/) guide within the broader [CLI Architecture & Design Patterns for Python GIS](/cli-architecture-design-patterns/) reference.
+To test a geospatial CLI across GDAL versions, define a GitHub Actions `strategy.matrix` over `python-version` and `gdal-version`, run each job inside the matching `ghcr.io/osgeo/gdal` container (or a conda-forge `gdal=<ver>` pin), install your package, run `pytest`, and upload coverage per job. Set `fail-fast: false` so one red combination does not cancel the rest. This page is part of the [Packaging & CI/CD for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/) guide within the broader [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
@@ -86,7 +86,7 @@ To test a geospatial CLI across GDAL versions, define a GitHub Actions `strategy
 - Familiarity with GitHub Actions workflow YAML
 - GDAL is provided by the container image or conda environment in CI — you do not install it with pip
 
-The core problem is that GDAL is a C library, and its Python bindings (`rasterio`, `pyproj`, `fiona`/`pyogrio`) are compiled against a specific ABI. A test that passes against GDAL 3.4 can regress on GDAL 3.8 because a driver was renamed, a default changed, or axis-order handling shifted. A version matrix surfaces these regressions before your users do. For how these pins fit into your release story, see the parent [Packaging & CI/CD for Python GIS CLI Tools](/cli-architecture-design-patterns/packaging-and-cicd/) guide.
+The core problem is that GDAL is a C library, and its Python bindings (`rasterio`, `pyproj`, `fiona`/`pyogrio`) are compiled against a specific ABI. A test that passes against GDAL 3.4 can regress on GDAL 3.8 because a driver was renamed, a default changed, or axis-order handling shifted. A version matrix surfaces these regressions before your users do. For how these pins fit into your release story, see the parent [Packaging & CI/CD for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/) guide.
 
 ## How the Matrix Fans Out
 
@@ -271,7 +271,7 @@ def test_target_crs_is_projected(epsg):
 
 The single most common cross-version failure is authority-compliant axis order. Since GDAL 3 and PROJ 6, coordinate transformations honour the axis order declared by the CRS authority, so `EPSG:4326` is latitude-then-longitude, not the longitude-first convention many older scripts assume. A test that hardcodes `transformer.transform(lon, lat)` against a `Transformer` built without `always_xy=True` can silently swap coordinates, and the exact behaviour drifts as `pyproj` and its bundled PROJ move between GDAL 3.4, 3.6, and 3.8. Driver defaults shift too — for example, creation-option defaults and NULL-handling in some drivers changed across these releases.
 
-The fix is twofold. First, always build transformers with `always_xy=True` so your CLI's coordinate order is explicit and version-independent, as shown in the test above. Second, pin `pyproj` and `rasterio` to versions built against the GDAL in each matrix leg, rather than letting pip resolve whatever wheel it prefers. When your CLI reads pins or driver preferences from configuration, keep them consistent across environments using the [Environment Variable Sync](/cli-architecture-design-patterns/environment-variable-sync/) pattern so local runs and CI resolve the same GDAL behaviour. For exercising the command entry points themselves, drive them with [Testing Click Commands with CliRunner for GIS Tools](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/testing-click-commands-with-clirunner-for-gis-tools/).
+The fix is twofold. First, always build transformers with `always_xy=True` so your CLI's coordinate order is explicit and version-independent, as shown in the test above. Second, pin `pyproj` and `rasterio` to versions built against the GDAL in each matrix leg, rather than letting pip resolve whatever wheel it prefers. When your CLI reads pins or driver preferences from configuration, keep them consistent across environments using the [Environment Variable Sync](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/) pattern so local runs and CI resolve the same GDAL behaviour. For exercising the command entry points themselves, drive them with [Testing Click Commands with CliRunner for GIS Tools](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/testing-click-commands-with-clirunner-for-gis-tools/).
 
 ## Verification
 
@@ -329,5 +329,5 @@ Add a step that runs `gdalinfo --version` and `python -c` to print `rasterio.gda
 
 ## Related
 
-- [Packaging & CI/CD for Python GIS CLI Tools](/cli-architecture-design-patterns/packaging-and-cicd/) — parent guide covering wheels, container builds, and release automation for geospatial command-line tools
-- [Building a Docker Image with GDAL for a Python CLI](/cli-architecture-design-patterns/packaging-and-cicd/building-a-docker-image-with-gdal-for-a-python-cli/) — package the same pinned GDAL you test against into a reproducible runtime image
+- [Packaging & CI/CD for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/) — parent guide covering wheels, container builds, and release automation for geospatial command-line tools
+- [Building a Docker Image with GDAL for a Python CLI](https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/building-a-docker-image-with-gdal-for-a-python-cli/) — package the same pinned GDAL you test against into a reproducible runtime image

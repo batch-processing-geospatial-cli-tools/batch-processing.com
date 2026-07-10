@@ -2,7 +2,7 @@
 title: "Configuration File Management for GIS CLI Tools"
 description: "Configuration management for Python GIS CLIs using Pydantic Settings, TOML, and YAML — strict schemas, deterministic precedence chains, and fail-fast validation."
 slug: "configuration-file-management"
-type: "cluster"
+type: "topic"
 breadcrumb: "Configuration File Management"
 datePublished: "2024-03-15"
 dateModified: "2026-06-23"
@@ -72,7 +72,7 @@ dateModified: "2026-06-23"
 ]
 </script>
 
-Geospatial CLIs that orchestrate batch coordinate transformations, raster tile generation, and cloud storage synchronisation break down fast when parameters are scattered across hardcoded defaults, ad-hoc environment variables, and undocumented shell wrappers. A single, schema-validated configuration file — with a deterministic precedence chain from defaults through file to environment variable to CLI flag — is the cure. This guide is part of the [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) reference and focuses specifically on the mechanics of loading, validating, and distributing that configuration within a Python GIS tool.
+Geospatial CLIs that orchestrate batch coordinate transformations, raster tile generation, and cloud storage synchronisation break down fast when parameters are scattered across hardcoded defaults, ad-hoc environment variables, and undocumented shell wrappers. A single, schema-validated configuration file — with a deterministic precedence chain from defaults through file to environment variable to CLI flag — is the cure. This guide is part of the [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference and focuses specifically on the mechanics of loading, validating, and distributing that configuration within a Python GIS tool.
 
 ## Prerequisites
 
@@ -80,7 +80,7 @@ Geospatial CLIs that orchestrate batch coordinate transformations, raster tile g
 - `pydantic>=2.0` and `pydantic-settings>=2.0`
 - `pyyaml>=6.0` if your pipeline uses YAML rather than TOML
 - GDAL/rasterio or GeoPandas in your virtual environment (field validators need to resolve CRS strings)
-- Familiarity with [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) to understand how CLI flags feed into the precedence chain
+- Familiarity with [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) to understand how CLI flags feed into the precedence chain
 
 ```bash
 pip install "pydantic>=2.0" "pydantic-settings>=2.0" pyyaml typer
@@ -298,7 +298,7 @@ def load_config(
 
 ### Step 4: Wire the Loader into a Typer Command
 
-Use [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) to declare the `--config` option and any per-invocation override flags. Build the `overrides` dict from whatever flags were explicitly set (check for `None` rather than a falsy default), then call `load_config` at the very start of the command body.
+Use [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) to declare the `--config` option and any per-invocation override flags. Build the `overrides` dict from whatever flags were explicitly set (check for `None` rather than a falsy default), then call `load_config` at the very start of the command body.
 
 ```python
 import sys
@@ -415,7 +415,7 @@ app = typer.Typer(
 )
 ```
 
-For teams working with YAML-based CI pipelines, [Managing YAML configs for geospatial CLI workflows](/cli-architecture-design-patterns/configuration-file-management/managing-yaml-configs-for-geospatial-cli-workflows/) covers multi-environment deployment patterns and schema migration.
+For teams working with YAML-based CI pipelines, [Managing YAML configs for geospatial CLI workflows](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/managing-yaml-configs-for-geospatial-cli-workflows/) covers multi-environment deployment patterns and schema migration.
 
 ## Error Handling and Gotchas
 
@@ -496,7 +496,7 @@ python -m mygeotool process --crs-target "WGS84"
 echo "Exit code: $?"  # expect: Exit code: 1
 ```
 
-The [environment variable synchronisation patterns in Environment Variable Sync](/cli-architecture-design-patterns/environment-variable-sync/) complement this verification approach with tooling for diffing resolved configuration against expected values in CI.
+The [environment variable synchronisation patterns in Environment Variable Sync](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/) complement this verification approach with tooling for diffing resolved configuration against expected values in CI.
 
 ## Performance Notes
 
@@ -539,7 +539,7 @@ Yes. Parse either format into a plain Python dict first using `tomllib` or `yaml
 
 ## Related
 
-- [Managing YAML configs for geospatial CLI workflows](/cli-architecture-design-patterns/configuration-file-management/managing-yaml-configs-for-geospatial-cli-workflows/) — schema validation patterns for multi-environment YAML pipelines
-- [Environment Variable Sync](/cli-architecture-design-patterns/environment-variable-sync/) — synchronise and audit environment variable state across deployment targets
-- [CLI Subcommand Organisation](/cli-architecture-design-patterns/cli-subcommand-organization/) — structure validated config injection across a multi-command Typer application
-- [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) — parent guide covering the full lifecycle of production Python GIS CLI tooling
+- [Managing YAML configs for geospatial CLI workflows](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/managing-yaml-configs-for-geospatial-cli-workflows/) — schema validation patterns for multi-environment YAML pipelines
+- [Environment Variable Sync](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/) — synchronise and audit environment variable state across deployment targets
+- [CLI Subcommand Organisation](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) — structure validated config injection across a multi-command Typer application
+- [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) — parent guide covering the full lifecycle of production Python GIS CLI tooling

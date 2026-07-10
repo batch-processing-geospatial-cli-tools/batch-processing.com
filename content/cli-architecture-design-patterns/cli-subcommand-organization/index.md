@@ -2,7 +2,7 @@
 title: "CLI Subcommand Organization for GIS Toolchains"
 description: "Structure Python GIS CLI tools with modular subcommand hierarchies, lazy imports, and type-driven signatures so your toolchain stays fast and testable as it scales."
 slug: "cli-subcommand-organization"
-type: "cluster"
+type: "topic"
 breadcrumb: "CLI Subcommand Organization"
 datePublished: "2024-11-01"
 dateModified: "2026-06-23"
@@ -74,7 +74,7 @@ dateModified: "2026-06-23"
 }
 </script>
 
-Splitting a Python GIS CLI into a clean subcommand hierarchy is the single most effective way to keep startup time under 200 ms and test surface area manageable — even when the underlying stack pulls in GDAL, rasterio, and pyproj. This page is part of the [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) guide.
+Splitting a Python GIS CLI into a clean subcommand hierarchy is the single most effective way to keep startup time under 200 ms and test surface area manageable — even when the underlying stack pulls in GDAL, rasterio, and pyproj. This page is part of the [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
 
 ## Prerequisites
 
@@ -82,7 +82,7 @@ Splitting a Python GIS CLI into a clean subcommand hierarchy is the single most 
 - **`typer>=0.12`** or **`click>=8.1`** — examples below use Typer; the structural patterns apply to either.
 - **GIS stack** — `rasterio>=1.3`, `pyproj>=3.6`, `shapely>=2.0`, `pyogrio>=0.7` for realistic command signatures.
 - **`pytest>=8`** with `typer.testing.CliRunner` for integration tests.
-- Background reading: [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) covers type-driven option declarations; [Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) covers framework trade-offs if you have not yet committed to one.
+- Background reading: [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) covers type-driven option declarations; [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) covers framework trade-offs if you have not yet committed to one.
 
 ## Problem framing
 
@@ -279,7 +279,7 @@ Because `import rasterio` sits inside the callback body, `geo --help`, `geo inge
 
 ### Step 4 — Attach type-driven signatures using `typing.Annotated`
 
-[Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) establishes the type-driven pattern in detail. Applied here to a reprojection command:
+[Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) establishes the type-driven pattern in detail. Applied here to a reprojection command:
 
 ```python
 # src/geo_cli/transform/reproject.py
@@ -369,7 +369,7 @@ After `pip install -e .` (or `uv pip install -e .`), the `geo` executable is ava
 
 ## Configuration integration
 
-The layered config pattern — defaults in code, overrides from a YAML file, then environment variables, then explicit flags — plugs naturally into this subcommand structure. Each group's `__init__.py` can read a shared `Settings` object that [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/) describes in full:
+The layered config pattern — defaults in code, overrides from a YAML file, then environment variables, then explicit flags — plugs naturally into this subcommand structure. Each group's `__init__.py` can read a shared `Settings` object that [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) describes in full:
 
 ```python
 # src/geo_cli/config.py
@@ -401,7 +401,7 @@ settings = GeoSettings.load()
 
 Any subcommand that needs a default EPSG imports `settings.default_epsg`. When `GEO_DEFAULT_EPSG=32632` is set in the shell — for instance in a CI environment that always works in UTM zone 32N — it overrides the YAML default without touching command flags. Explicit `--epsg` on the command line takes precedence over both.
 
-[Environment Variable Sync](/cli-architecture-design-patterns/environment-variable-sync/) covers the precedence chain and `GDAL_*` / `PROJ_*` variable handling in detail.
+[Environment Variable Sync](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/) covers the precedence chain and `GDAL_*` / `PROJ_*` variable handling in detail.
 
 ## Error handling and gotchas
 
@@ -517,7 +517,7 @@ GDAL and rasterio trigger C extension initialisation at import time. If your sub
 <details class="faq-item">
 <summary>Can I mix Click and Typer subcommands in the same app?</summary>
 
-Yes. Typer exposes a `.as_click_group()` method that converts a `typer.Typer` instance into a `click.Group`. You can then attach a raw Click group as a subcommand. This is useful when migrating a legacy Click-based command incrementally: keep the old Click group working while rebuilding individual commands as Typer callbacks. The [Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) page covers the interop pattern in detail.
+Yes. Typer exposes a `.as_click_group()` method that converts a `typer.Typer` instance into a `click.Group`. You can then attach a raw Click group as a subcommand. This is useful when migrating a legacy Click-based command incrementally: keep the old Click group working while rebuilding individual commands as Typer callbacks. The [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) page covers the interop pattern in detail.
 </details>
 
 <details class="faq-item">
@@ -536,9 +536,9 @@ Use `0` for success, `1` for user input errors (wrong flag, missing file), `2` f
 
 ## Related
 
-- [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) — parent guide covering the full architecture of production Python GIS command-line tools
-- [Structuring a Multi-Command GDAL CLI with Typer Sub-Apps](/cli-architecture-design-patterns/cli-subcommand-organization/structuring-a-multi-command-gdal-cli-with-typer-sub-apps/) — split raster, vector, and inspect commands into mountable sub-apps that stay independently testable
-- [Sharing Global Options Across Geospatial Subcommands](/cli-architecture-design-patterns/cli-subcommand-organization/sharing-global-options-across-geospatial-subcommands/) — propagate `--crs`, `--workers`, and `--config` to every subcommand through a Typer context object
-- [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) — type-driven option and argument declarations that slot directly into the subcommand signatures shown here
-- [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/) — layered config (YAML + env vars + flags) for geospatial CLI tools, including GDAL cache tuning
-- [Rich Console Output & Progress Bars](/cli-architecture-design-patterns/rich-console-output-progress-bars/) — adding structured progress feedback to long-running raster and vector commands within this subcommand structure
+- [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) — parent guide covering the full architecture of production Python GIS command-line tools
+- [Structuring a Multi-Command GDAL CLI with Typer Sub-Apps](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/structuring-a-multi-command-gdal-cli-with-typer-sub-apps/) — split raster, vector, and inspect commands into mountable sub-apps that stay independently testable
+- [Sharing Global Options Across Geospatial Subcommands](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/sharing-global-options-across-geospatial-subcommands/) — propagate `--crs`, `--workers`, and `--config` to every subcommand through a Typer context object
+- [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — type-driven option and argument declarations that slot directly into the subcommand signatures shown here
+- [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) — layered config (YAML + env vars + flags) for geospatial CLI tools, including GDAL cache tuning
+- [Rich Console Output & Progress Bars](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/) — adding structured progress feedback to long-running raster and vector commands within this subcommand structure
