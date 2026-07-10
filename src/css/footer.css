@@ -68,6 +68,22 @@
   padding-top: var(--space-md);
   font-size: 0.8rem;
   color: rgba(232, 228, 240, 0.65);
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
 }
+
+.footer-bottom p { margin: 0; }
+
+.footer-github {
+  display: inline-flex;
+  align-items: center;
+  color: rgba(232, 228, 240, 0.75);
+  transition: color var(--transition);
+}
+
+.footer-github:hover { color: var(--c-cream); }
+.footer-github svg { display: block; }
 
