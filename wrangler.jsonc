@@ -1,0 +1,9 @@
+{
+  // Cloudflare Worker serving the built Eleventy site via Workers Static Assets.
+  // (Migrated from a Pages project; deploy with `wrangler deploy`.)
+  "name": "batch-processing-com",
+  "compatibility_date": "2026-07-01",
+  "assets": {
+    "directory": "./_site"
+  }
+}

@@ -7,8 +7,8 @@
     "build": "eleventy",
     "start": "eleventy --serve --watch",
     "icons": "node src/scripts/generate-icons.js",
-    "deploy": "npm run build && wrangler pages deploy ./_site --project-name=batch-processing-com",
-    "deploy:prod": "npm run build && wrangler pages deploy ./_site --project-name=batch-processing-com --branch=main"
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:prod": "npm run build && wrangler deploy"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +20,7 @@
     "@11ty/eleventy-plugin-syntaxhighlight": "^5.0.2",
     "markdown-it": "^14.1.1",
     "markdown-it-anchor": "^9.2.0",
-    "markdown-it-checkbox": "^1.1.0"
+    "markdown-it-checkbox": "^1.1.0",
+    "wrangler": "^4.110.0"
   }
 }
