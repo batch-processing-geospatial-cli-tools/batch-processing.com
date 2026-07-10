@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const STATIC_CACHE = "gis-cli-static-" + CACHE_VERSION;
 const PAGES_CACHE  = "gis-cli-pages-"  + CACHE_VERSION;
 
@@ -49,7 +49,9 @@ self.addEventListener("fetch", (event) => {
   // Only handle same-origin GET requests
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
 
-  // Static assets (CSS, JS, images) → Cache-first
+  // Static assets (CSS, JS, images) → Stale-while-revalidate
+  // Serve from cache immediately, fetch a fresh copy in the background and
+  // update the cache so redeploys reach users without a hard refresh.
   if (
     url.pathname.startsWith("/css/") ||
     url.pathname.startsWith("/js/") ||
@@ -58,9 +60,7 @@ self.addEventListener("fetch", (event) => {
     url.pathname === "/favicon.svg" ||
     url.pathname === "/manifest.json"
   ) {
-    event.respondWith(
-      caches.match(request).then((cached) => cached || fetchAndCache(request, STATIC_CACHE))
-    );
+    event.respondWith(staleWhileRevalidate(request, STATIC_CACHE));
     return;
   }
 
@@ -86,5 +86,21 @@ async function fetchAndCache(request, cacheName) {
   const cache = await caches.open(cacheName);
   cache.put(request, response.clone());
   return response;
+}
+
+// Serve cached copy immediately (if present) while fetching a fresh copy in
+// the background to update the cache. Falls back to the network on a cache miss.
+async function staleWhileRevalidate(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+  const network = fetch(request)
+    .then((response) => {
+      if (response && response.ok) {
+        cache.put(request, response.clone());
+      }
+      return response;
+    })
+    .catch(() => cached);
+  return cached || network;
 }
 

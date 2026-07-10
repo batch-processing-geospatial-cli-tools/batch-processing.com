@@ -513,11 +513,11 @@ Key testing principles for this toolchain:
 - **CRS validation assertions.** Assert that transformations preserve topology and that mismatched projections raise explicit, actionable errors rather than silently producing shifted output.
 - **Idempotency checks.** Run the same command twice and assert that outputs are byte-identical (or that checksums match). Any second run that changes output indicates state leakage.
 
-In CI/CD pipelines, pin Python versions, lock dependency hashes, and cache downloaded spatial datasets. Use matrix testing across operating systems to catch platform-specific GDAL binding issues early. Containerise your CLI with minimal base images — `python:slim` plus pre-compiled GDAL wheels — and verify startup time, memory footprint, and `--help` output as smoke tests on every build.
+In CI/CD pipelines, pin Python versions, lock dependency hashes, and cache downloaded spatial datasets. The full discipline of reproducible builds, containerised GDAL, and version-matrix testing is covered in [Packaging & CI/CD for Python GIS CLI Tools](/cli-architecture-design-patterns/packaging-and-cicd/): use matrix testing across operating systems and GDAL releases to catch platform-specific binding issues early, containerise your CLI with minimal base images — `python:slim` plus pre-compiled GDAL wheels — and verify startup time, memory footprint, and `--help` output as smoke tests on every build.
 
 ## Topic Guide: Clusters Under This Section
 
-This section organises six focused topic areas. Each addresses a distinct architectural challenge in production GIS tooling:
+This section organises seven focused topic areas. Each addresses a distinct architectural challenge in production GIS tooling:
 
 **[Click vs Typer for Geospatial Workflows](/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/)** compares the two dominant Python CLI frameworks across routing paradigms, plugin architecture, testing ergonomics, and completion generation — grounded in spatial toolchain requirements rather than toy examples.
 
@@ -530,6 +530,8 @@ This section organises six focused topic areas. Each addresses a distinct archit
 **[Environment Variable Sync](/cli-architecture-design-patterns/environment-variable-sync/)** explains how to synchronise explicit config files with runtime environment overrides, manage `GDAL_CACHEMAX` and other GDAL environment hooks, and prevent brittle deployments in containerised or serverless runtimes.
 
 **[Rich Console Output & Progress Bars](/cli-architecture-design-patterns/rich-console-output-progress-bars/)** covers terminal UI patterns for batch jobs: dynamic progress bars, multi-column status tables, spinner animations, and TTY detection that strips ANSI codes cleanly in non-interactive environments.
+
+**[Packaging & CI/CD for Python GIS CLI Tools](/cli-architecture-design-patterns/packaging-and-cicd/)** covers the last mile: declaring console-script entry points, pinning the fragile GDAL stack, shipping reproducible multi-stage Docker images, and matrix-testing across GDAL and Python versions so the tool installs and runs identically everywhere.
 
 ## Conclusion
 

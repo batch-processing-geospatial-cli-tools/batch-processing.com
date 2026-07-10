@@ -47,9 +47,11 @@ description: A practitioner-focused resource for building, packaging, testing, a
     <p>
       The content is organised into two complementary sections: the first covers the
       <strong>CLI layer</strong> — argument parsing with Typer and Click, subcommand organisation,
-      Rich console output, and configuration management. The second dives into the
+      Rich console output, configuration management, and packaging &amp; CI/CD for the
+      notoriously fragile GDAL stack. The second dives into the
       <strong>processing layer</strong> — async I/O, multiprocessing, chunked vector reading,
-      memory-safe pipelines, and checkpointing for long-running spatial batch jobs.
+      memory-safe pipelines, dead-letter error handling, and checkpointing for long-running
+      spatial batch jobs.
     </p>
   </div>
 </section>
@@ -118,6 +120,26 @@ description: A practitioner-focused resource for building, packaging, testing, a
         <p class="start-card__desc">
           Persist progress to disk so a crashed or cancelled job can resume from the last
           successful record — essential for multi-hour raster pipelines.
+        </p>
+        <span class="start-card__cta" aria-hidden="true">Read guide →</span>
+      </a>
+
+      <a href="/cli-architecture-design-patterns/packaging-and-cicd/building-a-docker-image-with-gdal-for-a-python-cli/" class="start-card">
+        <span class="start-card__tag">CLI layer</span>
+        <strong class="start-card__title">Build a Docker Image with GDAL for a Python CLI</strong>
+        <p class="start-card__desc">
+          A reproducible multi-stage Dockerfile that pins GDAL and ships your geospatial CLI
+          so it runs identically in CI and production — no more "works on my machine".
+        </p>
+        <span class="start-card__cta" aria-hidden="true">Read guide →</span>
+      </a>
+
+      <a href="/spatial-batch-processing-async-workflows/chunked-vector-data-reading/pyogrio-vs-fiona-for-large-vector-datasets/" class="start-card">
+        <span class="start-card__tag">Processing layer</span>
+        <strong class="start-card__title">pyogrio vs Fiona for Large Vector Datasets</strong>
+        <p class="start-card__desc">
+          A benchmarked decision guide: when Arrow-based pyogrio's bulk reads win, and when
+          Fiona's record-by-record streaming keeps memory flat on huge Shapefiles.
         </p>
         <span class="start-card__cta" aria-hidden="true">Read guide →</span>
       </a>

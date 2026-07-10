@@ -537,6 +537,8 @@ Use `0` for success, `1` for user input errors (wrong flag, missing file), `2` f
 ## Related
 
 - [CLI Architecture & Design Patterns](/cli-architecture-design-patterns/) — parent guide covering the full architecture of production Python GIS command-line tools
+- [Structuring a Multi-Command GDAL CLI with Typer Sub-Apps](/cli-architecture-design-patterns/cli-subcommand-organization/structuring-a-multi-command-gdal-cli-with-typer-sub-apps/) — split raster, vector, and inspect commands into mountable sub-apps that stay independently testable
+- [Sharing Global Options Across Geospatial Subcommands](/cli-architecture-design-patterns/cli-subcommand-organization/sharing-global-options-across-geospatial-subcommands/) — propagate `--crs`, `--workers`, and `--config` to every subcommand through a Typer context object
 - [Argument Parsing with Typer](/cli-architecture-design-patterns/argument-parsing-with-typer/) — type-driven option and argument declarations that slot directly into the subcommand signatures shown here
 - [Configuration File Management](/cli-architecture-design-patterns/configuration-file-management/) — layered config (YAML + env vars + flags) for geospatial CLI tools, including GDAL cache tuning
 - [Rich Console Output & Progress Bars](/cli-architecture-design-patterns/rich-console-output-progress-bars/) — adding structured progress feedback to long-running raster and vector commands within this subcommand structure

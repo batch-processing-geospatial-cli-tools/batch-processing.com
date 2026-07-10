@@ -40,7 +40,7 @@
   <link rel="manifest" href="/manifest.json">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/main.css?v={{ assets.v }}">
 
   <!-- JSON-LD Structured Data ─────────────────────────────────────────── -->
   {%- if pageType == "home" %}
@@ -145,10 +145,10 @@
   {% include "components/footer.njk" %}
 
   <!-- Scripts -->
-  <script src="/js/nav.js" defer></script>
-  <script src="/js/copy-code.js" defer></script>
-  <script src="/js/checkbox.js" defer></script>
-  <script src="/js/accordion.js" defer></script>
-  <script src="/js/main.js" defer></script>
+  <script src="/js/nav.js?v={{ assets.v }}" defer></script>
+  <script src="/js/copy-code.js?v={{ assets.v }}" defer></script>
+  <script src="/js/checkbox.js?v={{ assets.v }}" defer></script>
+  <script src="/js/accordion.js?v={{ assets.v }}" defer></script>
+  <script src="/js/main.js?v={{ assets.v }}" defer></script>
 </body>
 </html>

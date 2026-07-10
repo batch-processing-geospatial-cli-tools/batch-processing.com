@@ -301,3 +301,11 @@ details.faq-item > summary:hover { background: var(--c-lavender-mid); }
   margin: 0;
 }
 
+
+/* In-article diagram SVGs span the full content column width.
+   Scoped to .prose + role="img" so decorative UI icons are untouched. */
+.prose svg[role="img"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto;
+}
