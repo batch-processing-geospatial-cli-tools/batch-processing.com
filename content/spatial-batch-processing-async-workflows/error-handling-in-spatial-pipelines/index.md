@@ -1,6 +1,6 @@
 ---
 title: "Error Handling in Spatial Pipelines"
-description: "Isolate CRS mismatches, GDAL driver failures, and geometry corruption in Python GIS batch jobs — production patterns with structured telemetry and graceful shutdown."
+description: "Isolate CRS mismatches, GDAL driver failures, and geometry corruption in Python batch jobs, with structured telemetry and graceful shutdown."
 slug: "error-handling-in-spatial-pipelines"
 type: "topic"
 breadcrumb: "Error Handling in Spatial Pipelines"
@@ -8,91 +8,11 @@ datePublished: "2024-03-15"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Error Handling in Spatial Pipelines",
-      "description": "Production patterns for isolating CRS mismatches, GDAL driver failures, and geometry corruption in Python GIS batch jobs — with structured telemetry and graceful shutdown.",
-      "datePublished": "2024-03-15",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Spatial Batch Processing & Async Workflows", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/"},
-        {"@type": "ListItem", "position": 3, "name": "Error Handling in Spatial Pipelines", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Build fault-tolerant error handling for Python spatial pipelines",
-      "step": [
-        {"@type": "HowToStep", "name": "Gate inputs with a CRS and geometry validation pass"},
-        {"@type": "HowToStep", "name": "Isolate GDAL context per worker with ProcessPoolExecutor"},
-        {"@type": "HowToStep", "name": "Wrap transient I/O in bounded exponential-backoff retry"},
-        {"@type": "HowToStep", "name": "Emit structured JSON telemetry with spatial context"},
-        {"@type": "HowToStep", "name": "Register SIGINT/SIGTERM handlers to flush and checkpoint on shutdown"}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does rasterio raise a CPLE_AppDefined error inside a multiprocessing worker?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "GDAL's global error handler is not fork-safe. Each worker process must call gdal.UseExceptions() and reset the error handler after the fork, or the C-level state inherited from the parent can fire spurious callbacks. Use the configure_gdal_for_worker() guard shown in the implementation section."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "When should I use CancelledError vs a custom sentinel in asyncio pipelines?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Raise asyncio.CancelledError for cooperative cancellation triggered by the event loop (e.g. task.cancel()). Use a custom sentinel value (e.g. None in a queue) to signal producers/consumers to stop when you are coordinating shutdown yourself without actually cancelling tasks."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How do I avoid duplicate output files after a retried raster write?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Write to a .tmp file first, then call os.replace() atomically. If the worker crashes mid-write, the .tmp is left behind (detectable and removable on restart) rather than a partially-written final file that silently passes CRC checks."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "What is the right exit code for a pipeline that succeeds but skips some files?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Exit 0 only when every requested file succeeded. Use exit code 1 for partial success (some files skipped or degraded), and exit code 2 for argument/configuration errors before any file is processed. This follows POSIX conventions and lets CI scripts distinguish hard failures from soft degradation."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Can I use tenacity's retry decorator inside asyncio coroutines?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. Replace @retry with @retry (async=True) or use tenacity's AsyncRetrying context manager. Wrap only the I/O-bound coroutine — never the CPU-bound function dispatched via asyncio.to_thread(), or you risk retrying the thread dispatch itself rather than the actual network call."
-          }
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 **TL;DR:** Wrap each spatial operation in an explicit failure boundary — validate CRS before opening file descriptors, isolate GDAL context per process, retry transient I/O with jittered backoff, and emit machine-readable telemetry that includes extent, CRS, and duration alongside the error message.
 
 ## Prerequisites
 
-This page is part of the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) guide. Before continuing, you should have:
+These patterns build on the wider [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) guide. Before continuing, you should have:
 
 - Python 3.10+ (`asyncio`, `concurrent.futures`, `logging`, `signal` from the standard library)
 - `rasterio`, `geopandas`, `shapely`, and `pyogrio` installed; GDAL ≥ 3.4 on the `PATH`
@@ -182,7 +102,6 @@ from shapely.validation import make_valid
 
 logger = logging.getLogger("spatial_pipeline.validation")
 
-
 def validate_raster_input(src_path: Path, required_epsg: int) -> Optional[str]:
     """
     Return None on success or an error message string on failure.
@@ -207,7 +126,6 @@ def validate_raster_input(src_path: Path, required_epsg: int) -> Optional[str]:
         return f"Cannot open {src_path.name}: {exc}"
 
     return None  # passed validation
-
 
 def validate_vector_geometry(geom_dict: dict) -> dict:
     """
@@ -243,7 +161,6 @@ from osgeo import gdal
 import rasterio
 from rasterio.errors import RasterioError, CRSError
 
-
 def configure_gdal_for_worker() -> None:
     """
     Called once per worker process immediately after fork.
@@ -253,7 +170,6 @@ def configure_gdal_for_worker() -> None:
     gdal.SetConfigOption("GDAL_CACHEMAX", "256")        # 256 MB block cache per worker
     gdal.SetConfigOption("CPL_VSIL_USE_TEMP_FILE_FOR_RANDOM_WRITE", "YES")
     os.environ.setdefault("PROJ_NETWORK", "OFF")         # prevent PROJ from hitting CDN in CI
-
 
 def process_single_raster(src_path: Path, out_dir: Path, target_epsg: int) -> dict[str, Any]:
     """
@@ -318,7 +234,6 @@ def process_single_raster(src_path: Path, out_dir: Path, target_epsg: int) -> di
         if tmp_path.exists():
             tmp_path.unlink(missing_ok=True)
 
-
 def run_batch(
     files: list[Path],
     out_dir: Path,
@@ -382,7 +297,6 @@ logger = logging.getLogger("spatial_pipeline.retry")
 _circuit_failure_counts: dict[str, int] = {}
 CIRCUIT_OPEN_THRESHOLD = 5
 
-
 def is_transient_error(exc: Exception) -> bool:
     """
     Classify whether an exception is worth retrying.
@@ -396,7 +310,6 @@ def is_transient_error(exc: Exception) -> bool:
     msg = str(exc).lower()
     transient_signals = ("503", "timeout", "connection reset", "partial read", "ssl", "vsicurl")
     return any(sig in msg for sig in transient_signals)
-
 
 def with_retry(
     fn: Callable[[], T],
@@ -471,7 +384,6 @@ class JsonLineHandler(logging.Handler):
         import sys
         print(json.dumps(payload), file=sys.stderr, flush=True)
 
-
 def configure_structured_logging(log_path: Path | None = None) -> None:
     root = logging.getLogger("spatial_pipeline")
     root.setLevel(logging.DEBUG)
@@ -509,7 +421,6 @@ from .telemetry import configure_structured_logging
 logger = logging.getLogger("spatial_pipeline.cli")
 _manifest: list[dict] = []
 
-
 def _write_manifest(path: Path) -> None:
     """Flush the in-progress manifest atomically."""
     tmp = path.with_suffix(".tmp")
@@ -518,7 +429,6 @@ def _write_manifest(path: Path) -> None:
     import os
     os.replace(tmp, path)
     logger.info("Manifest written: %s (%d records)", path, len(_manifest))
-
 
 @click.command()
 @click.argument("input_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
@@ -581,7 +491,6 @@ def reproject_batch(
     logger.info("Pipeline finished: %d/%d succeeded", success, total)
 
     sys.exit(0 if success == total else 1)
-
 
 if __name__ == "__main__":
     reproject_batch()
@@ -708,7 +617,7 @@ Yes. Use `tenacity.AsyncRetrying` as a context manager inside your coroutine, or
 
 ## Related
 
-- [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) — parent guide covering async I/O, multiprocessing, and memory management for Python GIS batch jobs
+- [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) — parent guide covering async I/O, multiprocessing, and memory management for batch jobs
 - [Logging Spatial Transformation Results to Structured JSON](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/) — extend the telemetry patterns here with a full JSON schema and Elasticsearch ingestion pipeline
 - [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — overlap network latency with CPU decompression while keeping the retry logic bounded
 - [Chunked Vector Data Reading](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — apply the same partial-failure isolation patterns to large vector datasets using pyogrio batch reads

@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Rendering a Live Rich Dashboard for Batch Raster Jobs",
-      "description": "Combine Rich Live, Progress, and Table to show per-worker throughput, ETA, and error counts for a multiprocessing raster batch without flooding the scrollback.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Rich Console Output & Progress Bars for GIS CLIs", "item": "https://batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/"},
-        {"@type": "ListItem", "position": 3, "name": "Rendering a Live Rich Dashboard for Batch Raster Jobs", "item": "https://batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/rendering-a-live-rich-dashboard-for-batch-raster-jobs/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Render a Live Rich Dashboard for a Batch Raster Job",
-      "step": [
-        {"@type": "HowToStep", "name": "Build the dashboard layout", "text": "Group a Rich Progress bar and a per-worker Table into a single renderable that Live can refresh in place."},
-        {"@type": "HowToStep", "name": "Dispatch tiles to a process pool", "text": "Submit each tile reprojection to a ProcessPoolExecutor and keep a future-to-tile map for tracking."},
-        {"@type": "HowToStep", "name": "Consume results with as_completed", "text": "Iterate as_completed in the parent process and update the Progress task and worker table from each returned result."},
-        {"@type": "HowToStep", "name": "Aggregate throughput and errors", "text": "Increment per-worker tile counts and a global error counter as each future resolves, then refresh the Live view."},
-        {"@type": "HowToStep", "name": "Verify the final tally", "text": "Confirm the completed count equals the tile count and that the process exit code reflects any partial failure."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Can I update a Rich Live display from inside worker processes?",
-          "acceptedAnswer": {"@type": "Answer", "text": "No. A Rich Live instance owns a single terminal and cannot be pickled or shared across processes. Only the parent process may render. Workers return plain data such as tile counts and error flags, and the parent updates the Progress bar and Table from the as_completed loop."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I stop the dashboard from flooding the scrollback?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Render the Progress bar and Table inside a single Live region so Rich rewrites the same block of lines instead of appending. Route any per-tile log lines through Live.console.print or a logging RichHandler bound to the same console so they scroll above the pinned dashboard."}
-        },
-        {
-          "@type": "Question",
-          "name": "Why is my ETA jumping around during the raster batch?",
-          "acceptedAnswer": {"@type": "Answer", "text": "TimeRemainingColumn estimates from the recent completion rate. When tiles vary widely in size the rate is noisy early on. Advance the Progress task once per completed tile rather than per byte, and the estimate stabilises after the first dozen tiles."}
-        },
-        {
-          "@type": "Question",
-          "name": "Should I use refresh_per_second or manual refresh with Live?",
-          "acceptedAnswer": {"@type": "Answer", "text": "For a batch driven by as_completed, set a modest refresh_per_second such as 4 and call live.update after each result. A high refresh rate wastes CPU redrawing an unchanged table, and manual updates guarantee the view reflects the latest completed tile."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Rendering a Live Rich Dashboard for Batch Raster Jobs
 
-To show a live dashboard for a batch raster job, wrap a `rich.live.Live` around a `Group` that holds a `Progress` bar (tiles done, ETA) and a `Table` of per-worker status, then drive both from the parent process as `ProcessPoolExecutor` futures resolve through `as_completed`. Workers only reproject tiles and return counts; the parent owns the terminal and renders. This page is part of the [Rich Console Output & Progress Bars for GIS CLIs](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/) guide inside the broader [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
+To show a live dashboard for a batch raster job, wrap a `rich.live.Live` around a `Group` that holds a `Progress` bar (tiles done, ETA) and a `Table` of per-worker status, then drive both from the parent process as `ProcessPoolExecutor` futures resolve through `as_completed`. Workers only reproject tiles and return counts; the parent owns the terminal and renders. This dashboard is one build-out within the [Rich Console Output & Progress Bars for GIS CLIs](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/) guide, itself part of the broader [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
@@ -86,7 +25,7 @@ To show a live dashboard for a batch raster job, wrap a `rich.live.Live` around 
 - GDAL 3.4+ available to rasterio (via a wheel or conda/mamba)
 - `concurrent.futures` and `multiprocessing` are in the standard library
 
-For the parallelism model underneath this dashboard, read [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/). For the counting and ETA concepts the dashboard visualises, see [Progress Tracking for Python GIS Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/).
+For the parallelism model underneath this dashboard, read [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/). For the counting and ETA concepts the dashboard visualises, see [Progress Tracking for Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/).
 
 ## How the Dashboard Data Flows
 
@@ -179,7 +118,6 @@ from rich.progress import (
     TimeRemainingColumn, MofNCompleteColumn,
 )
 
-
 @dataclass
 class TileResult:
     """Plain, picklable payload returned from a worker to the parent."""
@@ -188,7 +126,6 @@ class TileResult:
     ok: bool
     seconds: float
     error: str | None = None
-
 
 def reproject_tile(src_path: Path, dst_path: Path, dst_crs: str) -> TileResult:
     """Reproject one raster tile. Runs in a worker process — no Rich here."""
@@ -220,11 +157,9 @@ def reproject_tile(src_path: Path, dst_path: Path, dst_crs: str) -> TileResult:
         elapsed = time.perf_counter() - start
         return TileResult(src_path.name, worker, False, elapsed, str(exc))
 
-
 def build_dashboard(progress: Progress, table: Table) -> Group:
     """Compose the two renderables into one block Live can refresh."""
     return Group(progress, table)
-
 
 def render_table(stats: dict[int, dict], errors: int) -> Table:
     """Rebuild the per-worker table from accumulated stats."""
@@ -238,7 +173,6 @@ def render_table(stats: dict[int, dict], errors: int) -> Table:
         rate = s["done"] / s["busy"] if s["busy"] > 0 else 0.0
         table.add_row(str(pid), str(s["done"]), f"{rate:0.2f}", str(s["errors"]))
     return table
-
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Live dashboard raster batch")
@@ -296,7 +230,6 @@ def main() -> None:
     print(f"Completed {total_ok}/{len(tiles)} tiles, {errors} errors.")
     sys.exit(0 if errors == 0 else 12)   # 12 = partial batch failure
 
-
 if __name__ == "__main__":
     main()
 ```
@@ -311,7 +244,7 @@ if __name__ == "__main__":
 
 4. **`stats` keyed by worker PID** — `ProcessPoolExecutor` reuses a fixed set of worker processes, so `os.getpid()` inside `reproject_tile` yields a stable identifier per worker. Accumulating `done`, `errors`, and `busy` seconds per PID gives a genuine tiles-per-second figure for each worker row.
 
-5. **`live.console.print(...)` for failures** — Routing per-tile log lines through the Live console prints them *above* the pinned dashboard rather than tearing it. See [Progress Tracking for Python GIS Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) for the same log-above-progress technique applied to plain counters.
+5. **`live.console.print(...)` for failures** — Routing per-tile log lines through the Live console prints them *above* the pinned dashboard rather than tearing it. See [Progress Tracking for Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) for the same log-above-progress technique applied to plain counters.
 
 6. **`live.update(build_dashboard(...))`** — The table is immutable once built, so a fresh `Table` is composed on every result and handed to `live.update`. At a few tiles per second this rebuild is negligible, and it guarantees the rendered state always reflects the latest completed tile.
 

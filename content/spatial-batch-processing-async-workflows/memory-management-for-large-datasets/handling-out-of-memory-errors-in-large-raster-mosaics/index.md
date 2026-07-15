@@ -14,97 +14,9 @@ datePublished: "2024-11-15"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Handling Out-of-Memory Errors in Large Raster Mosaics",
-      "description": "Fix OOM crashes when merging large raster mosaics in Python. Use VRT-backed windowed I/O with rasterio to cap RAM to a single chunk regardless of mosaic size.",
-      "datePublished": "2024-11-15",
-      "dateModified": "2026-06-23",
-      "author": { "@type": "Organization", "name": "batch-processing.com" }
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {
-          "@type": "ListItem",
-          "position": 1,
-          "name": "Spatial Batch Processing & Async Workflows",
-          "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/"
-        },
-        {
-          "@type": "ListItem",
-          "position": 2,
-          "name": "Memory Management for Large Datasets",
-          "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/"
-        },
-        {
-          "@type": "ListItem",
-          "position": 3,
-          "name": "Handling Out-of-Memory Errors in Large Raster Mosaics",
-          "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/handling-out-of-memory-errors-in-large-raster-mosaics/"
-        }
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Fix OOM Errors in Large Raster Mosaics",
-      "description": "Stream-merge large raster mosaics with rasterio and GDAL VRTs to prevent out-of-memory crashes.",
-      "step": [
-        { "@type": "HowToStep", "name": "Install dependencies", "text": "pip install rasterio gdal numpy" },
-        { "@type": "HowToStep", "name": "Build a GDAL VRT to unify inputs", "text": "Call gdal.BuildVRT() to create a zero-pixel virtual raster that harmonises CRS, resolution, and extents." },
-        { "@type": "HowToStep", "name": "Calculate aligned tile windows", "text": "Divide the unified extent into a grid of Window objects that match the target GeoTIFF block size." },
-        { "@type": "HowToStep", "name": "Stream read and write each tile", "text": "Use rasterio's windowed read/write loop to load only the current tile into RAM, write it to disk, then free the array." },
-        { "@type": "HowToStep", "name": "Verify output integrity", "text": "Compare source and output checksums with gdalinfo and a band-statistics assertion." }
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does rasterio.merge() crash with MemoryError on large mosaics?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "rasterio.merge() allocates a single contiguous NumPy array large enough to hold the full merged extent. For a 10 000×10 000 three-band uint16 mosaic that is around 600 MB before NumPy's object overhead and GDAL's internal block cache are included. VRT-backed windowed I/O avoids the contiguous allocation entirely."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How do I set GDAL_CACHEMAX without restarting Python?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Call gdal.SetCacheMax(bytes) at runtime before opening any datasets. Set it to 25–50 % of available RAM; exceeding that figure forces swap usage and degrades throughput before the kernel OOM killer intervenes."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Can I parallelise the windowed loop across workers?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes, but each worker needs its own rasterio file handle. Do not share handles across processes. Pre-compute the window list, distribute it via multiprocessing.Pool, and open the VRT independently in each worker. See the Multiprocessing Geospatial Tasks guide for pool sizing."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "What chunk size should I use?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Start at 1024 pixels and match it to your storage layer's native block size. Query it with stat -fc %s /your/mount. Misalignment between chunk_size and the on-disk block size causes read-amplification that inflates both I/O time and cache pressure."
-          }
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 The fix for OOM crashes in raster mosaic pipelines is to replace any full-extent allocation — including `rasterio.merge()` — with a VRT-backed windowed I/O loop that reads and writes one spatial tile at a time, capping peak RAM to `chunk_size × bands × dtype_bytes` plus a bounded GDAL cache, regardless of mosaic dimensions.
 
-This page is part of the [Memory Management for Large Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) guide within [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/).
+For the broader memory-management context, see the [Memory Management for Large Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) guide within [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/).
 
 ## Prerequisites
 
@@ -197,7 +109,6 @@ import rasterio
 from osgeo import gdal
 from rasterio.windows import Window
 
-
 def set_gdal_cache(fraction: float = 0.25) -> None:
     """Cap GDAL's block cache to a fraction of available RAM.
 
@@ -210,7 +121,6 @@ def set_gdal_cache(fraction: float = 0.25) -> None:
         gdal.SetCacheMax(int(available * fraction))
     except ImportError:
         gdal.SetCacheMax(256 * 1024 * 1024)  # 256 MB fallback
-
 
 def build_vrt(inputs: list[str], vrt_path: str) -> None:
     """Unify source rasters into a GDAL VRT.
@@ -229,7 +139,6 @@ def build_vrt(inputs: list[str], vrt_path: str) -> None:
         raise RuntimeError(f"gdal.BuildVRT failed; check inputs exist and share a CRS: {inputs}")
     vrt.FlushCache()
     vrt = None  # Release C handle; do NOT rely on Python's GC timing here
-
 
 def stream_mosaic(
     vrt_path: str,
@@ -268,7 +177,6 @@ def stream_mosaic(
                     del data          # Explicit dereference
                     gc.collect()      # Force immediate reclamation; prevents heap fragmentation
 
-
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Stream-merge large rasters to a GeoTIFF without OOM."
@@ -300,7 +208,6 @@ def main() -> None:
         stream_mosaic(vrt_path, args.output, args.chunk)
     finally:
         Path(vrt_path).unlink(missing_ok=True)
-
 
 if __name__ == "__main__":
     main()

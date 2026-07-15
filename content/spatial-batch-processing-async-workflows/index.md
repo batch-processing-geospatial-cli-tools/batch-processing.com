@@ -1,6 +1,6 @@
 ---
 title: "Spatial Batch Processing & Async Workflows"
-description: "Python GIS guide: async I/O, chunked vector reading, multiprocessing, memory management, and fault-tolerant batch pipelines for terabyte-scale spatial datasets."
+description: "A guide to async I/O, chunked vector reading, multiprocessing, memory management, and fault-tolerant batch pipelines for terabyte-scale spatial datasets."
 slug: "spatial-batch-processing-async-workflows"
 type: "guide"
 breadcrumb: "Spatial Batch Processing & Async Workflows"
@@ -8,65 +8,11 @@ datePublished: "2024-01-15"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Spatial Batch Processing & Async Workflows",
-      "description": "Production-grade guide for Python GIS developers: async I/O, chunked vector reading, multiprocessing, memory management, and fault-tolerant batch pipelines for terabyte-scale spatial datasets.",
-      "datePublished": "2024-01-15",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Spatial Batch Processing & Async Workflows", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Build Async Spatial Batch Pipelines in Python",
-      "step": [
-        {"@type": "HowToStep", "name": "Partition I/O and CPU work", "text": "Identify which pipeline stages are I/O-bound (cloud reads, network fetches) versus CPU-bound (GDAL transforms, spatial joins) and route each to the correct concurrency primitive."},
-        {"@type": "HowToStep", "name": "Enforce chunk boundaries", "text": "Use block-aligned raster windows or feature-offset reads to keep per-task memory constant regardless of dataset size."},
-        {"@type": "HowToStep", "name": "Implement structured error recovery", "text": "Quarantine invalid geometries and CRS mismatches into a dead-letter structure so the pipeline continues rather than halting."},
-        {"@type": "HowToStep", "name": "Wire observability into the event loop", "text": "Emit structured JSON logs and progress callbacks from async tasks without blocking the event loop."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "When should I use asyncio instead of multiprocessing for spatial batch jobs?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use asyncio when the bottleneck is I/O latency—cloud storage reads, HTTP tile fetches, database queries. Use multiprocessing when GDAL or rasterio CPU transforms dominate, because the GIL blocks thread-based concurrency for C-extension work."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I prevent memory exhaustion when processing large raster files?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use block-aligned windowed reads via rasterio, enforce asyncio.Semaphore limits on concurrent open file handles, and close dataset objects explicitly in finally blocks or context managers."}
-        },
-        {
-          "@type": "Question",
-          "name": "What exit codes should a spatial batch CLI return?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Follow POSIX conventions: 0 for success, 1 for general runtime errors, 2 for usage/argument errors. Add domain codes: 10 for CRS mismatch, 11 for unsupported format, 12 for partial batch failure (some features processed, some quarantined)."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Spatial Batch Processing & Async Workflows
 
 Modern geospatial infrastructure demands more than sequential scripts. As datasets scale into terabytes and cloud-native storage becomes the default, Python GIS developers, DevOps engineers, and internal tooling teams must transition from monolithic processing loops to orchestrated, concurrent execution models. The architectural decisions you make here — how to partition I/O and CPU work, how to bound memory across millions of features, how to survive transient failures without restarting jobs from zero — determine whether a pipeline is a research prototype or a production asset.
 
-This guide establishes a production-grade framework for designing asynchronous geospatial pipelines. It covers concurrency boundaries, memory-safe data ingestion, fault tolerance, structured observability, and the testing discipline that makes spatial batch jobs trustworthy in automated environments.
+This guide sets out a framework for designing asynchronous geospatial pipelines. It covers concurrency boundaries, memory-safe data ingestion, fault tolerance, structured observability, and the testing discipline that makes spatial batch jobs trustworthy in automated environments.
 
 ---
 
@@ -210,7 +156,6 @@ EXIT_PARTIAL = 12
 CHUNK_COLS = 512   # match underlying COG block size
 CHUNK_ROWS = 512
 
-
 async def read_window_async(
     src_path: str,
     window: Window,
@@ -245,7 +190,6 @@ async def read_window_async(
 
         # GDAL is not async-native; offload the blocking call to a thread pool
         return await asyncio.to_thread(_read)
-
 
 async def process_tile_list(
     tile_paths: list[str],
@@ -306,7 +250,6 @@ async def process_tile_list(
 
     return EXIT_SUCCESS
 
-
 def main() -> None:
     # In production this is a typer/click command that parses --config,
     # --epsg, --workers from CLI flags with layered config resolution
@@ -350,7 +293,6 @@ logger = logging.getLogger(__name__)
 
 TARGET_EPSG = 4326
 
-
 def _reproject_worker(src_path: str, out_path: str) -> dict:
     """
     Runs inside a worker process. Each process has its own GIL and its own
@@ -378,7 +320,6 @@ def _reproject_worker(src_path: str, out_path: str) -> dict:
         "features": len(gdf),
         "crs_out": f"EPSG:{TARGET_EPSG}",
     }
-
 
 async def reproject_batch(
     src_paths: list[str],
@@ -416,7 +357,6 @@ async def reproject_batch(
             successes.append(result)
 
     return successes
-
 
 if __name__ == "__main__":
     sources = [
@@ -460,7 +400,6 @@ from pathlib import Path
 
 import yaml
 
-
 @dataclass
 class BatchConfig:
     target_epsg: int = 4326
@@ -470,7 +409,6 @@ class BatchConfig:
     chunk_rows: int = 512
     output_dir: Path = Path("output")
     log_format: str = "json"   # "json" | "text"
-
 
 def load_config(config_path: Path | None = None) -> BatchConfig:
     cfg = BatchConfig()  # 1. built-in defaults
@@ -531,7 +469,6 @@ Emit JSON log lines, not print statements. Each line should carry fields that le
 import logging
 import sys
 
-
 class JsonFormatter(logging.Formatter):
     """Emit one JSON object per log record — machine-parseable."""
 
@@ -550,7 +487,6 @@ class JsonFormatter(logging.Formatter):
         if record.exc_info:
             doc["traceback"] = traceback.format_exception(*record.exc_info)
         return json.dumps({k: v for k, v in doc.items() if v is not None})
-
 
 def configure_logging(log_format: str = "json") -> None:
     """
@@ -596,7 +532,6 @@ from rasterio.crs import CRS
 from rasterio.io import MemoryFile
 from rasterio.transform import from_bounds
 
-
 @pytest.fixture
 def in_memory_raster() -> MemoryFile:
     """
@@ -632,10 +567,8 @@ Run the same batch command twice and assert outputs are byte-identical:
 import hashlib
 from pathlib import Path
 
-
 def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
-
 
 def test_reproject_idempotent(tmp_path, sample_shapefile):
     out = tmp_path / "out.gpkg"
@@ -658,7 +591,6 @@ Assert that CRS mismatches are caught before expensive I/O begins:
 import pytest
 from pyproj import CRS
 from your_pipeline import validate_crs
-
 
 def test_rejects_mismatched_crs():
     source_crs = CRS.from_epsg(32632)   # UTM zone 32N

@@ -14,71 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Building a Docker Image with GDAL for a Python CLI",
-      "description": "Write a slim, reproducible multi-stage Dockerfile that installs a pinned GDAL and your Python geospatial CLI so it runs identically in CI and production.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Packaging & CI/CD for Python GIS CLI Tools", "item": "https://batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/"},
-        {"@type": "ListItem", "position": 3, "name": "Building a Docker Image with GDAL for a Python CLI", "item": "https://batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/building-a-docker-image-with-gdal-for-a-python-cli/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Build a Docker Image with GDAL for a Python CLI",
-      "step": [
-        {"@type": "HowToStep", "name": "Pin the GDAL base image", "text": "Start the build stage from a tagged OSGeo GDAL image such as ghcr.io/osgeo/gdal:ubuntu-small-3.8.5 so the C library version is reproducible."},
-        {"@type": "HowToStep", "name": "Build the wheel in an isolated stage", "text": "Install build tooling and pip-install your CLI package into a virtual environment inside the build stage."},
-        {"@type": "HowToStep", "name": "Copy the venv into a slim runtime stage", "text": "Start a second stage from the same GDAL runtime image and copy only the built virtual environment across."},
-        {"@type": "HowToStep", "name": "Set GDAL_DATA and PROJ_LIB", "text": "Export GDAL_DATA and PROJ_LIB in the runtime stage so coordinate transforms resolve their support files."},
-        {"@type": "HowToStep", "name": "Add a non-root user and ENTRYPOINT", "text": "Create an unprivileged user and set ENTRYPOINT to the installed console script so the container runs the CLI directly."},
-        {"@type": "HowToStep", "name": "Verify the image", "text": "Run docker run --rm to print the tool version and warp a mounted EPSG:4326 GeoTIFF to confirm GDAL works end to end."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why is my container GDAL version different from the Python package version?",
-          "acceptedAnswer": {"@type": "Answer", "text": "The osgeo.gdal Python bindings must be built against the exact system libgdal in the image. If you pip-install a gdal wheel from PyPI it ships its own compiled library that shadows the system one, so pip install gdal==$(gdal-config --version) against the OSGeo base image instead of pulling an arbitrary wheel."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I make PROJ find its transformation grids inside the image?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Set PROJ_LIB (and PROJ_DATA on PROJ 9) to the directory that holds proj.db, which is /usr/share/proj on the OSGeo images. Without it, pyproj and any datum transform fall back to an empty search path and raise a CRS error at runtime."}
-        },
-        {
-          "@type": "Question",
-          "name": "Should I run the container as root?",
-          "acceptedAnswer": {"@type": "Answer", "text": "No. Create a dedicated non-root user with a fixed UID and switch to it with USER before the ENTRYPOINT. Bind-mounted output directories then need to be writable by that UID, which you control with the --user flag on docker run or chown on the host."}
-        },
-        {
-          "@type": "Question",
-          "name": "Why does rasterio segfault or report a GDAL version mismatch in my image?",
-          "acceptedAnswer": {"@type": "Answer", "text": "The manylinux rasterio wheel bundles its own copy of GDAL, which clashes with the system libgdal in the OSGeo base image. Install it with pip install --no-binary rasterio rasterio so it links against the system library, or pin a rasterio release whose bundled GDAL matches your base image."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Building a Docker Image with GDAL for a Python CLI
 
-To Dockerise a Python CLI that needs GDAL, build from a pinned OSGeo GDAL image in a multi-stage `Dockerfile`: compile your wheel into a virtual environment in the build stage, copy that venv into a slim runtime stage from the same base, export `GDAL_DATA` and `PROJ_LIB`, add a non-root user, and set the console script as the `ENTRYPOINT`. This page is part of the [Packaging & CI/CD for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/) guide within the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
+To Dockerise a Python CLI that needs GDAL, build from a pinned OSGeo GDAL image in a multi-stage `Dockerfile`: compile your wheel into a virtual environment in the build stage, copy that venv into a slim runtime stage from the same base, export `GDAL_DATA` and `PROJ_LIB`, add a non-root user, and set the console script as the `ENTRYPOINT`. The steps here expand on the [Packaging & CI/CD for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/) guide, part of the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 

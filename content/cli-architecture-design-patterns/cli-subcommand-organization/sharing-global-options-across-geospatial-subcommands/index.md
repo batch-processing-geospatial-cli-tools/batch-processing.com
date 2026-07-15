@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Sharing Global Options Across Geospatial Subcommands",
-      "description": "Propagate --crs, --workers, and --config to every subcommand via a Typer context object so global flags resolve once and flow into each command.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "CLI Subcommand Organization for GIS Toolchains", "item": "https://batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/"},
-        {"@type": "ListItem", "position": 3, "name": "Sharing Global Options Across Geospatial Subcommands", "item": "https://batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/sharing-global-options-across-geospatial-subcommands/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Share Global Options Across Geospatial Typer Subcommands",
-      "step": [
-        {"@type": "HowToStep", "name": "Define a shared state dataclass", "text": "Create a frozen dataclass that holds the resolved crs, workers, config path, and verbose flag for the whole toolchain."},
-        {"@type": "HowToStep", "name": "Resolve options in a root callback", "text": "Declare --crs, --workers, --config, and --verbose on an @app.callback() and store the built state on ctx.obj."},
-        {"@type": "HowToStep", "name": "Read ctx.obj in each subcommand", "text": "Add a ctx: typer.Context parameter to every raster and vector subcommand and pull the shared state from ctx.obj."},
-        {"@type": "HowToStep", "name": "Guard against a missing callback", "text": "Handle the case where ctx.obj is None so subcommands fail loudly instead of raising AttributeError."},
-        {"@type": "HowToStep", "name": "Verify propagation", "text": "Invoke a raster and a vector subcommand with the same global flags and confirm both echo the identical resolved CRS and worker count."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why is ctx.obj None inside my subcommand?",
-          "acceptedAnswer": {"@type": "Answer", "text": "ctx.obj is only populated when the root @app.callback() actually runs. It stays None if you assign to ctx.obj in the wrong function, if a subcommand is invoked in a way that bypasses the callback, or if you forgot to set ctx.obj = state inside the callback body. Always assign state in the callback and add a guard that raises a clear usage error when ctx.obj is None."}
-        },
-        {
-          "@type": "Question",
-          "name": "How does a subcommand override a global option like --crs?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Give the subcommand its own optional --crs that defaults to None. When it is None, fall back to the shared value on ctx.obj; when the user passes it, the local value wins. This keeps a single global default while allowing per-command precedence without duplicating the flag on every command."}
-        },
-        {
-          "@type": "Question",
-          "name": "Should I use invoke_without_command on the callback?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Only if you want the root command to do something when called with no subcommand, such as printing help or a status summary. If invoke_without_command is True, the callback runs even with no subcommand, so guard against ctx.invoked_subcommand being None before doing subcommand-specific work."}
-        },
-        {
-          "@type": "Question",
-          "name": "Where should config-file values fit in the precedence chain?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Resolve precedence inside the callback in the order defaults, then config file, then environment variables, then command-line flags, with the flag winning last. Build the final state dataclass once there and every subcommand reads the already-merged result from ctx.obj rather than re-reading the file."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Sharing Global Options Across Geospatial Subcommands
 
-Share global flags across Typer subcommands by declaring them on a root `@app.callback()`, resolving them once, and storing a state object on `ctx.obj`. Each subcommand then takes a `ctx: typer.Context` parameter and reads `ctx.obj` instead of redeclaring `--crs` or `--workers`. This is part of the [CLI Subcommand Organization for GIS Toolchains](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) guide within the broader [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
+Share global flags across Typer subcommands by declaring them on a root `@app.callback()`, resolving them once, and storing a state object on `ctx.obj`. Each subcommand then takes a `ctx: typer.Context` parameter and reads `ctx.obj` instead of redeclaring `--crs` or `--workers`. It builds on the [CLI Subcommand Organization](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) guide, within the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
@@ -85,7 +24,7 @@ Share global flags across Typer subcommands by declaring them on a root `@app.ca
 - `pip install "typer>=0.12" pyogrio rasterio`
 - GDAL 3.4+ available to rasterio and pyogrio (system package or conda/mamba)
 
-The pattern here assumes you have already split commands into sub-apps. If you have not, read [CLI Subcommand Organization for GIS Toolchains](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) first, then return to wire shared options through them.
+The pattern here assumes you have already split commands into sub-apps. If you have not, read [CLI Subcommand Organization](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) first, then return to wire shared options through them.
 
 ## The Problem: Redeclared Flags Drift Apart
 
@@ -169,7 +108,6 @@ vector_app = typer.Typer(no_args_is_help=True, help="Vector commands")
 app.add_typer(raster_app, name="raster")
 app.add_typer(vector_app, name="vector")
 
-
 @dataclass(frozen=True)
 class AppState:
     """Resolved global options shared by every subcommand."""
@@ -177,14 +115,12 @@ class AppState:
     workers: int
     verbose: bool
 
-
 def _load_config(path: Optional[Path]) -> dict:
     """Read a TOML config file, returning an empty dict when absent."""
     if path is None or not path.exists():
         return {}
     with path.open("rb") as fh:
         return tomllib.load(fh).get("defaults", {})
-
 
 @app.callback()
 def main(
@@ -214,14 +150,12 @@ def main(
 
     ctx.obj = AppState(crs=resolved_crs, workers=workers, verbose=verbose)
 
-
 def get_state(ctx: typer.Context) -> AppState:
     """Fetch shared state, failing loudly if the callback never ran."""
     if ctx.obj is None:
         typer.secho("Global options were not initialised.", fg=typer.colors.RED, err=True)
         raise typer.Exit(code=2)  # 2 = usage error
     return ctx.obj
-
 
 @raster_app.command("warp")
 def raster_warp(
@@ -256,7 +190,6 @@ def raster_warp(
                 )
     typer.echo(f"Reprojected {src.name} -> {dst.name} in {target_crs}")
 
-
 @vector_app.command("dissolve")
 def vector_dissolve(
     ctx: typer.Context,
@@ -276,7 +209,6 @@ def vector_dissolve(
     dissolved = gdf.dissolve(by=by)
     dissolved.to_file(dst, engine="pyogrio")
     typer.echo(f"Dissolved {len(gdf)} -> {len(dissolved)} features in {state.crs}")
-
 
 if __name__ == "__main__":
     app()
@@ -357,5 +289,5 @@ Resolve precedence inside the callback in the order defaults, then config file, 
 
 ## Related
 
-- [CLI Subcommand Organization for GIS Toolchains](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) — parent guide covering sub-app layout, command naming, and shared-state patterns for geospatial toolchains
+- [CLI Subcommand Organization](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) — parent guide covering sub-app layout, command naming, and shared-state patterns for geospatial toolchains
 - [Structuring a Multi-Command GDAL CLI with Typer Sub-Apps](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/structuring-a-multi-command-gdal-cli-with-typer-sub-apps/) — how to split raster and vector commands into sub-apps before sharing globals through them

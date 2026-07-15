@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Reading Large GeoJSON in Chunks with pyogrio",
-      "description": "Stream a multi-gigabyte GeoJSON in bounded feature batches using pyogrio skip_features and max_features so process memory stays flat regardless of file size.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Chunked Vector Data Reading for Spatial Pipelines", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/"},
-        {"@type": "ListItem", "position": 3, "name": "Reading Large GeoJSON in Chunks with pyogrio", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/reading-large-geojson-in-chunks-with-pyogrio/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Read a Large GeoJSON in Chunks with pyogrio",
-      "step": [
-        {"@type": "HowToStep", "name": "Count features once", "text": "Call pyogrio.read_info to get the total feature count so the loop knows when to stop."},
-        {"@type": "HowToStep", "name": "Loop over offsets", "text": "Increment skip_features by the batch size and read max_features features per iteration."},
-        {"@type": "HowToStep", "name": "Reproject each batch", "text": "Reproject the returned GeoDataFrame to EPSG:4326 so every chunk carries a consistent CRS."},
-        {"@type": "HowToStep", "name": "Process and release", "text": "Hand each batch to the consumer, then let it go out of scope so memory is reclaimed before the next read."},
-        {"@type": "HowToStep", "name": "Stop on a short batch", "text": "Break the loop when a read returns fewer than batch_size features, marking the end of file."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Does skip_features make GeoJSON reads slower as the offset grows?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Yes. GeoJSON has no spatial or feature index, so pyogrio must re-parse the file from the top to reach a given skip_features offset. Reading the whole file in batches therefore costs O(n squared) parsing time. Convert to FlatGeobuf or GeoPackage for large repeated reads, where offset seeks are constant time."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I keep memory flat while chunking a huge GeoJSON?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Read a fixed max_features per iteration, process each batch fully, and let the GeoDataFrame go out of scope before the next read so its memory is reclaimed. Peak resident memory then tracks one batch plus the parser buffer, not the whole file. Watch RSS with a memory sampler to confirm it stays flat."}
-        },
-        {
-          "@type": "Question",
-          "name": "Why reproject inside the batch loop instead of once at the end?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Because you never hold the full dataset in memory, there is no end state to reproject. Reprojecting each batch to EPSG:4326 as it is read keeps every chunk in a consistent CRS for the downstream consumer while the batch is still small and cheap to transform."}
-        },
-        {
-          "@type": "Question",
-          "name": "What is a good batch size for chunked GeoJSON reading?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Start at 50000 features and tune from measured RSS. Larger batches amortise the O(n squared) re-parse cost of GeoJSON but raise peak memory; smaller batches keep memory low but re-parse the file prefix more times. For truly large files, convert to FlatGeobuf so batch size only affects memory, not parse cost."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Reading Large GeoJSON in Chunks with pyogrio
 
-To read a multi-gigabyte GeoJSON without loading it all into RAM, drive `pyogrio.read_dataframe(path, skip_features=offset, max_features=batch_size)` in a loop, advancing `offset` by `batch_size` each pass until a read returns fewer than `batch_size` features. Each batch arrives as a small `GeoDataFrame` you reproject, process, and release, so peak memory tracks one batch instead of the file. This page is part of the [Chunked Vector Data Reading for Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) guide inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
+To read a multi-gigabyte GeoJSON without loading it all into RAM, drive `pyogrio.read_dataframe(path, skip_features=offset, max_features=batch_size)` in a loop, advancing `offset` by `batch_size` each pass until a read returns fewer than `batch_size` features. Each batch arrives as a small `GeoDataFrame` you reproject, process, and release, so peak memory tracks one batch instead of the file. This walks through one pattern from the [Chunked Vector Data Reading for Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) guide, part of the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -168,7 +107,6 @@ logging.basicConfig(
 
 TARGET_CRS = "EPSG:4326"
 
-
 def iter_geojson_batches(
     path: Path,
     batch_size: int = 50_000,
@@ -209,7 +147,6 @@ def iter_geojson_batches(
         if len(batch) < batch_size:
             break
 
-
 def process_batch(batch: gpd.GeoDataFrame) -> int:
     """Replace with real work: write to a sink, aggregate, filter, etc.
 
@@ -219,7 +156,6 @@ def process_batch(batch: gpd.GeoDataFrame) -> int:
     # Example: keep only features whose geometry is valid, then count.
     valid = batch[batch.geometry.is_valid]
     return len(valid)
-
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -247,7 +183,6 @@ def main() -> None:
 
     logging.info("Done. %d batches, %d features processed.", n_batches, handled)
     sys.exit(0)
-
 
 if __name__ == "__main__":
     main()

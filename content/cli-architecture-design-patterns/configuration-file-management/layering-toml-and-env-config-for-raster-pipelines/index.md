@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Layering TOML and Env Config for Raster Pipelines",
-      "description": "Resolve raster pipeline settings across defaults, a TOML file, environment variables, and CLI flags with a deterministic, testable precedence chain.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Configuration File Management for GIS CLI Tools", "item": "https://batch-processing.com/cli-architecture-design-patterns/configuration-file-management/"},
-        {"@type": "ListItem", "position": 3, "name": "Layering TOML and Env Config for Raster Pipelines", "item": "https://batch-processing.com/cli-architecture-design-patterns/configuration-file-management/layering-toml-and-env-config-for-raster-pipelines/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Layer TOML, environment variables, and CLI flags for a raster pipeline",
-      "step": [
-        {"@type": "HowToStep", "name": "Define a typed default config", "text": "Declare a dataclass with fields like target_epsg, max_workers, chunk_size, and output_dir carrying the built-in defaults."},
-        {"@type": "HowToStep", "name": "Read the TOML table", "text": "Parse pyproject.toml or a standalone file with tomllib and pull the tool.mytool table if it exists."},
-        {"@type": "HowToStep", "name": "Overlay prefixed environment variables", "text": "Scan os.environ for MYTOOL_ prefixed keys and coerce each string to the target field type."},
-        {"@type": "HowToStep", "name": "Apply explicit CLI overrides last", "text": "Merge only the flags the user actually passed so unset flags never clobber lower layers."},
-        {"@type": "HowToStep", "name": "Print the resolved config", "text": "Emit the final dataclass with per-field provenance so the effective settings are auditable before the run starts."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does tomllib read integers correctly but environment variables do not?",
-          "acceptedAnswer": {"@type": "Answer", "text": "tomllib parses TOML types natively, so an unquoted 4 becomes a Python int and a quoted \"4\" stays a str. Environment variables are always strings, so MYTOOL_MAX_WORKERS=4 arrives as the string '4'. You must coerce env values to each dataclass field's declared type before merging, or comparisons and arithmetic downstream will misbehave."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I stop unset CLI flags from overwriting my TOML values?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Never default your CLI flags to the config defaults. Default them to None and merge only the keys whose value is not None. That way a flag the user omitted contributes nothing to the final layer and the TOML or env value survives as the resolved setting."}
-        },
-        {
-          "@type": "Question",
-          "name": "Should the TOML file live in pyproject.toml or a separate file?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Both work with the same loader. Reusing pyproject.toml under a tool.mytool table keeps project-scoped defaults with the code, while a standalone raster.toml suits per-run or per-dataset overrides. Resolve the standalone file after pyproject so it wins, keeping the defaults-to-file-to-env-to-flag order intact."}
-        },
-        {
-          "@type": "Question",
-          "name": "How can I tell which layer supplied each final value?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Track provenance while you merge. Record the source name alongside each field as later layers overwrite earlier ones, then print field, value, and source together. This turns a silent CRS mismatch into a one-line answer about whether the value came from the default, the TOML file, an env var, or a flag."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Layering TOML and Env Config for Raster Pipelines
 
-To layer configuration for a raster CLI, resolve settings in a fixed order: built-in defaults, then a `[tool.mytool]` TOML table read with `tomllib`, then `MYTOOL_`-prefixed environment variables, then explicit command-line flags. Each layer overwrites only the keys it actually supplies, and the last writer wins per field. This page is part of the [Configuration File Management for GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) guide within the broader CLI Architecture & Design Patterns reference.
+To layer configuration for a raster CLI, resolve settings in a fixed order: built-in defaults, then a `[tool.mytool]` TOML table read with `tomllib`, then `MYTOOL_`-prefixed environment variables, then explicit command-line flags. Each layer overwrites only the keys it actually supplies, and the last writer wins per field. It belongs to the [Configuration File Management for GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) guide, part of the broader CLI Architecture & Design Patterns reference.
 
 The hard part is not reading a file. It is making precedence deterministic and testable so a `target_epsg` set in a deployment env var never gets silently reset by a stale default, and so a single `--max-workers` flag on the command line always wins.
 
@@ -148,10 +87,8 @@ from dataclasses import dataclass, fields, replace
 from pathlib import Path
 from typing import Any
 
-
 ENV_PREFIX = "MYTOOL_"
 TOML_TABLE = ("tool", "mytool")
-
 
 @dataclass(frozen=True)
 class RasterConfig:
@@ -160,7 +97,6 @@ class RasterConfig:
     chunk_size: int = 512            # tile edge in pixels for windowed reads
     output_dir: Path = Path("./out")  # where reprojected rasters land
     overwrite: bool = False          # replace existing outputs
-
 
 def _coerce(field_type: Any, raw: str) -> Any:
     """Coerce a raw string (from env) to the dataclass field's type.
@@ -176,7 +112,6 @@ def _coerce(field_type: Any, raw: str) -> Any:
         return Path(raw)
     return raw  # str fields pass through unchanged
 
-
 def _load_toml(path: Path) -> dict[str, Any]:
     """Return the [tool.mytool] table, or {} if the file/table is absent."""
     if not path.is_file():
@@ -188,7 +123,6 @@ def _load_toml(path: Path) -> dict[str, Any]:
         table = table.get(key, {}) if isinstance(table, dict) else {}
     return table if isinstance(table, dict) else {}
 
-
 def _load_env() -> dict[str, str]:
     """Collect MYTOOL_-prefixed vars, lowercased to field names."""
     out: dict[str, str] = {}
@@ -196,7 +130,6 @@ def _load_env() -> dict[str, str]:
         if key.startswith(ENV_PREFIX):
             out[key[len(ENV_PREFIX):].lower()] = value
     return out
-
 
 def load_config(
     toml_path: Path = Path("pyproject.toml"),
@@ -233,7 +166,6 @@ def load_config(
             provenance[name] = "flag"
 
     return config, provenance
-
 
 if __name__ == "__main__":
     import argparse

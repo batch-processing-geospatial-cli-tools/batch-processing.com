@@ -8,71 +8,9 @@ datePublished: "2024-11-20"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Implementing Checkpointing for Interrupted Spatial Batches",
-      "description": "How to persist atomic checkpoint state for spatial batch jobs in Python — resume GeoPackage, Shapefile, and raster pipelines exactly where they stopped after OOM kills, SIGTERM, or network drops.",
-      "datePublished": "2024-11-20",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Spatial Batch Processing & Async Workflows", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/"},
-        {"@type": "ListItem", "position": 3, "name": "Progress Tracking in Batch Jobs", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/"},
-        {"@type": "ListItem", "position": 4, "name": "Checkpointing Interrupted Spatial Batches", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/implementing-checkpointing-for-interrupted-spatial-batches/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Implement Checkpointing for Interrupted Spatial Batches",
-      "description": "Persist an atomic JSON state file that maps each spatial asset to a completion flag, wrap the processing loop in signal handlers, and resume from the exact offset on restart.",
-      "step": [
-        {"@type": "HowToStep", "name": "Build the SpatialCheckpoint class", "text": "Create a class that loads existing state from JSON, registers SIGINT/SIGTERM handlers, and exposes mark_complete() and get_pending() methods."},
-        {"@type": "HowToStep", "name": "Use atomic file replacement", "text": "Write checkpoint state to a .tmp file then call os.replace() to swap it in — this prevents half-written JSON if the process crashes mid-flush."},
-        {"@type": "HowToStep", "name": "Apply format-specific write guards", "text": "Wrap GeoPackage writes in explicit SQLite transactions and write Shapefiles to a temp directory before moving the complete sidecar set to the target path."},
-        {"@type": "HowToStep", "name": "Mark assets complete after commit", "text": "Call checkpoint.mark_complete(asset_id) only after a successful write or COMMIT — never before, to prevent false positives that skip re-processing after a partial write."},
-        {"@type": "HowToStep", "name": "Verify resumption with a dry-run count", "text": "On restart, log len(pending) vs len(all_assets) and assert that the difference equals the number of completed entries in the checkpoint file."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why use os.replace() instead of directly writing the checkpoint JSON?",
-          "acceptedAnswer": {"@type": "Answer", "text": "os.replace() is an atomic POSIX rename. If the process crashes while writing the .tmp file, the original checkpoint remains intact. A direct open('checkpoint.json', 'w') write can leave a truncated or partially flushed file that is unreadable on restart."}
-        },
-        {
-          "@type": "Question",
-          "name": "How should I checkpoint a GeoPackage write that inserts thousands of features per asset?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use an explicit SQLite transaction: BEGIN, insert all features, COMMIT, then call mark_complete(). If the process dies between BEGIN and COMMIT, SQLite rolls back the transaction and the asset stays in the pending list, so it will be retried cleanly on restart."}
-        },
-        {
-          "@type": "Question",
-          "name": "Can I use this pattern with multiprocessing workers?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Yes, but the checkpoint file becomes a shared resource. Replace the local JSON file with a SQLite database (using INSERT OR IGNORE) or a Redis SET. Each worker calls SETNX or INSERT ... ON CONFLICT DO NOTHING to claim an asset before starting, then writes a completion record only after the format-specific commit succeeds."}
-        },
-        {
-          "@type": "Question",
-          "name": "What stable identifier should I use as the asset key?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use absolute paths (str(Path(asset).resolve())), tile coordinates (zoom/x/y tuples), or content-addressable hashes (SHA-256 of the source file). Avoid relative paths, database row cursors, or OS-assigned inode numbers — all of these can change between runs."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 To implement checkpointing for interrupted spatial batches, persist a lightweight atomic state file that maps each spatial asset — file path, feature ID, or tile coordinate — to a completion flag. Wrap the processing loop in a `SIGINT`/`SIGTERM` handler that flushes state before exit, and on restart deserialize the file, filter out completed items, and resume from the exact offset. This eliminates redundant I/O and prevents partial writes in formats like GeoPackage and Shapefile.
 
-This page is part of the [Progress Tracking in Batch Jobs](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) guide, which sits inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
+It sits within the [Progress Tracking in Batch Jobs](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) guide, part of the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -166,7 +104,6 @@ log = logging.getLogger(__name__)
 CHECKPOINT_FILE = "spatial_batch_state.json"
 TARGET_CRS = "EPSG:4326"
 
-
 class SpatialCheckpoint:
     """Atomic, signal-aware checkpoint for spatial batch jobs."""
 
@@ -217,7 +154,6 @@ class SpatialCheckpoint:
     def completed_count(self) -> int:
         return sum(1 for v in self.state.values() if v)
 
-
 def process_one_asset(src_path: Path, dst_dir: Path) -> None:
     """
     Read a GeoPackage with pyogrio, reproject to EPSG:4326, write output.
@@ -240,7 +176,6 @@ def process_one_asset(src_path: Path, dst_dir: Path) -> None:
     # pyogrio.write_dataframe wraps the underlying GPKG write in a single
     # transaction; on completion the SQLite COMMIT is issued before returning.
     pyogrio.write_dataframe(gdf, str(dst_path), driver="GPKG")
-
 
 def process_spatial_batch(src_dir: Path, dst_dir: Path) -> int:
     dst_dir.mkdir(parents=True, exist_ok=True)
@@ -279,7 +214,6 @@ def process_spatial_batch(src_dir: Path, dst_dir: Path) -> int:
 
     log.info("Batch finished. %d/%d assets processed.", checkpoint.completed_count, len(all_assets))
     return 0
-
 
 if __name__ == "__main__":
     import argparse

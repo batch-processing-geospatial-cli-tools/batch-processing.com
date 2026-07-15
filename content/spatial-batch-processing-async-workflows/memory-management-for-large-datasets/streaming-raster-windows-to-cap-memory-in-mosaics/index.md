@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Streaming Raster Windows to Cap Memory in Mosaics",
-      "description": "Process a large raster mosaic block by block with rasterio windowed reads so peak memory stays constant no matter how many tiles the mosaic contains.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Memory Management for Large GIS Datasets", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/"},
-        {"@type": "ListItem", "position": 3, "name": "Streaming Raster Windows to Cap Memory in Mosaics", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/streaming-raster-windows-to-cap-memory-in-mosaics/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Stream Raster Windows to Cap Memory in Mosaics",
-      "step": [
-        {"@type": "HowToStep", "name": "Open source and copy the profile", "text": "Open the mosaic with rasterio and copy its profile so the output dataset shares the same CRS, transform, and dtype."},
-        {"@type": "HowToStep", "name": "Read the native block shape", "text": "Inspect src.block_shapes to learn the internal tile size that GDAL reads and writes atomically."},
-        {"@type": "HowToStep", "name": "Iterate block-aligned windows", "text": "Loop over src.block_windows(1) so each read starts and ends on a native block boundary and only one block is resident at a time."},
-        {"@type": "HowToStep", "name": "Transform and write the window", "text": "Apply the per-pixel operation to the block array and write it to the identical window of the output dataset opened in write mode."},
-        {"@type": "HowToStep", "name": "Verify flat memory", "text": "Sample resource.getrusage during the run and confirm peak RSS stays constant regardless of mosaic size."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why iterate block_windows instead of reading fixed pixel tiles?",
-          "acceptedAnswer": {"@type": "Answer", "text": "block_windows(1) yields windows aligned to the raster's internal tiling, so each read maps to whole GDAL blocks with no partial-block overhead. Reading arbitrary pixel rectangles forces GDAL to decode every block those rectangles touch, then discard the unused edges, wasting decompression I/O."}
-        },
-        {
-          "@type": "Question",
-          "name": "How much memory does one block actually use?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Peak resident memory is roughly block_height times block_width times the dtype byte width times band count, plus a matching output buffer and GDAL's block cache. A 512 by 512 float32 block is about 1 MB per band, so a handful of bands stays comfortably under 10 MB no matter how large the mosaic is."}
-        },
-        {
-          "@type": "Question",
-          "name": "Can I read a super-block covering several native blocks at once?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Yes. Group native blocks into a super-block whose height and width are integer multiples of block_shapes. This amortises Python loop overhead across more pixels while keeping reads block-aligned. Never pick a super-block that straddles a fractional block boundary, or you reintroduce partial-block reads."}
-        },
-        {
-          "@type": "Question",
-          "name": "Does the output need the same block layout as the input?",
-          "acceptedAnswer": {"@type": "Answer", "text": "For the cleanest write path, set the output creation options to tiled with the same blockxsize and blockysize as the source. Writing a block-aligned window into a matching tiled output means GDAL flushes exactly the tiles you wrote with no read-modify-write cycle on neighbouring tiles."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Streaming Raster Windows to Cap Memory in Mosaics
 
-Process a huge raster mosaic without loading it all by iterating its native blocks: open the source with rasterio, walk `src.block_windows(1)` so each `Window` lands on a block boundary, transform that block, and write it straight into the matching window of an output dataset opened in `"w"` mode. Only one block is ever resident, so peak memory is a fixed function of block size, not mosaic size. This page is part of the [Memory Management for Large GIS Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) guide within the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
+Process a huge raster mosaic without loading it all by iterating its native blocks: open the source with rasterio, walk `src.block_windows(1)` so each `Window` lands on a block boundary, transform that block, and write it straight into the matching window of an output dataset opened in `"w"` mode. Only one block is ever resident, so peak memory is a fixed function of block size, not mosaic size. For the wider context, see the [Memory Management for Large GIS Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) guide within the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -164,7 +103,6 @@ import numpy as np
 import rasterio
 from rasterio.windows import Window
 
-
 def super_block_windows(src: rasterio.DatasetReader, factor: int):
     """Yield block-aligned windows that each cover `factor` x `factor`
     native blocks, clipped to the raster edge.
@@ -180,7 +118,6 @@ def super_block_windows(src: rasterio.DatasetReader, factor: int):
             width = min(step_w, src.width - col_off)      # clip right edge
             yield Window(col_off, row_off, width, height)
 
-
 def compute_ndvi(red: np.ndarray, nir: np.ndarray) -> np.ndarray:
     """(NIR - RED) / (NIR + RED) with a guarded denominator."""
     red = red.astype("float32")
@@ -189,12 +126,10 @@ def compute_ndvi(red: np.ndarray, nir: np.ndarray) -> np.ndarray:
     ndvi = np.where(denom == 0, 0.0, (nir - red) / denom)
     return ndvi.astype("float32")
 
-
 def peak_rss_mb() -> float:
     """Resident-set peak in MB (ru_maxrss is KB on Linux, bytes on macOS)."""
     raw = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     return raw / 1024 if sys.platform.startswith("linux") else raw / (1024 * 1024)
-
 
 def stream_ndvi(src_path: Path, dst_path: Path, red_idx: int,
                 nir_idx: int, factor: int) -> int:
@@ -225,7 +160,6 @@ def stream_ndvi(src_path: Path, dst_path: Path, red_idx: int,
     print(f"done — final peak RSS {peak_rss_mb():.1f} MB")
     return 0
 
-
 def main() -> None:
     parser = argparse.ArgumentParser(description="Stream NDVI over a mosaic")
     parser.add_argument("src", type=Path, help="Input multi-band GeoTIFF mosaic")
@@ -239,7 +173,6 @@ def main() -> None:
         print(f"source not found: {args.src}", file=sys.stderr)
         sys.exit(2)
     sys.exit(stream_ndvi(args.src, args.dst, args.red, args.nir, args.factor))
-
 
 if __name__ == "__main__":
     main()

@@ -1,6 +1,6 @@
 ---
-title: "Progress Tracking for Python GIS Batch Pipelines"
-description: "Progress tracking for Python GIS batch jobs: thread-safe counters, async-compatible renderers, persistent checkpointing, and graceful teardown for spatial pipelines."
+title: "Progress Tracking for Batch Pipelines"
+description: "Progress tracking for spatial batch jobs: thread-safe counters, async-compatible renderers, persistent checkpointing, and graceful teardown."
 slug: "progress-tracking-in-batch-jobs"
 type: "topic"
 breadcrumb: "Progress Tracking in Batch Jobs"
@@ -8,73 +8,7 @@ datePublished: "2024-11-10"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Progress Tracking in Batch Jobs: Thread-Safe Patterns for Python GIS Pipelines",
-      "description": "Build production-grade progress tracking for Python GIS batch jobs: thread-safe counters, async-compatible renderers, persistent checkpointing, and graceful teardown for long-running spatial pipelines.",
-      "datePublished": "2024-11-10",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Spatial Batch Processing & Async Workflows", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/"},
-        {"@type": "ListItem", "position": 3, "name": "Progress Tracking in Batch Jobs", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Implement thread-safe progress tracking for Python GIS batch pipelines",
-      "step": [
-        {"@type": "HowToStep", "name": "Install dependencies and enumerate tasks", "text": "Install rich and tqdm, then pre-calculate total spatial units (tiles, features, or files) before spawning workers."},
-        {"@type": "HowToStep", "name": "Build a thread-safe counter", "text": "Wrap a threading.Lock around an integer counter so concurrent workers can advance state without race conditions."},
-        {"@type": "HowToStep", "name": "Render progress from the main thread", "text": "Drive rich.progress or tqdm exclusively from the main thread, syncing from the locked counter at safe boundaries — never from worker threads directly."},
-        {"@type": "HowToStep", "name": "Attach async-compatible updates for I/O pipelines", "text": "In asyncio pipelines, call progress.advance() after each awaited task completes; the call is non-blocking and safe from coroutine context."},
-        {"@type": "HowToStep", "name": "Persist checkpoint state to disk", "text": "Serialise completed indices and failed tasks to a JSON manifest at configurable intervals so long jobs can resume after interruption."},
-        {"@type": "HowToStep", "name": "Verify with structured log output and exit codes", "text": "Confirm POSIX exit codes, final counts, and JSON log lines match expected totals after the batch finishes."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does updating a Rich progress bar from a worker thread cause garbled output?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Rich's internal live display uses a thread-safe internal lock, but calling advance() from multiple threads while the main thread is also updating causes interleaved ANSI writes. The correct pattern is to advance a plain threading.Lock-guarded counter in workers and call progress.update() from the main thread only, at safe synchronisation points such as as_completed() boundaries."}
-        },
-        {
-          "@type": "Question",
-          "name": "How often should I flush progress state to the checkpoint manifest?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Every 50–100 completed tasks or every 30 seconds, whichever comes first. Flushing too often (every task) turns progress into an I/O bottleneck on NFS or network-attached storage. Use an atomic write pattern: write to a .tmp file first, then os.replace() it into place so a crash never leaves a corrupt manifest."}
-        },
-        {
-          "@type": "Question",
-          "name": "Can tqdm and Rich be used together in the same pipeline?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Avoid mixing them in the same terminal session — both manipulate ANSI cursor positioning and will produce garbled output. Pick one renderer. Rich is preferable for multi-task dashboards with memory and throughput columns; tqdm is lighter weight and integrates with existing pandas/geopandas iteration patterns via tqdm.pandas()."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I suppress progress output when running in CI or piping to a log aggregator?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Check sys.stdout.isatty() at startup or test for a --quiet / NO_COLOR environment variable. Pass disable=True to tqdm or set Console(force_terminal=False) in Rich. This prevents orphaned ANSI codes in log files and avoids breaking CI log viewers."}
-        },
-        {
-          "@type": "Question",
-          "name": "What is the performance overhead of rich.progress on a high-throughput vector pipeline?",
-          "acceptedAnswer": {"@type": "Answer", "text": "On a pipeline processing millions of features, calling progress.advance() on every feature adds roughly 5–15 µs per call. At 1 M features/s this is 5–15 s of overhead. Batch updates every 1 000 features (progress.advance(1000) after processing a chunk) reduces the overhead to microseconds per batch and is sufficient for accurate ETA rendering."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
-Embedding visible, accurate progress state into a spatial batch job transforms a black-box process into a monitorable workflow — and is part of the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) guide on building resilient Python GIS pipelines.
+Embedding visible, accurate progress state into a spatial batch job transforms a black-box process into a monitorable workflow. It is part of the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) guide.
 
 ## TL;DR
 

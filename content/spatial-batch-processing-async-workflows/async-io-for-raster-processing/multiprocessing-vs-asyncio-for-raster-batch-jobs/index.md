@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Multiprocessing vs Asyncio for Raster Batch Jobs",
-      "description": "Decide between a process pool and an async event loop for raster batch work by matching CPU-bound warps to multiprocessing and I/O-bound cloud reads to asyncio.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Async I/O for Raster Processing: CLI Patterns", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/"},
-        {"@type": "ListItem", "position": 3, "name": "Multiprocessing vs Asyncio for Raster Batch Jobs", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/multiprocessing-vs-asyncio-for-raster-batch-jobs/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Choose Between Multiprocessing and Asyncio for Raster Batch Jobs",
-      "step": [
-        {"@type": "HowToStep", "name": "Classify the workload", "text": "Determine whether the dominant cost is CPU-bound pixel math or I/O-bound network and disk waiting."},
-        {"@type": "HowToStep", "name": "Pick multiprocessing for CPU-bound work", "text": "Use a process pool for warp, reproject, resample, and raster algebra because these release the GIL only inside C and scale with cores."},
-        {"@type": "HowToStep", "name": "Pick asyncio for I/O-bound work", "text": "Use an async event loop for COG range reads and many small cloud fetches where tasks spend most time awaiting the network."},
-        {"@type": "HowToStep", "name": "Use a hybrid for mixed workloads", "text": "Run an asyncio loop that dispatches CPU-bound stages to a ProcessPoolExecutor with loop.run_in_executor."},
-        {"@type": "HowToStep", "name": "Verify with a stage timer", "text": "Profile which stage dominates wall-clock time before committing to a concurrency model."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does asyncio give no speedup for reprojection?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Reprojection is CPU-bound pixel math, and asyncio runs all coroutines on a single thread inside one process. Because the warp holds the CPU rather than awaiting I/O, the event loop cannot interleave anything, so tasks run one after another at single-core speed. A process pool is the only model that gives real parallelism for that work."}
-        },
-        {
-          "@type": "Question",
-          "name": "When should I use a hybrid of asyncio and a process pool?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use a hybrid when a job mixes heavy network reads with heavy pixel math, such as streaming cloud-optimized GeoTIFFs and then reprojecting them. Run an asyncio loop to fan out the range reads and call loop.run_in_executor with a ProcessPoolExecutor to offload each warp, so both stages saturate their respective bottleneck."}
-        },
-        {
-          "@type": "Question",
-          "name": "Does multiprocessing help for reading many small cloud files?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Rarely. Processes cost real memory and startup time, and for network-bound reads each worker spends most of its life blocked on a socket. An asyncio loop handles thousands of concurrent awaits on one thread with far less overhead, so it usually beats a process pool for high-latency, low-CPU fetches."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I decide which model to use before writing code?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Time one representative file end to end and split the total into an I/O wait segment and a CPU compute segment. If compute dominates choose multiprocessing, if waiting dominates choose asyncio, and if both are large choose the hybrid. Measuring first prevents building the wrong architecture."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Multiprocessing vs Asyncio for Raster Batch Jobs
 
-Match the tool to the bottleneck: use `multiprocessing` for CPU-bound raster work — warp, reproject, resample, raster algebra — because that pixel math holds the CPU and only true parallel processes scale it, and use `asyncio` for I/O-bound work such as cloud-optimized GeoTIFF range reads and many small HTTP fetches, where tasks spend their time awaiting the network. For jobs that mix both, run an async loop that dispatches to a process pool. This page is part of the [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) guide inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
+Match the tool to the bottleneck: use `multiprocessing` for CPU-bound raster work — warp, reproject, resample, raster algebra — because that pixel math holds the CPU and only true parallel processes scale it, and use `asyncio` for I/O-bound work such as cloud-optimized GeoTIFF range reads and many small HTTP fetches, where tasks spend their time awaiting the network. For jobs that mix both, run an async loop that dispatches to a process pool. It belongs to the [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) guide, part of the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -173,7 +112,6 @@ SOURCES = [
     "https://example-bucket.s3.amazonaws.com/scene_004.tif",
 ]
 
-
 def warp_bytes(raw: bytes, dst_path: Path) -> Path:
     """CPU-bound stage: reproject an in-memory raster to EPSG:32633.
 
@@ -198,12 +136,10 @@ def warp_bytes(raw: bytes, dst_path: Path) -> Path:
                 )
     return dst_path
 
-
 def fetch_sync(url: str) -> bytes:
     """Blocking read — used by the process-pool path."""
     with rasterio.open(url) as src:            # GDAL /vsicurl/ read
         return Path(src.name).read_bytes() if Path(src.name).exists() else src.read().tobytes()
-
 
 # --- Model 1: multiprocessing (best when warp dominates) -----------------
 def _worker(args: tuple) -> str:
@@ -211,12 +147,10 @@ def _worker(args: tuple) -> str:
     raw = fetch_sync(url)                       # blocks, but each process is separate
     return str(warp_bytes(raw, Path(out_dir) / f"{Path(url).stem}.tif"))
 
-
 def run_multiprocessing(out_dir: Path, workers: int) -> list:
     tasks = [(url, out_dir) for url in SOURCES]
     with ProcessPoolExecutor(max_workers=workers) as pool:
         return list(pool.map(_worker, tasks))
-
 
 # --- Model 2: asyncio (best when the network read dominates) -------------
 async def _fetch_async(session: aiohttp.ClientSession, url: str) -> bytes:
@@ -224,14 +158,12 @@ async def _fetch_async(session: aiohttp.ClientSession, url: str) -> bytes:
         resp.raise_for_status()
         return await resp.read()
 
-
 async def run_asyncio(out_dir: Path) -> list:
     async with aiohttp.ClientSession() as session:
         raws = await asyncio.gather(*(_fetch_async(session, u) for u in SOURCES))
     # Warp runs inline here — on the single loop thread — so it is serial.
     return [str(warp_bytes(raw, out_dir / f"{Path(u).stem}.tif"))
             for raw, u in zip(raws, SOURCES)]
-
 
 # --- Model 3: hybrid (async fetch + process-pool warp) -------------------
 async def run_hybrid(out_dir: Path, workers: int) -> list:
@@ -247,7 +179,6 @@ async def run_hybrid(out_dir: Path, workers: int) -> list:
             for raw, u in zip(raws, SOURCES)
         ]
         return [str(p) for p in await asyncio.gather(*futures)]
-
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Compare concurrency models")
@@ -267,7 +198,6 @@ def main() -> None:
     elapsed = time.perf_counter() - start
 
     print(f"mode={args.mode} files={len(results)} elapsed={elapsed:.2f}s")
-
 
 if __name__ == "__main__":
     main()

@@ -14,69 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Migrating a Click Geospatial CLI to Typer",
-      "description": "Port a Click-based GDAL command group to Typer incrementally: map decorators to type hints, preserve exit codes, and keep shell completion working during the switch.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Click vs Typer for Geospatial Workflows", "item": "https://batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/"},
-        {"@type": "ListItem", "position": 3, "name": "Migrating a Click Geospatial CLI to Typer", "item": "https://batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/migrating-a-click-geospatial-cli-to-typer/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Migrate a Click Geospatial CLI to Typer",
-      "step": [
-        {"@type": "HowToStep", "name": "Map decorators to type hints", "text": "Replace each click.option and click.argument decorator with a type-hinted parameter using typer.Option or typer.Argument as its default."},
-        {"@type": "HowToStep", "name": "Preserve exit codes", "text": "Convert every ctx.exit(code) and sys.exit(code) call to raise typer.Exit(code) so POSIX and domain exit codes stay identical."},
-        {"@type": "HowToStep", "name": "Mount unported commands", "text": "Wrap the remaining Click group with typer.main.get_command or add_typer so old and new commands coexist during the migration."},
-        {"@type": "HowToStep", "name": "Verify with CliRunner", "text": "Run the ported command through typer.testing.CliRunner and check exit_code and --help output against the Click baseline."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Do I have to rewrite the whole CLI in one commit?",
-          "acceptedAnswer": {"@type": "Answer", "text": "No. Typer is built on Click, so a Typer app can mount an existing Click group with typer.main.get_command and add_typer. Port one command at a time, keep the rest running as Click, and ship each command independently."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I keep exit codes identical after migrating to Typer?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Replace ctx.exit(code) and sys.exit(code) with raise typer.Exit(code). typer.Exit propagates the integer to the process exit status unchanged, so domain codes like 10 for a CRS mismatch and 2 for a usage error survive the port."}
-        },
-        {
-          "@type": "Question",
-          "name": "What happens to a Click nargs=-1 variadic argument in Typer?",
-          "acceptedAnswer": {"@type": "Answer", "text": "A Click argument with nargs=-1 becomes a parameter typed as List[Path] with a typer.Argument default in Typer. Typer reads the number of values from the type annotation, so there is no nargs keyword to pass."}
-        },
-        {
-          "@type": "Question",
-          "name": "Will shell completion keep working during the migration?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Yes. Because Typer compiles to a Click command object, the completion machinery is shared. Ported Typer commands and mounted Click commands both appear under the same --install-completion hook, so a single installed completion script covers the whole app."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Migrating a Click Geospatial CLI to Typer
 
-Migrate a Click GIS CLI to Typer command-by-command rather than in one rewrite: Typer is built on Click, so a Typer app can mount your existing Click group with `typer.main.get_command` and keep serving unported commands unchanged. For each command you port, replace `@click.option`/`@click.argument` decorators with type-hinted parameters, convert `ctx.exit(code)` to `raise typer.Exit(code)` to preserve exit codes, and confirm behaviour with `CliRunner`. This page is part of the [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) guide within the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
+Migrate a Click GIS CLI to Typer command-by-command rather than in one rewrite: Typer is built on Click, so a Typer app can mount your existing Click group with `typer.main.get_command` and keep serving unported commands unchanged. For each command you port, replace `@click.option`/`@click.argument` decorators with type-hinted parameters, convert `ctx.exit(code)` to `raise typer.Exit(code)` to preserve exit codes, and confirm behaviour with `CliRunner`. This walkthrough belongs to the [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) guide, part of the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
@@ -144,11 +84,9 @@ from osgeo import gdal
 
 gdal.UseExceptions()
 
-
 @click.group()
 def cli() -> None:
     """Legacy GDAL command group."""
-
 
 @cli.command()
 @click.argument("sources", nargs=-1, type=click.Path(exists=True, path_type=Path))
@@ -189,7 +127,6 @@ def reproject(sources: tuple[Path, ...], target_crs: str, out_dir: Path, overwri
     if failures:
         sys.exit(12)  # partial batch failure
 
-
 if __name__ == "__main__":
     cli()
 ```
@@ -211,7 +148,6 @@ from gis_cli.click_app import cli as legacy_click_group  # commands not yet port
 gdal.UseExceptions()
 
 app = typer.Typer(help="GDAL command group (Typer).", no_args_is_help=True)
-
 
 @app.command()
 def reproject(
@@ -256,7 +192,6 @@ def reproject(
         raise typer.Exit(10)   # every file rejected the CRS
     if failures:
         raise typer.Exit(12)   # partial batch failure
-
 
 # Mount the not-yet-ported Click commands so the whole app keeps working.
 # typer.main.get_command(app) -> Click object for the Typer commands;
@@ -315,13 +250,11 @@ from gis_cli.typer_app import app
 
 runner = CliRunner()
 
-
 def test_usage_error_exit_code() -> None:
     # No SOURCES given -> usage error, exit code 2 (unchanged from Click).
     result = runner.invoke(app, ["reproject", "--crs", "EPSG:32633"])
     assert result.exit_code == 2
     assert "No source rasters" in result.output
-
 
 def test_help_lists_all_commands() -> None:
     result = runner.invoke(app, ["--help"])

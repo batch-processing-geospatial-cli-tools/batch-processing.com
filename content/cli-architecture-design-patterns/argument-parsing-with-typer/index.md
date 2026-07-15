@@ -1,5 +1,5 @@
 ---
-title: "Argument Parsing with Typer for Python GIS CLIs"
+title: "Argument Parsing with Typer"
 description: "Build type-safe CLI argument parsers for geospatial pipelines using Typer — covering validation, subcommands, batch progress, and production error handling."
 slug: "argument-parsing-with-typer"
 type: "topic"
@@ -8,80 +8,14 @@ datePublished: "2024-03-15"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Argument Parsing with Typer for Python GIS CLIs",
-      "description": "Build type-safe, self-documenting CLI argument parsers for geospatial pipelines using Typer — covering validation, subcommands, batch progress, and production error handling.",
-      "datePublished": "2024-03-15",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "breadcrumb": {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-          {"@type": "ListItem", "position": 2, "name": "CLI Architecture & Design Patterns", "item": "https://batch-processing.com/cli-architecture-design-patterns/"},
-          {"@type": "ListItem", "position": 3, "name": "Argument Parsing with Typer", "item": "https://batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/"}
-        ]
-      }
-    },
-    {
-      "@type": "HowTo",
-      "name": "Build a type-safe Typer argument parser for a geospatial CLI",
-      "step": [
-        {"@type": "HowToStep", "name": "Initialize the Typer application instance"},
-        {"@type": "HowToStep", "name": "Declare entry points with type-hint driven parameters"},
-        {"@type": "HowToStep", "name": "Apply domain validators for EPSG codes and bounding boxes"},
-        {"@type": "HowToStep", "name": "Structure subcommands for distinct spatial operations"},
-        {"@type": "HowToStep", "name": "Integrate batch iteration with Rich progress tracking"},
-        {"@type": "HowToStep", "name": "Wire layered config so env vars and YAML override CLI defaults"}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Should I use typer.Argument or typer.Option for file paths?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use typer.Argument for positional inputs the user must always supply (source file, target directory). Use typer.Option for everything that has a sensible default or is truly optional — resolution, CRS, verbosity flags. Misclassifying a required path as an Option means users must type the flag name every time."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I validate an EPSG code inside a Typer callback?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Accept the value as int, then call pyproj.CRS.from_epsg(value) inside a try/except block. Raise typer.BadParameter with the original int so Typer formats the error message consistently with its other validation output."}
-        },
-        {
-          "@type": "Question",
-          "name": "Can I use Typer with a YAML config file and still override values from the CLI?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Yes. Load the YAML file into a dict first, then let each typer.Option default pull from that dict using a default_factory or an explicit Python expression. CLI flags always win because Typer resolves them last, after the Python default expression has already run."}
-        },
-        {
-          "@type": "Question",
-          "name": "Why does my Rich progress bar disappear when the CLI runs in a CI pipeline?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Rich detects a non-TTY environment (pipes, GitHub Actions log streams) and disables live rendering. Pass disable=not sys.stdout.isatty() explicitly to rich.progress.Progress so you control the behaviour rather than relying on auto-detection, which differs between Rich versions."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I test Typer commands without spawning a subprocess?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use typer.testing.CliRunner from the typer[all] package. Call runner.invoke(app, ['subcommand', '--option', 'value']) and assert on result.exit_code and result.output. This avoids subprocess overhead and plays well with pytest fixtures that set up temporary GeoPackage files."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
-Typer turns Python type annotations into a complete argument-parsing layer — inputs are coerced, validated, and documented automatically, with no manual `required=True` flags or `argparse.add_argument` boilerplate. This page is part of the [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
+Typer turns Python type annotations into a complete argument-parsing layer — inputs are coerced, validated, and documented automatically, with no manual `required=True` flags or `argparse.add_argument` boilerplate. It is one part of the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
 
 ## Prerequisites
 
 - **Python 3.10+** for `str | None` union syntax and `list[Path]` generics without `from __future__ import annotations`.
 - **`pip install "typer[all]"`** — the `[all]` extra pulls in Click (the parsing engine), Rich (terminal rendering), and shellingham (shell detection for tab completion). Without it, progress bars, help formatting, and shell completion are unavailable.
 - **Geospatial stack**: `geopandas`, `rasterio`, and `pyproj` for the downstream operations the CLI wraps. Install `pyogrio` as the `geopandas` I/O backend (`pip install pyogrio`) — it is substantially faster than fiona for both read and write paths.
-- Familiarity with the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) context helps when deciding where argument parsing ends and subcommand routing begins.
+- The [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide gives the broader context for deciding where argument parsing ends and subcommand routing begins.
 
 ## Problem framing
 

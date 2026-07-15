@@ -2,7 +2,7 @@
 layout: layouts/home
 pageType: home
 title: Python GIS CLI Toolcraft & Batch Processing
-description: A practitioner-focused resource for building, packaging, testing, and deploying command-line tools for spatial workflows.
+description: Guides and runnable code for building, packaging, testing, and deploying command-line tools for spatial work in Python.
 ---
 
 <section class="home-hero" aria-label="Hero">
@@ -13,13 +13,13 @@ description: A practitioner-focused resource for building, packaging, testing, a
       <span>Geospatial CLI Tools</span>
     </h1>
     <p class="home-hero__desc">
-      A practitioner-focused resource for building, packaging, testing, and deploying
-      Python command-line tools for spatial workflows — from argument parsing to
-      production-grade async batch pipelines.
+      A hands-on resource for building, packaging, testing, and deploying
+      Python command-line tools for spatial work — from argument parsing to
+      async batch pipelines.
     </p>
     <div class="hero-cta-group">
       {% for section in site.sections %}
-      <a href="{{ section.url }}" class="btn btn--primary">
+      <a href="{{ site.site.url }}{{ section.url }}" class="btn btn--primary">
         <span class="btn__icon" aria-hidden="true">{{ section.icon }}</span>
         {{ section.title }}
       </a>
@@ -34,9 +34,9 @@ description: A practitioner-focused resource for building, packaging, testing, a
       Modern geospatial workflows demand more than ad-hoc scripts. Whether you're automating
       raster tile processing across thousands of files, building internal toolchain CLIs for
       a GIS team, or packaging reusable spatial utilities as open-source libraries,
-      <strong>Python GIS CLI Toolcraft &amp; Batch Processing</strong> gives you the architecture
-      patterns, code templates, and production hardening techniques you need to ship tools
-      that scale.
+      <strong>Python GIS CLI Toolcraft &amp; Batch Processing</strong> collects the architecture
+      patterns, code templates, and hardening techniques that keep those tools reliable
+      as they grow.
     </p>
     <p>
       Each guide is written for working practitioners — Python GIS developers, DevOps engineers,
@@ -60,11 +60,11 @@ description: A practitioner-focused resource for building, packaging, testing, a
   <div class="page-wrapper">
     <h2 class="home-start-here__heading">Start here</h2>
     <p class="home-start-here__intro">
-      These guides are the highest-value entry points — each one is self-contained,
-      runnable, and covers a pattern you will reach for on every real project.
+      These guides are good places to start — each one is self-contained,
+      runnable, and covers a pattern you'll reach for on most projects.
     </p>
     <div class="start-here-grid">
-      <a href="/cli-architecture-design-patterns/argument-parsing-with-typer/how-to-build-a-typer-cli-for-shapefile-conversion/" class="start-card">
+      <a href="https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/how-to-build-a-typer-cli-for-shapefile-conversion/" class="start-card">
         <span class="start-card__tag">CLI layer</span>
         <strong class="start-card__title">Build a Typer CLI for Shapefile Conversion</strong>
         <p class="start-card__desc">
@@ -74,7 +74,7 @@ description: A practitioner-focused resource for building, packaging, testing, a
         <span class="start-card__cta" aria-hidden="true">Read guide →</span>
       </a>
 
-      <a href="/cli-architecture-design-patterns/argument-parsing-with-typer/adding-auto-completion-to-python-spatial-cli-tools/" class="start-card">
+      <a href="https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/adding-auto-completion-to-python-spatial-cli-tools/" class="start-card">
         <span class="start-card__tag">CLI layer</span>
         <strong class="start-card__title">Add Shell Auto-Completion to Spatial CLI Tools</strong>
         <p class="start-card__desc">
@@ -84,7 +84,7 @@ description: A practitioner-focused resource for building, packaging, testing, a
         <span class="start-card__cta" aria-hidden="true">Read guide →</span>
       </a>
 
-      <a href="/spatial-batch-processing-async-workflows/async-io-for-raster-processing/processing-100k-geojson-files-with-python-asyncio/" class="start-card">
+      <a href="https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/processing-100k-geojson-files-with-python-asyncio/" class="start-card">
         <span class="start-card__tag">Processing layer</span>
         <strong class="start-card__title">Process 100 k GeoJSON Files with Python asyncio</strong>
         <p class="start-card__desc">
@@ -94,7 +94,7 @@ description: A practitioner-focused resource for building, packaging, testing, a
         <span class="start-card__cta" aria-hidden="true">Read guide →</span>
       </a>
 
-      <a href="/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/optimizing-gdal-batch-operations-with-multiprocessing-pool/" class="start-card">
+      <a href="https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/optimizing-gdal-batch-operations-with-multiprocessing-pool/" class="start-card">
         <span class="start-card__tag">Processing layer</span>
         <strong class="start-card__title">Optimise GDAL Batch Operations with multiprocessing.Pool</strong>
         <p class="start-card__desc">
@@ -104,7 +104,7 @@ description: A practitioner-focused resource for building, packaging, testing, a
         <span class="start-card__cta" aria-hidden="true">Read guide →</span>
       </a>
 
-      <a href="/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/" class="start-card">
+      <a href="https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/" class="start-card">
         <span class="start-card__tag">Processing layer</span>
         <strong class="start-card__title">Log Spatial Transformation Results to Structured JSON</strong>
         <p class="start-card__desc">
@@ -114,7 +114,7 @@ description: A practitioner-focused resource for building, packaging, testing, a
         <span class="start-card__cta" aria-hidden="true">Read guide →</span>
       </a>
 
-      <a href="/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/implementing-checkpointing-for-interrupted-spatial-batches/" class="start-card">
+      <a href="https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/implementing-checkpointing-for-interrupted-spatial-batches/" class="start-card">
         <span class="start-card__tag">Processing layer</span>
         <strong class="start-card__title">Implement Checkpointing for Interrupted Spatial Batches</strong>
         <p class="start-card__desc">
@@ -124,7 +124,7 @@ description: A practitioner-focused resource for building, packaging, testing, a
         <span class="start-card__cta" aria-hidden="true">Read guide →</span>
       </a>
 
-      <a href="/cli-architecture-design-patterns/packaging-and-cicd/building-a-docker-image-with-gdal-for-a-python-cli/" class="start-card">
+      <a href="https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/building-a-docker-image-with-gdal-for-a-python-cli/" class="start-card">
         <span class="start-card__tag">CLI layer</span>
         <strong class="start-card__title">Build a Docker Image with GDAL for a Python CLI</strong>
         <p class="start-card__desc">
@@ -134,7 +134,7 @@ description: A practitioner-focused resource for building, packaging, testing, a
         <span class="start-card__cta" aria-hidden="true">Read guide →</span>
       </a>
 
-      <a href="/spatial-batch-processing-async-workflows/chunked-vector-data-reading/pyogrio-vs-fiona-for-large-vector-datasets/" class="start-card">
+      <a href="https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/pyogrio-vs-fiona-for-large-vector-datasets/" class="start-card">
         <span class="start-card__tag">Processing layer</span>
         <strong class="start-card__title">pyogrio vs Fiona for Large Vector Datasets</strong>
         <p class="start-card__desc">
@@ -154,13 +154,13 @@ description: A practitioner-focused resource for building, packaging, testing, a
       {% for section in site.sections %}
       <div class="section-card">
         <div class="section-card__icon" aria-hidden="true">{{ section.icon }}</div>
-        <a href="{{ section.url }}" class="section-card__title">{{ section.title }}</a>
+        <a href="{{ site.site.url }}{{ section.url }}" class="section-card__title">{{ section.title }}</a>
         <p class="section-card__desc">{{ section.description }}</p>
         {% set subs = collections.subsections | subsectionsFor(section.url) %}
         {% if subs.length %}
         <ul class="link-list">
           {% for sub in subs %}
-          <li><a href="{{ sub.url }}">{{ sub.data.title or sub.fileSlug }}</a></li>
+          <li><a href="{{ site.site.url }}{{ sub.url }}">{{ sub.data.title or sub.fileSlug }}</a></li>
           {% endfor %}
         </ul>
         {% endif %}

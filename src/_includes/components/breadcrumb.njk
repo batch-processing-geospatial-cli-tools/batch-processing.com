@@ -4,7 +4,7 @@
     {% if loop.last %}
       <span class="breadcrumb__current" aria-current="page">{{ title or crumb.label }}</span>
     {% else %}
-      <a href="{{ crumb.url }}">{{ crumb.label }}</a>
+      <a href="{{ site.site.url }}{{ crumb.url }}">{{ crumb.label }}</a>
       <span class="breadcrumb__sep" aria-hidden="true">›</span>
     {% endif %}
   {% endfor %}

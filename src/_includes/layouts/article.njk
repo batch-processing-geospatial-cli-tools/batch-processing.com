@@ -27,7 +27,7 @@ pageType: article
     <ul class="link-list">
       {% for art in siblings %}
         {% if art.url !== myUrl %}
-        <li><a href="{{ art.url }}">{{ art.data.title or art.fileSlug }}</a></li>
+        <li><a href="{{ site.site.url }}{{ art.url }}">{{ art.data.title or art.fileSlug }}</a></li>
         {% endif %}
       {% endfor %}
     </ul>
@@ -36,7 +36,7 @@ pageType: article
 
   {# Back to subsection link #}
   <nav class="breadcrumb" aria-label="Section navigation" style="margin-top: var(--space-2xl);">
-    <a href="{{ parentUrl }}">← Back to subsection</a>
+    <a href="{{ site.site.url }}{{ parentUrl }}">← Back to subsection</a>
   </nav>
 </div>
 

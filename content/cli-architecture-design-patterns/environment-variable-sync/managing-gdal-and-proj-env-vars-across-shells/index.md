@@ -14,69 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Managing GDAL and PROJ Environment Variables Across Shells",
-      "description": "Keep GDAL_DATA, PROJ_LIB, and GDAL_CACHEMAX consistent across bash, zsh, Docker, and CI so a geospatial CLI behaves identically in every environment.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Environment Variable Sync for Python GIS CLI Tools", "item": "https://batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/"},
-        {"@type": "ListItem", "position": 3, "name": "Managing GDAL and PROJ Environment Variables Across Shells", "item": "https://batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/managing-gdal-and-proj-env-vars-across-shells/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Keep GDAL and PROJ environment variables consistent across shells",
-      "step": [
-        {"@type": "HowToStep", "name": "Detect the real data directories", "text": "Resolve GDAL_DATA and PROJ_DATA at runtime from pyproj.datadir.get_data_dir() and rasterio._env.GDALDataFinder rather than hardcoding paths."},
-        {"@type": "HowToStep", "name": "Set os.environ defaults before GDAL initialises", "text": "Assign the detected paths to os.environ with setdefault before importing osgeo.gdal so the C library reads correct values on first use."},
-        {"@type": "HowToStep", "name": "Mirror the paths as shell exports", "text": "Emit equivalent export lines for bash and zsh so interactive shells, Docker images, and CI runners share one source of truth."},
-        {"@type": "HowToStep", "name": "Verify the resolved directories", "text": "Run projinfo EPSG:4326 and print the resolved dirs to confirm proj.db is found and datum shifts resolve correctly."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why do GDAL_DATA and PROJ_LIB differ between bash and zsh?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Each shell sources a different startup file. A path exported in .bashrc is invisible to a zsh login shell that only reads .zshrc, and neither is read by a non-interactive CI runner or a Docker RUN step. When one environment picks up a conda proj.db and another picks up the system one, the same CLI resolves coordinates differently. Detecting the paths in Python removes the dependency on any single shell startup file."}
-        },
-        {
-          "@type": "Question",
-          "name": "What causes PROJ: proj_create: Cannot find proj.db?",
-          "acceptedAnswer": {"@type": "Answer", "text": "PROJ cannot locate its proj.db grid and CRS database because PROJ_DATA (formerly PROJ_LIB) points at a directory that does not contain the file, or is unset while the library default path is wrong. This usually happens after a conda environment change or a Docker layer that installed a different GDAL build. Setting PROJ_DATA to the value returned by pyproj.datadir.get_data_dir() resolves it."}
-        },
-        {
-          "@type": "Question",
-          "name": "Should I use PROJ_LIB or PROJ_DATA?",
-          "acceptedAnswer": {"@type": "Answer", "text": "PROJ 9 reads PROJ_DATA and treats PROJ_LIB as a deprecated alias that still works for backward compatibility. On mixed fleets where some machines run PROJ 6 to 8 and others run PROJ 9, set both variables to the same directory so every version finds proj.db. The helper in this guide writes both."}
-        },
-        {
-          "@type": "Question",
-          "name": "Why does GDAL_CACHEMAX behave differently on two machines?",
-          "acceptedAnswer": {"@type": "Answer", "text": "GDAL_CACHEMAX interprets a bare number as megabytes on some builds and as a percentage of RAM on older ones, so 512 can mean 512 MB or 512 percent depending on the version. Always append an explicit unit such as 512MB to remove the ambiguity, and set the same value in every shell and container so raster block caching performs identically."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Managing GDAL and PROJ Environment Variables Across Shells
 
-Your GDAL and PROJ variables differ between shells because each shell sources a different startup file, and a Docker or CI environment sources none of them. The fix is to stop hardcoding paths in `.bashrc` and instead detect the correct directories at runtime with `pyproj.datadir.get_data_dir()` and rasterio, then set `os.environ` defaults before `osgeo.gdal` initialises. This page is part of the [Environment Variable Sync for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/) guide within the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
+Your GDAL and PROJ variables differ between shells because each shell sources a different startup file, and a Docker or CI environment sources none of them. The fix is to stop hardcoding paths in `.bashrc` and instead detect the correct directories at runtime with `pyproj.datadir.get_data_dir()` and rasterio, then set `os.environ` defaults before `osgeo.gdal` initialises. This runtime-detection approach is one piece of the [Environment Variable Sync for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/) guide, part of the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
@@ -174,7 +114,6 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-
 def _detect_proj_data() -> Path | None:
     """Return the directory that actually contains proj.db.
 
@@ -188,7 +127,6 @@ def _detect_proj_data() -> Path | None:
     candidate = Path(get_data_dir())
     return candidate if (candidate / "proj.db").is_file() else candidate
 
-
 def _detect_gdal_data() -> Path | None:
     """Return GDAL's support-file directory as rasterio resolves it."""
     try:
@@ -197,7 +135,6 @@ def _detect_gdal_data() -> Path | None:
         return None
     found = GDALDataFinder().search()
     return Path(found) if found else None
-
 
 def sync_geo_env(cache_mb: int = 512, num_threads: int = 1) -> dict[str, str]:
     """Set GDAL/PROJ env defaults from detected paths. Returns what was set.
@@ -228,11 +165,9 @@ def sync_geo_env(cache_mb: int = 512, num_threads: int = 1) -> dict[str, str]:
     resolved["GDAL_NUM_THREADS"] = os.environ["GDAL_NUM_THREADS"]
     return resolved
 
-
 def as_shell_exports(resolved: dict[str, str]) -> str:
     """Render the resolved env as bash/zsh `export` lines for `eval`."""
     return "\n".join(f'export {k}="{v}"' for k, v in resolved.items())
-
 
 if __name__ == "__main__":
     # `eval "$(python geo_env.py)"` pins the same paths in an interactive shell.

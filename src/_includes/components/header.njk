@@ -1,6 +1,6 @@
 <nav class="site-header" aria-label="Site header">
   <div class="header-inner">
-    <a href="/" class="site-logo" aria-label="{{ site.site.name }} home">
+    <a href="{{ site.site.url }}/" class="site-logo" aria-label="{{ site.site.name }} home">
       <img src="/icons/logo.svg" alt="" class="site-logo__img" width="36" height="36" aria-hidden="true">
       <span class="site-logo__text">GIS CLI<br>Toolcraft</span>
     </a>
@@ -13,7 +13,7 @@
 
     <nav id="site-nav" class="site-nav" aria-label="Main navigation">
       {% for section in site.sections %}
-        <a href="{{ section.url }}" class="site-nav__link">
+        <a href="{{ site.site.url }}{{ section.url }}" class="site-nav__link">
           <span class="nav-icon" aria-hidden="true">{{ section.icon }}</span>
           <span>{{ section.title }}</span>
         </a>

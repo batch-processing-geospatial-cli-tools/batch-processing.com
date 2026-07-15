@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Validating EPSG Codes as Typer CLI Options",
-      "description": "Add a Typer callback that rejects invalid EPSG codes at the CLI boundary with pyproj, returning exit code 2 before any raster or vector I/O begins.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Argument Parsing with Typer for Python GIS CLIs", "item": "https://batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/"},
-        {"@type": "ListItem", "position": 3, "name": "Validating EPSG Codes as Typer CLI Options", "item": "https://batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/validating-epsg-codes-as-typer-cli-options/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Validate an EPSG code passed as a Typer CLI option",
-      "step": [
-        {"@type": "HowToStep", "name": "Normalise the raw input", "text": "Accept either 4326 or EPSG:4326 and reduce both to a single integer authority code before validating."},
-        {"@type": "HowToStep", "name": "Resolve the code with pyproj", "text": "Call pyproj.CRS.from_epsg on the integer so a syntactically valid but non-existent code is rejected."},
-        {"@type": "HowToStep", "name": "Raise typer.BadParameter on failure", "text": "Convert any pyproj error into typer.BadParameter so Typer prints a usage message and exits with code 2."},
-        {"@type": "HowToStep", "name": "Attach the callback to the option", "text": "Wire the validator to the --crs option with callback= so it runs before the command body opens any dataset."},
-        {"@type": "HowToStep", "name": "Return the canonical CRS", "text": "Return the normalised EPSG string so the command body receives an already-validated value."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does my callback receive a string when I typed a number?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Typer passes the raw command-line token to a str-typed option, so 4326 arrives as the string '4326', not the integer 4326. Strip any EPSG: prefix and call int() yourself before handing the value to pyproj, and raise typer.BadParameter if the int() conversion fails."}
-        },
-        {
-          "@type": "Question",
-          "name": "Does pyproj reject a code like EPSG:9999?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Yes. EPSG:9999 is syntactically valid but is not registered in the EPSG database, so pyproj.CRS.from_epsg(9999) raises pyproj.exceptions.CRSError. Catching that error and re-raising typer.BadParameter is what turns an unknown authority code into a clean exit code 2 instead of a stack trace later."}
-        },
-        {
-          "@type": "Question",
-          "name": "What exit code does typer.BadParameter produce?",
-          "acceptedAnswer": {"@type": "Answer", "text": "typer.BadParameter causes Typer to print a usage error to stderr and exit with code 2, matching the POSIX convention for command-line usage errors. This lets shell scripts and CI jobs distinguish bad arguments from runtime failures, which exit with code 1."}
-        },
-        {
-          "@type": "Question",
-          "name": "Should I validate the CRS in the callback or inside the command?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Validate in the callback. A callback runs before the command body, so a bad EPSG code fails before any raster or vector file is opened. Validating inside the command wastes the cost of opening a dataset and risks partial writes before the CRS is checked."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Validating EPSG Codes as Typer CLI Options
 
-To reject a bad EPSG code before any file is touched, attach a `callback=` to your Typer `--crs` option that normalises the value and resolves it through `pyproj.CRS.from_epsg`; on any failure raise `typer.BadParameter`, which prints a usage message and exits with code `2`. Because a callback runs before the command body, invalid input never reaches a `gdal.Open` or `pyogrio.read_dataframe` call. This page is part of the [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) guide within the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
+To reject a bad EPSG code before any file is touched, attach a `callback=` to your Typer `--crs` option that normalises the value and resolves it through `pyproj.CRS.from_epsg`; on any failure raise `typer.BadParameter`, which prints a usage message and exits with code `2`. Because a callback runs before the command body, invalid input never reaches a `gdal.Open` or `pyogrio.read_dataframe` call. It builds on the [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) guide, part of the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
@@ -145,7 +84,6 @@ from pyproj.exceptions import CRSError
 
 app = typer.Typer(add_completion=False)
 
-
 def normalise_epsg(raw: str) -> int:
     """Reduce '4326' or 'EPSG:4326' to the integer 4326.
 
@@ -160,7 +98,6 @@ def normalise_epsg(raw: str) -> int:
             raise ValueError(f"unsupported authority {authority!r}; expected EPSG")
         token = code
     return int(token)  # raises ValueError on non-numeric input
-
 
 def validate_crs(value: str) -> str:
     """Typer callback: turn any bad EPSG code into an exit-code-2 usage error.
@@ -185,7 +122,6 @@ def validate_crs(value: str) -> str:
     # Return the normalised, canonical form for the command body to consume.
     return f"EPSG:{crs.to_epsg()}"
 
-
 @app.command()
 def reproject(
     source: Path = typer.Argument(..., exists=True, dir_okay=False,
@@ -208,7 +144,6 @@ def reproject(
     gdf = gdf.to_crs(crs)
     pyogrio.write_dataframe(gdf, destination)
     typer.echo(f"Wrote {destination}")
-
 
 if __name__ == "__main__":
     app()
@@ -314,5 +249,5 @@ Validate in the callback. A callback runs before the command body, so a bad EPSG
 
 ## Related
 
-- [Argument Parsing with Typer for Python GIS CLIs](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — parent guide covering options, arguments, and callback-based validation at the CLI boundary
+- [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — parent guide covering options, arguments, and callback-based validation at the CLI boundary
 - [How to Build a Typer CLI for Shapefile Conversion](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/how-to-build-a-typer-cli-for-shapefile-conversion/) — a full Typer command that consumes a validated CRS to convert and reproject vector data

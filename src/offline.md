@@ -11,6 +11,6 @@ permalink: /offline/index.html
     It looks like you don't have an internet connection right now.
     Previously visited pages are still available — check your browser's cache or try again when you're back online.
   </p>
-  <a href="/" class="btn btn--primary" style="display: inline-flex;">← Back to home</a>
+  <a href="https://www.batch-processing.com/" class="btn btn--primary" style="display: inline-flex;">← Back to home</a>
 </div>
 

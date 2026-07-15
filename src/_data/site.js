@@ -4,7 +4,7 @@ module.exports = {
     shortName: "GIS CLI Tools",
     url: "https://www.batch-processing.com",
     description:
-      "A practitioner-focused resource for building, packaging, testing, and deploying command-line tools for spatial workflows.",
+      "Guides and runnable code for building, packaging, testing, and deploying command-line tools for spatial work in Python.",
     themeColor: "#4a3f7a",
   },
   sections: [

@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Paginating PostGIS Feature Reads for Batch Export",
-      "description": "Export millions of PostGIS features in keyset-paginated chunks with pyogrio and a server-side cursor so a batch job never loads the whole table into memory.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Chunked Vector Data Reading for Spatial Pipelines", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/"},
-        {"@type": "ListItem", "position": 3, "name": "Paginating PostGIS Feature Reads for Batch Export", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/paginating-postgis-feature-reads-for-batch-export/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Paginate PostGIS Feature Reads for Batch Export",
-      "step": [
-        {"@type": "HowToStep", "name": "Index the pagination key", "text": "Ensure a b-tree index on the gid primary key so each keyset seek is an index range scan rather than a full sort."},
-        {"@type": "HowToStep", "name": "Read one keyset page", "text": "Issue an SQL query with WHERE gid greater than the last seen value ORDER BY gid LIMIT batch through pyogrio.read_dataframe."},
-        {"@type": "HowToStep", "name": "Reproject the batch", "text": "Call GeoDataFrame.to_crs to convert each page to EPSG:4326 before writing."},
-        {"@type": "HowToStep", "name": "Append to the output", "text": "Write each reprojected page to a GeoPackage layer with append mode so memory never holds the full table."},
-        {"@type": "HowToStep", "name": "Advance the cursor", "text": "Set last_gid to the maximum gid of the page just written and loop until a page returns zero rows."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why is OFFSET pagination slow on large PostGIS tables?",
-          "acceptedAnswer": {"@type": "Answer", "text": "OFFSET forces PostgreSQL to read and discard every row before the offset on each page, so scanning the whole table costs O(n squared) row visits. Keyset pagination uses WHERE gid greater than the last value against an index, making each page an O(log n) seek plus a bounded range scan that stays constant per page."}
-        },
-        {
-          "@type": "Question",
-          "name": "Do I need an index for keyset pagination to be fast?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Yes. The b-tree index on the ORDER BY column is what makes WHERE gid greater than last an index range scan instead of a sort of the whole table. A primary key on gid already provides this index; a non-unique key needs a composite tiebreaker to stay deterministic."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I keep memory flat while exporting millions of features?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Read a fixed batch size per iteration, reproject and write that page, then discard the GeoDataFrame before fetching the next one. Peak memory stays proportional to the batch size, not the table size, because only one page of geometries is ever resident."}
-        },
-        {
-          "@type": "Question",
-          "name": "When should I use a psycopg server-side cursor instead of pyogrio pages?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use a named server-side cursor with itersize when a single ordered scan is acceptable and you want the server to stream rows without a WHERE clause per page. Use pyogrio keyset pages when the job may pause, resume, or run across separate connections, since each page is an independent stateless query."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Paginating PostGIS Feature Reads for Batch Export
 
-To read millions of PostGIS features without exhausting memory, page through the table by keyset: fetch a fixed batch with `WHERE gid > :last_gid ORDER BY gid LIMIT :batch`, reproject that page to `EPSG:4326`, append it to a GeoPackage, then advance `last_gid` and repeat. Peak memory stays proportional to one batch, never the whole table. This page is part of the [Chunked Vector Data Reading for Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) guide inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
+To read millions of PostGIS features without exhausting memory, page through the table by keyset: fetch a fixed batch with `WHERE gid > :last_gid ORDER BY gid LIMIT :batch`, reproject that page to `EPSG:4326`, append it to a GeoPackage, then advance `last_gid` and repeat. Peak memory stays proportional to one batch, never the whole table. This is one technique in the [Chunked Vector Data Reading for Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) guide, part of the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -171,7 +110,6 @@ PG_DSN = os.environ.get(
     "PG:host=localhost dbname=gis user=gis password=gis",
 )
 
-
 def export_layer(table: str, key: str, dst: Path, batch: int, target_epsg: int) -> int:
     """Page through `table` by keyset on `key`, reproject, append to GeoPackage.
 
@@ -214,7 +152,6 @@ def export_layer(table: str, key: str, dst: Path, batch: int, target_epsg: int) 
 
     return written
 
-
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Keyset-paginated PostGIS to GeoPackage export"
@@ -232,7 +169,6 @@ def main() -> None:
     total = export_layer(args.table, args.key, args.dst, args.batch, args.epsg)
     logging.info("done: %d features written to %s", total, args.dst)
     sys.exit(0 if total > 0 else 1)
-
 
 if __name__ == "__main__":
     main()

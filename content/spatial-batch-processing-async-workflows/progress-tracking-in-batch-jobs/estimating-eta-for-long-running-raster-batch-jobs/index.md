@@ -6,7 +6,7 @@ type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
-  - label: "Progress Tracking for Python GIS Batch Pipelines"
+  - label: "Progress Tracking for Batch Pipelines"
     url: "/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/"
   - label: "Estimating ETA for Long-Running Raster Batch Jobs"
     url: "/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/estimating-eta-for-long-running-raster-batch-jobs/"
@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Estimating ETA for Long-Running Raster Batch Jobs",
-      "description": "Compute a stable ETA for a raster batch job from a rolling throughput average and surface it through a Rich progress bar and structured logs.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Progress Tracking for Python GIS Batch Pipelines", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/"},
-        {"@type": "ListItem", "position": 3, "name": "Estimating ETA for Long-Running Raster Batch Jobs", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/estimating-eta-for-long-running-raster-batch-jobs/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Estimate ETA for a Long-Running Raster Batch Job",
-      "step": [
-        {"@type": "HowToStep", "name": "Record per-tile durations", "text": "Time each finished tile with time.monotonic() and push the elapsed seconds into a bounded collections.deque."},
-        {"@type": "HowToStep", "name": "Compute exponentially-weighted throughput", "text": "Blend recent per-tile durations with an exponential weight so newer tiles influence the estimate more than stale ones."},
-        {"@type": "HowToStep", "name": "Project remaining time", "text": "Divide remaining tiles by the smoothed throughput to get an ETA that ignores warm-up noise."},
-        {"@type": "HowToStep", "name": "Render a Rich ETA column", "text": "Subclass a Rich ProgressColumn to display the smoothed ETA next to the raster progress bar."},
-        {"@type": "HowToStep", "name": "Emit ETA to structured logs", "text": "Log the ETA seconds and throughput as JSON fields at a fixed interval so headless CI runs stay observable."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does the ETA from a naive total-average jump around so much?",
-          "acceptedAnswer": {"@type": "Answer", "text": "A total-average ETA divides every remaining tile by the mean cost of all tiles seen so far, so a single large tile permanently drags the average up and a run of small tiles drags it down. Because early tiles keep influencing the mean forever, the projection lurches whenever tile cost changes. A rolling exponentially-weighted window forgets stale tiles, so the estimate tracks current conditions instead."}
-        },
-        {
-          "@type": "Question",
-          "name": "Should I weight throughput by tile count or by pixel count?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Weight by pixels whenever tile sizes vary widely. Counting tiles assumes every tile costs the same, so a batch that mixes 512-pixel and 8192-pixel tiles produces an ETA that swings with the luck of the draw. Tracking pixels per second and multiplying by remaining pixels gives a stable projection because it measures the work that actually varies."}
-        },
-        {
-          "@type": "Question",
-          "name": "Why use time.monotonic() instead of time.time() for ETA?",
-          "acceptedAnswer": {"@type": "Answer", "text": "time.time() reads the wall clock, which can jump backwards or forwards when NTP corrects the system time or when daylight-saving changes apply. A backwards jump produces a negative tile duration and a nonsensical ETA. time.monotonic() only ever increases and is immune to clock adjustments, so it is the correct clock for measuring elapsed intervals."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I know the ETA is trustworthy?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Log the ETA at a fixed interval and check that its predicted finish time converges as the job proceeds. On a healthy run the predicted completion timestamp should stabilise within a few percent after the first window fills, and the final ETA should approach zero smoothly rather than snapping down at the end."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Estimating ETA for Long-Running Raster Batch Jobs
 
-A trustworthy ETA for a raster batch comes from measuring recent throughput, not the whole-run average. Time each finished tile with `time.monotonic()`, push the duration into a bounded `collections.deque`, compute an exponentially-weighted tiles-per-second rate, and multiply the remaining tiles by that rate. This tracks current conditions instead of being anchored to warm-up tiles. This page is part of the [Progress Tracking for Python GIS Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) guide within the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
+A trustworthy ETA for a raster batch comes from measuring recent throughput, not the whole-run average. Time each finished tile with `time.monotonic()`, push the duration into a bounded `collections.deque`, compute an exponentially-weighted tiles-per-second rate, and multiply the remaining tiles by that rate. This tracks current conditions instead of being anchored to warm-up tiles. For the wider context, see the [Progress Tracking for Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) guide and the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference it sits within.
 
 ## Prerequisites
 
@@ -156,7 +95,6 @@ logging.basicConfig(
 )
 log = logging.getLogger("raster.eta")
 
-
 class RollingEta:
     """Estimate remaining seconds from an exponentially-weighted rate.
 
@@ -209,7 +147,6 @@ class RollingEta:
         remaining = max(self.total_units - self.done_units, 0)
         return remaining / rate
 
-
 class RollingEtaColumn(ProgressColumn):
     """Render the RollingEta attached to a task's fields as 'eta 3m12s'."""
 
@@ -223,7 +160,6 @@ class RollingEtaColumn(ProgressColumn):
         m, s = divmod(int(secs), 60)
         return Text(f"eta {m:d}m{s:02d}s", style="cyan")
 
-
 def tile_windows(width: int, height: int, block: int):
     """Yield (window, pixel_count) tiles; edge tiles are smaller on purpose."""
     for row in range(0, height, block):
@@ -231,7 +167,6 @@ def tile_windows(width: int, height: int, block: int):
         for col in range(0, width, block):
             w = min(block, width - col)
             yield Window(col, row, w, h), w * h
-
 
 def process_tile(dataset, window: Window) -> None:
     """Stand-in for real work: read the block and touch every pixel.
@@ -241,7 +176,6 @@ def process_tile(dataset, window: Window) -> None:
     """
     band1 = dataset.read(1, window=window)
     _ = int(band1.sum())             # force materialisation of the read
-
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Rolling-window ETA for a raster batch")
@@ -296,7 +230,6 @@ def main() -> int:
 
     log.info(json.dumps({"event": "done", "tiles": len(tiles)}))
     return 0
-
 
 if __name__ == "__main__":
     sys.exit(main())
@@ -382,5 +315,5 @@ Log the ETA at a fixed interval and check that its predicted finish time converg
 
 ## Related
 
-- [Progress Tracking for Python GIS Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) — parent guide covering progress bars, throughput metrics, and observability for batch raster and vector jobs
+- [Progress Tracking for Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) — parent guide covering progress bars, throughput metrics, and observability for batch raster and vector jobs
 - [Checkpointing for Interrupted Spatial Batch Jobs](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/implementing-checkpointing-for-interrupted-spatial-batches/) — resume a batch from its last saved position so the ETA restarts from real progress rather than zero

@@ -1,5 +1,5 @@
 ---
-title: "Rich Console Output & Progress Bars for GIS CLIs"
+title: "Rich Console Output & Progress Bars"
 description: "Add structured progress bars, themed tables, and error-safe console output to geospatial batch CLIs using Python's Rich library — with full CI/CD compatibility."
 slug: "rich-console-output-progress-bars"
 type: "topic"
@@ -8,72 +8,7 @@ datePublished: "2024-03-15"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Rich Console Output & Progress Bars for Geospatial CLI Tools",
-      "description": "Use Python's Rich library to add structured progress bars, themed tables, and error-safe console output to geospatial batch processing CLIs — with full CI/CD compatibility.",
-      "datePublished": "2024-03-15",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "CLI Architecture & Design Patterns", "item": "https://batch-processing.com/cli-architecture-design-patterns/"},
-        {"@type": "ListItem", "position": 3, "name": "Rich Console Output & Progress Bars", "item": "https://batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Add Rich progress bars and structured console output to a geospatial CLI",
-      "step": [
-        {"@type": "HowToStep", "position": 1, "name": "Initialize a themed Console on stderr"},
-        {"@type": "HowToStep", "position": 2, "name": "Build a Progress context with geospatial-aware columns"},
-        {"@type": "HowToStep", "position": 3, "name": "Bind tasks to raster or vector I/O iterators"},
-        {"@type": "HowToStep", "position": 4, "name": "Render a structured summary table after the batch"},
-        {"@type": "HowToStep", "position": 5, "name": "Configure headless / CI fallback modes"}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Is Rich's Progress object thread-safe for concurrent raster processing?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Yes — Progress.advance() and Progress.update() are thread-safe when called from multiple threads. For multiprocessing you need a Manager-proxied counter or a queue-based aggregator, because worker processes do not share memory with the parent console."}
-        },
-        {
-          "@type": "Question",
-          "name": "Why should I write Console output to stderr rather than stdout?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Writing progress and diagnostics to stderr keeps stdout clean for machine-readable output (GeoJSON, CSV, NDJSON). When stdout is piped to another process or file, stderr output continues to appear in the terminal without breaking the pipe."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I disable the progress bar when running inside GitHub Actions or GitLab CI?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Detect the CI environment variable and sys.stdout.isatty(). Set Console(quiet=True) or omit the Progress context altogether, replacing it with plain console.log() calls that CI log aggregators can parse."}
-        },
-        {
-          "@type": "Question",
-          "name": "What does transient=True do in a Rich Progress context?",
-          "acceptedAnswer": {"@type": "Answer", "text": "transient=True removes each completed progress bar from the terminal scrollback once its task finishes. This keeps the terminal clean during multi-stage pipelines without flooding the history with stale bars."}
-        },
-        {
-          "@type": "Question",
-          "name": "Can I use Rich tables to display CRS metadata alongside progress?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Yes. After the batch completes, render a rich.table.Table with columns for EPSG code, authority, axis order, and validation status. For detailed column configuration and overflow handling see the Customizing Rich tables for coordinate system outputs guide."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
-Adding terminal feedback to geospatial batch CLIs turns opaque multi-minute raster runs into observable, debuggable pipelines — this page is part of the [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
+Adding terminal feedback to geospatial batch CLIs turns opaque multi-minute raster runs into observable, debuggable pipelines, and it builds on the wider [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
 
 ## Prerequisites
 
@@ -473,6 +408,6 @@ Yes. Because `Console` is passed explicitly, you can call `console.print(table)`
 ## Related
 
 - [Customizing Rich tables for coordinate system outputs](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/customizing-rich-tables-for-coordinate-system-outputs/) — map `pyproj.CRS` objects into terminal tables with EPSG badges and axis order indicators
-- [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) — parent guide covering the full CLI toolcraft stack for Python GIS practitioners
+- [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) — parent guide covering the full CLI toolcraft stack for Python geospatial tools
 - [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — type-safe CLI entry points that integrate cleanly with the progress manager patterns shown above
 - [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) — comparison of callback-heavy and type-driven dispatch, including how each framework handles progress manager injection

@@ -1,5 +1,5 @@
 ---
-title: "Environment Variable Sync for Python GIS CLI Tools"
+title: "Environment Variable Sync for a Python Geospatial CLI"
 description: "Schema-driven validation, cross-platform path normalization, and subprocess propagation patterns for synchronizing environment variables in Python geospatial CLIs."
 slug: "environment-variable-sync"
 type: "topic"
@@ -8,92 +8,11 @@ datePublished: "2024-11-12"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Environment Variable Sync for Python GIS CLI Tools",
-      "description": "Schema-driven validation, cross-platform path normalization, and subprocess propagation patterns for synchronizing environment variables in Python geospatial CLIs.",
-      "datePublished": "2024-11-12",
-      "dateModified": "2026-06-23",
-      "author": { "@type": "Organization", "name": "batch-processing.com" },
-      "publisher": { "@type": "Organization", "name": "batch-processing.com" }
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/" },
-        { "@type": "ListItem", "position": 2, "name": "CLI Architecture & Design Patterns", "item": "https://batch-processing.com/cli-architecture-design-patterns/" },
-        { "@type": "ListItem", "position": 3, "name": "Environment Variable Sync", "item": "https://batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/" }
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Synchronize Environment Variables in a Python GIS CLI",
-      "step": [
-        { "@type": "HowToStep", "position": 1, "name": "Define a typed pydantic-settings schema", "text": "Map every required and optional variable to a typed model with GIS-specific path validators." },
-        { "@type": "HowToStep", "position": 2, "name": "Establish load precedence", "text": "Read shell environment first, then .env files, then CI/CD secret managers." },
-        { "@type": "HowToStep", "position": 3, "name": "Validate and coerce types", "text": "Convert strings to Path objects, integers, and booleans; reject malformed values before entering the processing loop." },
-        { "@type": "HowToStep", "position": 4, "name": "Normalize geospatial library paths", "text": "Resolve GDAL_DATA, PROJ_LIB, and CPL_DEBUG to absolute, cross-platform paths and write them back to os.environ." },
-        { "@type": "HowToStep", "position": 5, "name": "Propagate to subprocesses and batch workers", "text": "Pass env explicitly via subprocess.run(env=...) and serialize config into worker context dictionaries." }
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does rasterio fail to open files after I set PROJ_LIB at runtime?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "PROJ initializes its data directory once during import. If you set PROJ_LIB after import rasterio, the change has no effect. Set environment variables before any import of rasterio, pyproj, or fiona."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Should I use pydantic-settings or python-dotenv for environment sync?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Use pydantic-settings when you need type coercion, nested model validation, and path existence checks. Use python-dotenv alone only for trivial scripts; it provides no type safety."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How do I prevent .env values from overwriting CI secrets?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Pass env_ignore_empty=True and override=False to BaseSettings so that existing shell variables take precedence over .env entries."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Do child processes spawned with subprocess.run inherit os.environ mutations?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "On POSIX, yes; on Windows with spawn start method, the environment is serialized and sent to the child, so mutations made after process creation are not reflected. Always pass env=os.environ.copy() explicitly."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Can I use environment variable sync with Typer CLI options?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. Load and validate the config in a Typer callback decorated with @app.callback(invoke_without_command=True), then store the resolved GISRuntimeConfig on the typer.Context object for subcommand access."
-          }
-        }
-      ]
-    }
-  ]
-}
-</script>
-
-# Environment Variable Sync for Python GIS CLI Tools
+# Environment Variable Sync for a Python Geospatial CLI
 
 Schema-driven environment variable sync gives your Python GIS CLI a validated, normalized configuration layer before any GDAL driver opens a file — eliminating the silent CRS mismatches, `libproj` segfaults, and credential leaks that plague unmanaged environment inheritance.
 
-This page is part of the [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
+The pattern here is one piece of the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
 
 ---
 
@@ -181,7 +100,6 @@ from typing import Optional
 
 from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
 
 class GISRuntimeConfig(BaseSettings):
     model_config = SettingsConfigDict(
@@ -275,7 +193,6 @@ from pathlib import Path
 
 app = typer.Typer(name="geo-pipeline", add_completion=True)
 
-
 @app.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
@@ -290,7 +207,6 @@ def main(
     """Geo-pipeline: reproducible spatial batch processing."""
     ctx.ensure_object(dict)
     ctx.obj["config"] = load_and_sync_config(env_file=env_file)
-
 
 @app.command()
 def reproject(
@@ -381,7 +297,6 @@ import subprocess
 import os
 from typing import Optional
 
-
 def run_gdal_translate(
     src_path: Path,
     dst_path: Path,
@@ -423,7 +338,6 @@ For distributed batch workers running under Celery or Dask, serialize the valida
 import multiprocessing
 from typing import Any
 
-
 def _worker_init(env_overrides: dict[str, str]) -> None:
     """
     Worker initializer: apply env overrides then sync GIS paths.
@@ -431,7 +345,6 @@ def _worker_init(env_overrides: dict[str, str]) -> None:
     """
     os.environ.update(env_overrides)
     load_and_sync_config()
-
 
 def process_raster_batch(
     tile_paths: list[Path],
@@ -467,7 +380,6 @@ import re
 _SENSITIVE_PATTERN = re.compile(
     r"(key|secret|token|password|credential|auth)", re.IGNORECASE
 )
-
 
 def log_config_summary(config: GISRuntimeConfig) -> None:
     """Log the resolved configuration, redacting credential fields."""
@@ -592,4 +504,4 @@ The parent process's `os.environ` remains unchanged, and the override is scoped 
 - [Configuration File Management for GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) — extend the precedence chain with TOML/YAML project-level config files that layer beneath environment variables.
 - [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — wire CLI flags into the top of the precedence chain so explicit user arguments always override synced environment values.
 - [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) — framework comparison that influences how you expose `--env-file` and config-check subcommands.
-- [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) — parent guide covering the full configuration layer, subcommand organization, and observability patterns for production GIS toolchains.
+- [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) — parent guide covering the full configuration layer, subcommand organization, and observability patterns for GIS toolchains.

@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Choosing Chunk Size for Multiprocessing Raster Warps",
-      "description": "Pick a tile chunk size for a multiprocessing raster warp by aligning to the source block shape and balancing worker memory against scheduling overhead.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Multiprocessing Geospatial Tasks in Python", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/"},
-        {"@type": "ListItem", "position": 3, "name": "Choosing Chunk Size for Multiprocessing Raster Warps", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/choosing-chunk-size-for-multiprocessing-raster-warps/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Choose a Chunk Size for a Multiprocessing Raster Warp",
-      "step": [
-        {"@type": "HowToStep", "name": "Read the source block shape", "text": "Open the raster and read block_shapes so chunk sizes can be aligned to the native tile grid."},
-        {"@type": "HowToStep", "name": "Snap chunk size to a block multiple", "text": "Round the requested chunk edge to the nearest integer multiple of the native block edge, typically 512 or 1024."},
-        {"@type": "HowToStep", "name": "Estimate per-chunk memory", "text": "Compute width times height times bands times dtype size to predict the resident bytes each worker holds."},
-        {"@type": "HowToStep", "name": "Derive a safe worker count", "text": "Divide the RAM budget by the per-chunk footprint and cap workers so total memory stays under the budget."},
-        {"@type": "HowToStep", "name": "Dispatch chunk windows to a pool", "text": "Tile the raster into aligned windows and submit each window to a ProcessPoolExecutor for warping."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "What chunk size should I start with for a raster warp?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Start at an integer multiple of the source block edge, usually 512 or 1024 pixels square. Read block_shapes first, then round your target chunk to the nearest multiple so each read maps cleanly onto stored tiles. Sweep 512, 1024, and 2048 to find the throughput peak for your specific storage and dtype."}
-        },
-        {
-          "@type": "Question",
-          "name": "Why do non-block-aligned chunks slow the warp down?",
-          "acceptedAnswer": {"@type": "Answer", "text": "A tiled GeoTIFF is stored as fixed blocks, often 256 or 512 pixels square. When a chunk window straddles block boundaries, GDAL must read every overlapping block in full and discard the parts outside the window. This read amplification can double or triple the bytes pulled from disk, so snapping chunk edges to a multiple of the block edge removes the waste."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I stop chunk workers from running out of memory?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Estimate the per-chunk footprint as width times height times bands times dtype size, then multiply by the worker count and a safety factor of two to three for GDAL warp scratch buffers. Keep that product under your RAM budget. If it exceeds the budget, shrink the chunk edge to the next smaller block multiple or reduce the worker count."}
-        },
-        {
-          "@type": "Question",
-          "name": "Should I handle remainder chunks at the raster edge?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Yes. Raster dimensions are rarely an exact multiple of the chunk size, so the last row and column of windows are smaller remainders. Clip each window to the raster bounds rather than assuming a full chunk. A window that reads past the raster edge raises a read error or pads with nodata, corrupting the output mosaic."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Choosing Chunk Size for Multiprocessing Raster Warps
 
-Pick a chunk size that is an integer multiple of the source raster's native block edge, typically 512 or 1024 pixels square, then cap the worker count so `chunk_bytes * workers` stays under your RAM budget. Block alignment removes read amplification, and the memory cap prevents out-of-memory kills. This page is part of the [Multiprocessing Geospatial Tasks in Python](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) guide inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
+Pick a chunk size that is an integer multiple of the source raster's native block edge, typically 512 or 1024 pixels square, then cap the worker count so `chunk_bytes * workers` stays under your RAM budget. Block alignment removes read amplification, and the memory cap prevents out-of-memory kills. It builds on the [Multiprocessing Geospatial Tasks in Python](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) guide, part of the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 The core trade-off is simple: chunks that are too small drown the pool in scheduling overhead and repeated compression setup, while chunks that are too large exhaust memory and leave workers idle at the tail of the job. The helper below reads `block_shapes`, snaps a requested chunk edge to a block multiple, estimates memory, and derives a safe `(chunk_size, workers)` pair before dispatching windows.
 
@@ -177,7 +116,6 @@ from rasterio.warp import calculate_default_transform, reproject, Resampling
 MEMORY_SAFETY_FACTOR = 3.0     # per-chunk arrays + warp working buffers
 RAM_BUDGET_FRACTION = 0.7      # never claim more than 70% of free RAM
 
-
 def align_chunk_to_block(requested: int, block_edge: int) -> int:
     """Round a requested chunk edge to the nearest positive multiple of the
     native block edge. A chunk that is not a block multiple forces GDAL to read
@@ -187,12 +125,10 @@ def align_chunk_to_block(requested: int, block_edge: int) -> int:
     multiple = max(1, round(requested / block_edge))
     return multiple * block_edge
 
-
 def estimate_chunk_bytes(edge: int, bands: int, dtype: str) -> int:
     """Resident bytes for one square chunk: width * height * bands * dtype_size."""
     dtype_size = np.dtype(dtype).itemsize
     return edge * edge * bands * dtype_size
-
 
 def plan_chunking(src_path: Path, requested_chunk: int) -> tuple[int, int]:
     """Return a safe (chunk_edge, worker_count) pair for this raster."""
@@ -218,7 +154,6 @@ def plan_chunking(src_path: Path, requested_chunk: int) -> tuple[int, int]:
     print(f"safe workers      : {workers}")
     return chunk_edge, int(workers)
 
-
 def iter_windows(width: int, height: int, edge: int):
     """Yield block-aligned windows, clipping the last row/col to raster bounds."""
     for row_off in range(0, height, edge):
@@ -226,7 +161,6 @@ def iter_windows(width: int, height: int, edge: int):
             w = min(edge, width - col_off)     # clip remainder column
             h = min(edge, height - row_off)    # clip remainder row
             yield Window(col_off, row_off, w, h)
-
 
 def warp_window(src_path: str, dst_path: str, dst_crs: str,
                 window: Window) -> tuple[int, int]:
@@ -253,7 +187,6 @@ def warp_window(src_path: str, dst_path: str, dst_crs: str,
         dst.write(out, window=Window(window.col_off, window.row_off, dst_w, dst_h))
     return (window.row_off, window.col_off)
 
-
 def build_output(src_path: Path, dst_path: Path, dst_crs: str, edge: int) -> None:
     """Create the destination raster with a tiled, block-aligned layout."""
     with rasterio.open(src_path) as src:
@@ -267,7 +200,6 @@ def build_output(src_path: Path, dst_path: Path, dst_crs: str, edge: int) -> Non
     )
     with rasterio.open(dst_path, "w", **profile):
         pass  # allocate the file; workers fill it window by window
-
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Block-aligned chunked raster warp")
@@ -304,7 +236,6 @@ def main() -> None:
 
     print(f"completed {len(windows) - failed}/{len(windows)} windows")
     sys.exit(0 if failed == 0 else 12)             # 12 = partial batch failure
-
 
 if __name__ == "__main__":
     main()

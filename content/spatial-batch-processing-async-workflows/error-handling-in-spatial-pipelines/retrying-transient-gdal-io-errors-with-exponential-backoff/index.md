@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Retrying Transient GDAL I/O Errors with Exponential Backoff",
-      "description": "Wrap remote GDAL reads in a tenacity retry with exponential backoff and jitter so transient S3 and network errors don't kill an otherwise healthy batch run.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Error Handling in Spatial Pipelines", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/"},
-        {"@type": "ListItem", "position": 3, "name": "Retrying Transient GDAL I/O Errors with Exponential Backoff", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/retrying-transient-gdal-io-errors-with-exponential-backoff/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Retry Transient GDAL I/O Errors with Exponential Backoff",
-      "step": [
-        {"@type": "HowToStep", "name": "Classify the error", "text": "Inspect the RasterioIOError message for HTTP 5xx or throttling markers to decide whether the failure is transient or permanent."},
-        {"@type": "HowToStep", "name": "Configure tenacity", "text": "Decorate the read with retry using wait_exponential plus wait_random jitter and stop_after_attempt to cap total attempts."},
-        {"@type": "HowToStep", "name": "Retry reads only", "text": "Apply the retry to the pure read function so a re-run never re-executes a non-idempotent write."},
-        {"@type": "HowToStep", "name": "Fail fast on permanent errors", "text": "Let missing-file, CRS mismatch, and unsupported-format errors raise immediately and exit with code 10 or 11."},
-        {"@type": "HowToStep", "name": "Verify the log", "text": "Confirm the log shows the expected attempt count followed by either a success line or a give-up line after the final attempt."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "How do I tell a transient GDAL error from a permanent one?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Inspect the exception. A RasterioIOError whose message mentions HTTP 500, 502, 503, 504, connection reset, or timeout is almost always transient and worth retrying. A message mentioning 404, no such file, not recognized as a supported file format, or a CRS mismatch you raise yourself is permanent and must fail fast."}
-        },
-        {
-          "@type": "Question",
-          "name": "Why add wait_random jitter on top of wait_exponential?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Pure exponential backoff makes every worker in a batch retry at the same instant after a shared outage, producing a synchronized thundering herd that re-triggers throttling. Adding wait_random spreads the retries across a window so the storage backend sees a smoother request rate and recovers."}
-        },
-        {
-          "@type": "Question",
-          "name": "Is it safe to retry a GDAL write the same way as a read?",
-          "acceptedAnswer": {"@type": "Answer", "text": "No. Reads are idempotent, so re-running them is harmless. Writes are not: a retried gdal.Warp or upload can produce duplicate or half-written output. Wrap only the read in the retry, or make the write atomic by writing to a temp path and renaming after success."}
-        },
-        {
-          "@type": "Question",
-          "name": "What stop condition should I use for a batch of thousands of files?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use stop_after_attempt(5) combined with a per-call ceiling from wait_exponential's max argument. Five attempts with a capped delay bounds worst-case latency per file to well under a minute, so one slow object cannot stall the whole batch while still surviving a short backend blip."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Retrying Transient GDAL I/O Errors with Exponential Backoff
 
-Wrap the remote read in a `tenacity` retry that fires only on transient failures — `RasterioIOError` carrying an HTTP 5xx or throttling signal — using `wait_exponential` plus `wait_random` jitter and `stop_after_attempt`, and let permanent failures like a missing key, a CRS mismatch, or an unsupported format raise straight through with exit code `10` or `11`. That single distinction keeps a flaky S3 backend from killing an otherwise healthy batch. This page is part of the [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) guide inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
+Wrap the remote read in a `tenacity` retry that fires only on transient failures — `RasterioIOError` carrying an HTTP 5xx or throttling signal — using `wait_exponential` plus `wait_random` jitter and `stop_after_attempt`, and let permanent failures like a missing key, a CRS mismatch, or an unsupported format raise straight through with exit code `10` or `11`. That single distinction keeps a flaky S3 backend from killing an otherwise healthy batch. For the wider failure-handling context, see the [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) guide within [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/).
 
 ## Prerequisites
 
@@ -180,14 +119,11 @@ PERMANENT_MARKERS = (
     "not recognized as", "not a supported", "does not exist",
 )
 
-
 class UnsupportedFormat(Exception):
     """Raised for a permanent format error -> exit 11."""
 
-
 class CrsMismatch(Exception):
     """Raised when the raster CRS is not the expected one -> exit 10."""
-
 
 def is_transient(exc: BaseException) -> bool:
     """Return True only for errors a bit-for-bit retry could clear.
@@ -201,7 +137,6 @@ def is_transient(exc: BaseException) -> bool:
     if any(p in msg for p in PERMANENT_MARKERS):
         return False
     return any(t in msg for t in TRANSIENT_MARKERS)
-
 
 @retry(
     retry=retry_if_exception(is_transient),   # ONLY transient reads are retried
@@ -229,7 +164,6 @@ def read_window(url: str, expected_epsg: int = 4326) -> "tuple":
         data = ds.read(1, window=window)
         return data, ds.profile
 
-
 def main() -> None:
     if len(sys.argv) != 2:
         log.error("usage: read_with_retry.py <vsis3-or-vsicurl-url>")
@@ -249,7 +183,6 @@ def main() -> None:
         sys.exit(1)
     log.info("read %s block: shape=%s dtype=%s", url, data.shape, data.dtype)
     sys.exit(0)
-
 
 if __name__ == "__main__":
     main()

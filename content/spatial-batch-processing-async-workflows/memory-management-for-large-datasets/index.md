@@ -8,79 +8,14 @@ datePublished: "2024-11-12"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Memory Management for Large GIS Datasets",
-      "description": "Keep Python GIS batch pipelines within memory bounds using windowed raster I/O, chunked vector reads, process-level ceilings, and tracemalloc-based drift detection.",
-      "datePublished": "2024-11-12",
-      "dateModified": "2026-06-23",
-      "author": { "@type": "Organization", "name": "batch-processing.com" }
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/" },
-        { "@type": "ListItem", "position": 2, "name": "Spatial Batch Processing & Async Workflows", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/" },
-        { "@type": "ListItem", "position": 3, "name": "Memory Management for Large Datasets", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/" }
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Memory-Efficient Python GIS Batch Processing",
-      "step": [
-        { "@type": "HowToStep", "position": 1, "name": "Profile baseline allocation with tracemalloc and psutil" },
-        { "@type": "HowToStep", "position": 2, "name": "Implement block-aligned windowed raster I/O with rasterio" },
-        { "@type": "HowToStep", "position": 3, "name": "Stream vector features in chunks using pyogrio" },
-        { "@type": "HowToStep", "position": 4, "name": "Enforce process-level memory ceilings with resource.setrlimit" },
-        { "@type": "HowToStep", "position": 5, "name": "Instrument per-iteration allocation drift and fail fast on threshold breach" }
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does RSS keep growing even after I call del and gc.collect()?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Python frees heap pages back to the OS lazily. More often the culprit is a C-backed library — GDAL, GEOS, or a NumPy buffer — that holds a memory-mapped file descriptor. Ensure rasterio datasets are closed inside their context managers and call pyogrio's returned DataFrames explicit del before gc.collect(). If RSS still grows, run tracemalloc snapshots before and after the suspect loop: the diff will point to the allocation site." }
-        },
-        {
-          "@type": "Question",
-          "name": "What is a safe GDAL_CACHEMAX value for a container with 4 GB RAM?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Set GDAL_CACHEMAX to 512 (MiB) — roughly 12 % of total RAM. GDAL's default of 256 MiB is reasonable for single-file reads but too high when several workers share the same host. Leave headroom for NumPy working arrays: each 10 000 × 10 000 float32 band costs 400 MB, so size the cache against your actual window dimensions, not the full scene." }
-        },
-        {
-          "@type": "Question",
-          "name": "Should I use RLIMIT_AS or RLIMIT_DATA to cap worker memory?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Prefer RLIMIT_AS (virtual address space) — it catches GDAL's mmap allocations that RLIMIT_DATA misses. Set it 20 % above your measured peak RSS to avoid spurious ENOMEM on startup, then tighten after profiling. In containers, pair it with the cgroup memory.limit_in_bytes so the OOM killer targets your process specifically rather than a random neighbor." }
-        },
-        {
-          "@type": "Question",
-          "name": "How does pyogrio Arrow mode reduce memory compared to a normal read?",
-          "acceptedAnswer": { "@type": "Answer", "text": "When use_arrow=True, pyogrio returns a zero-copy Arrow RecordBatch backed by shared memory rather than copying data into pandas object arrays. For string-heavy attribute tables (e.g., parcel IDs, land-use codes) this typically halves peak allocation. Downside: GeoDataFrame operations that mutate the geometry column will trigger a copy-on-write; keep the chunk immutable until you have filtered it." }
-        },
-        {
-          "@type": "Question",
-          "name": "At what chunk size does windowed rasterio I/O stop being faster than a full read?",
-          "acceptedAnswer": { "@type": "Answer", "text": "When the window is smaller than the raster's native tile or block size GDAL decompresses the full block anyway, so very small windows thrash I/O without saving memory. Read src.profile['blockxsize'] and src.profile['blockysize'] and make your window a multiple of those values. For untiled GeoTIFFs (blockysize=1, strip layout), row-band reads in batches of 256–1024 rows outperform pixel-level windows." }
-        }
-      ]
-    }
-  ]
-}
-</script>
-
-**TL;DR:** Replace naive full-file loads with block-aligned windowed reads for rasters and offset/limit streaming for vectors, cap each worker's virtual address space with `resource.setrlimit`, and detect slow leaks with per-iteration `tracemalloc` snapshots — that combination keeps Python GIS batch pipelines within predictable memory bounds regardless of input size.
+**TL;DR:** Replace naive full-file loads with block-aligned windowed reads for rasters and offset/limit streaming for vectors, cap each worker's virtual address space with `resource.setrlimit`, and detect slow leaks with per-iteration `tracemalloc` snapshots — that combination keeps Python batch pipelines within predictable memory bounds regardless of input size.
 
 ## Prerequisites
 
 - Python 3.9+ (type annotations, `contextlib.contextmanager`, `tracemalloc` in stdlib)
 - `pip install rasterio>=1.3 geopandas>=1.0 shapely>=2.0 pyogrio>=0.7 psutil`
 - GDAL/OGR installed system-wide or via `conda-forge`; `gdal-config --version` should succeed
-- Familiarity with the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) patterns covered in the parent guide
+- Familiarity with the parent [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) guide
 
 Set these two environment variables before any GIS import to cap GDAL's internal cache and prevent it from competing with your Python working arrays:
 
@@ -166,7 +101,6 @@ def iter_raster_windows(
             yield win, data
             del data   # dereference immediately; do not accumulate
 
-
 def process_raster(src_path: Path, dst_path: Path) -> None:
     """Normalise a raster to [0, 1] using block-aligned windowed reads."""
     with rasterio.open(src_path) as src:
@@ -210,7 +144,6 @@ def iter_vector_chunks(
         )
         yield chunk
         del chunk   # release Arrow buffers before next fetch
-
 
 def filter_large_parcels(
     src_path: Path,
@@ -278,7 +211,6 @@ def set_memory_ceiling_mb(limit_mb: int) -> None:
         else limit_bytes
     )
     resource.setrlimit(resource.RLIMIT_AS, (new_soft, hard))
-
 
 def entry_point(args) -> int:
     """CLI entry point; returns POSIX exit code."""
@@ -441,7 +373,6 @@ def verify_output(src_path: Path, dst_path: Path) -> None:
             f"dst {dst.width}×{dst.height}"
         )
     print(f"[OK] Output verified: {dst_path} ({dst_path.stat().st_size // 1_048_576} MiB)")
-
 
 def check_rss_returned_to_baseline(baseline: dict, tolerance_mb: float = 20.0) -> None:
     """Warn if RSS is more than tolerance_mb above baseline after the run."""

@@ -1,5 +1,5 @@
 ---
-title: "Testing Click Commands with CliRunner for GIS Tools"
+title: "Testing Click Commands with CliRunner"
 description: "Unit-test a Click shapefile-conversion command with CliRunner: assert exit codes, capture stderr, and inject in-memory rasterio fixtures without touching disk."
 slug: "testing-click-commands-with-clirunner-for-gis-tools"
 type: "article"
@@ -14,69 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Testing Click Commands with CliRunner for GIS Tools",
-      "description": "Unit-test a Click shapefile-conversion command with CliRunner: assert exit codes, capture stderr, and inject in-memory rasterio fixtures without touching disk.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Click vs Typer for Geospatial Workflows", "item": "https://batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/"},
-        {"@type": "ListItem", "position": 3, "name": "Testing Click Commands with CliRunner for GIS Tools", "item": "https://batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/testing-click-commands-with-clirunner-for-gis-tools/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Test a Click geospatial CLI command with CliRunner",
-      "step": [
-        {"@type": "HowToStep", "name": "Build an in-memory raster fixture", "text": "Create a small EPSG:4326 raster in a rasterio MemoryFile and expose it as a pytest fixture so tests never touch disk."},
-        {"@type": "HowToStep", "name": "Invoke the command with CliRunner", "text": "Instantiate CliRunner and call runner.invoke() inside isolated_filesystem() to run the reprojection command in a scratch directory."},
-        {"@type": "HowToStep", "name": "Assert the success path", "text": "Check result.exit_code equals 0 and inspect result.output for the expected EPSG:3857 confirmation message."},
-        {"@type": "HowToStep", "name": "Assert the CRS-mismatch failure path", "text": "Feed a raster whose CRS conflicts with the requested target and assert the domain exit code 10 with the error text on stderr."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Does CliRunner capture logging output as well as stdout?",
-          "acceptedAnswer": {"@type": "Answer", "text": "No. By default CliRunner captures click.echo() and anything written to sys.stdout, but the logging module writes to its own handlers, which are not redirected. Attach a caplog fixture or route diagnostics through click.echo(err=True) if you want to assert on them via result.output."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I separate stdout from stderr in a CliRunner result?",
-          "acceptedAnswer": {"@type": "Answer", "text": "On Click 8.2 and later, CliRunner keeps the two streams apart automatically and result.output holds only stdout while result.stderr holds stderr. On older releases pass mix_stderr=False to the CliRunner constructor, otherwise both streams are merged into result.output."}
-        },
-        {
-          "@type": "Question",
-          "name": "Should I assert on result.exit_code or catch SystemExit?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Always assert on result.exit_code. CliRunner traps the SystemExit raised by Click internally and records the numeric code on the result object, so a try/except SystemExit around runner.invoke() never fires and would mask the real assertion."}
-        },
-        {
-          "@type": "Question",
-          "name": "Why use a rasterio MemoryFile instead of a temporary GeoTIFF on disk?",
-          "acceptedAnswer": {"@type": "Answer", "text": "A MemoryFile builds the raster in RAM through GDAL's /vsimem/ virtual filesystem, so the test runs faster, leaves no artifacts, and works in read-only CI containers. Write the bytes to a path inside isolated_filesystem() only when the command opens a filename rather than a dataset object."}
-        }
-      ]
-    }
-  ]
-}
-</script>
+# Testing Click Commands with CliRunner
 
-# Testing Click Commands with CliRunner for GIS Tools
-
-To test a Click-based geospatial CLI command, drive it with `click.testing.CliRunner`: call `runner.invoke(cmd, [...])` inside `runner.isolated_filesystem()`, then assert on `result.exit_code`, `result.output`, and `result.stderr` rather than calling the command function directly. Feeding it a small in-memory rasterio fixture lets you exercise both the success and CRS-mismatch paths without writing files. This page is part of the [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) guide.
+To test a Click-based geospatial CLI command, drive it with `click.testing.CliRunner`: call `runner.invoke(cmd, [...])` inside `runner.isolated_filesystem()`, then assert on `result.exit_code`, `result.output`, and `result.stderr` rather than calling the command function directly. Feeding it a small in-memory rasterio fixture lets you exercise both the success and CRS-mismatch paths without writing files. It sits within the [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) guide.
 
 ## Prerequisites
 
@@ -143,7 +83,6 @@ import rasterio
 from rasterio.warp import calculate_default_transform, reproject, Resampling
 from pyproj import CRS
 
-
 @click.command()
 @click.argument("src", type=click.Path(exists=True, path_type=Path))
 @click.argument("dst", type=click.Path(path_type=Path))
@@ -199,7 +138,6 @@ from click.testing import CliRunner
 
 from gistools.reproject import reproject_cmd
 
-
 @pytest.fixture
 def wgs84_raster_bytes() -> bytes:
     """A 4x4 single-band EPSG:4326 GeoTIFF materialised entirely in memory."""
@@ -218,13 +156,11 @@ def wgs84_raster_bytes() -> bytes:
             ds.write(data)
         return mem.read()          # raw GeoTIFF bytes, no file on disk yet
 
-
 @pytest.fixture
 def runner() -> CliRunner:
     # mix_stderr=False keeps result.output (stdout) separate from result.stderr.
     # On Click >= 8.2 the streams are always split and this kwarg is removed.
     return CliRunner(mix_stderr=False)
-
 
 def test_reproject_success(runner, wgs84_raster_bytes):
     with runner.isolated_filesystem():
@@ -242,7 +178,6 @@ def test_reproject_success(runner, wgs84_raster_bytes):
         with rasterio.open("out.tif") as out:
             assert out.crs.to_epsg() == 3857
 
-
 def test_reproject_crs_mismatch(runner, wgs84_raster_bytes):
     with runner.isolated_filesystem():
         with open("in.tif", "wb") as fh:
@@ -256,7 +191,6 @@ def test_reproject_crs_mismatch(runner, wgs84_raster_bytes):
 
         assert result.exit_code == 10
         assert "refusing geographic 4326 to projected 3857" in result.stderr
-
 
 def test_missing_target_is_usage_error(runner, wgs84_raster_bytes):
     with runner.isolated_filesystem():

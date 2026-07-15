@@ -2,7 +2,7 @@
   <div class="page-wrapper">
     <div class="footer-inner">
       <div class="footer-brand">
-        <a href="/" class="footer-brand__logo" aria-label="{{ site.site.name }} home">
+        <a href="{{ site.site.url }}/" class="footer-brand__logo" aria-label="{{ site.site.name }} home">
           <img src="/icons/logo.svg" alt="" width="32" height="32" aria-hidden="true">
           <span class="footer-brand__name">GIS CLI Toolcraft</span>
         </a>
@@ -16,7 +16,7 @@
       {% set sectionSlug = section.url %}
       {% for sub in collections.subsections %}
         {% if sub.url and sectionSlug and (sub.url.indexOf(sectionSlug) === 0) %}
-        <li><a href="{{ sub.url }}">{{ sub.data.title or sub.fileSlug }}</a></li>
+        <li><a href="{{ site.site.url }}{{ sub.url }}">{{ sub.data.title or sub.fileSlug }}</a></li>
         {% endif %}
       {% endfor %}
         </ul>

@@ -6,7 +6,7 @@ type: "article"
 breadcrumb:
   - label: "Home"
     url: "/"
-  - label: "Progress Tracking for Python GIS Batch Pipelines"
+  - label: "Progress Tracking for Batch Pipelines"
     url: "/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/"
   - label: "Reporting Batch Progress to Prometheus from Python"
     url: "/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/reporting-batch-progress-to-prometheus-from-python/"
@@ -14,69 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Reporting Batch Progress to Prometheus from Python",
-      "description": "Expose tiles-processed, failures, and throughput as Prometheus metrics from a long-running geospatial batch job so dashboards and alerts track progress live.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Progress Tracking for Python GIS Batch Pipelines", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/"},
-        {"@type": "ListItem", "position": 3, "name": "Reporting Batch Progress to Prometheus from Python", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/reporting-batch-progress-to-prometheus-from-python/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Report Batch Progress to Prometheus from Python",
-      "step": [
-        {"@type": "HowToStep", "name": "Define the metric objects", "text": "Create a Counter for tiles processed and failed, a Gauge for tiles remaining and throughput, and a Histogram for tile duration, all with job and crs labels."},
-        {"@type": "HowToStep", "name": "Choose an exposition mode", "text": "Call start_http_server for a long-running daemon so Prometheus can scrape it, or push_to_gateway for a short-lived batch that exits before the next scrape."},
-        {"@type": "HowToStep", "name": "Update metrics in the parent process", "text": "Increment counters and set gauges from the main process as ProcessPoolExecutor futures complete, because workers cannot share the parent registry."},
-        {"@type": "HowToStep", "name": "Verify the series", "text": "Run curl on the metrics endpoint and confirm tiles_processed_total and the other series appear with the expected label set."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Should I use the Pushgateway or an HTTP scrape endpoint?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use start_http_server for a long-running daemon that lives long enough for Prometheus to scrape it on its normal interval. Use push_to_gateway only for short-lived batch jobs that finish and exit before the next scrape would occur. Pushing from a daemon leaves stale series in the gateway that never get cleaned up."}
-        },
-        {
-          "@type": "Question",
-          "name": "Why can't my ProcessPoolExecutor workers update the metrics directly?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Each worker process gets its own copy of the metric registry when it is forked or spawned, so increments inside a worker never reach the parent's registry that the HTTP server exposes. Update metrics from the parent as futures complete, or enable prometheus_client multiprocess mode with a shared PROMETHEUS_MULTIPROC_DIR."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I keep label cardinality under control?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Only use labels whose values come from a small fixed set, such as job name and target CRS. Never label a metric with a per-tile identifier, file path, or timestamp, because every distinct value creates a new time series and can overwhelm the Prometheus server."}
-        },
-        {
-          "@type": "Question",
-          "name": "What is the difference between a Counter and a Gauge here?",
-          "acceptedAnswer": {"@type": "Answer", "text": "A Counter only ever increases and is right for cumulative totals like tiles_processed_total, so you take rate() of it in queries. A Gauge can go up or down and suits point-in-time values like tiles_remaining or throughput_tiles_per_second that you set to an absolute number each update."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Reporting Batch Progress to Prometheus from Python
 
-Expose progress by defining `prometheus_client` metric objects in the parent process — a `Counter` for `tiles_processed_total` and `tiles_failed_total`, a `Gauge` for `tiles_remaining` and `throughput_tiles_per_second`, and a `Histogram` for `tile_duration_seconds` — then update them as `ProcessPoolExecutor` futures complete. For a long-running daemon call `start_http_server(8000)` so Prometheus scrapes it; for a short batch push to the Pushgateway on exit. This page is part of the [Progress Tracking for Python GIS Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) guide within the wider [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
+Expose progress by defining `prometheus_client` metric objects in the parent process — a `Counter` for `tiles_processed_total` and `tiles_failed_total`, a `Gauge` for `tiles_remaining` and `throughput_tiles_per_second`, and a `Histogram` for `tile_duration_seconds` — then update them as `ProcessPoolExecutor` futures complete. For a long-running daemon call `start_http_server(8000)` so Prometheus scrapes it; for a short batch push to the Pushgateway on exit. For the wider context, see the [Progress Tracking for Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) guide, part of the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -85,7 +25,7 @@ Expose progress by defining `prometheus_client` metric objects in the parent pro
 - A raster job that already yields tiles or windows; rasterio 1.3+ if you use `Window` reads
 - A running Prometheus server only for end-to-end scraping — not required to emit or `curl` the metrics locally
 
-If you are new to why long batch runs need external observability rather than a progress bar, start with the [Progress Tracking for Python GIS Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) overview. The parallelism model referenced here builds on [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/).
+If you are new to why long batch runs need external observability rather than a progress bar, start with the [Progress Tracking for Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) overview. The parallelism model referenced here builds on [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/).
 
 ## How Metrics Flow Out of a Multiprocess Batch
 
@@ -186,7 +126,6 @@ TILE_DURATION = Histogram(
     buckets=(0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0),
 )
 
-
 def reproject_tile(task: tuple) -> dict:
     """Runs in a WORKER process. Does not touch any metric object —
     it only measures and returns a plain dict for the parent to record."""
@@ -202,7 +141,6 @@ def reproject_tile(task: tuple) -> dict:
     except Exception as exc:
         return {"ok": False, "duration": time.perf_counter() - start,
                 "error": str(exc)}
-
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Batch reproject with Prometheus metrics")
@@ -255,7 +193,6 @@ def main() -> None:
 
     failed = int(TILES_FAILED.labels(**labels)._value.get())
     sys.exit(0 if failed == 0 else 12)   # 12 = partial batch failure
-
 
 if __name__ == "__main__":
     main()
@@ -341,5 +278,5 @@ A `Counter` only ever increases and is right for cumulative totals like `tiles_p
 
 ## Related
 
-- [Progress Tracking for Python GIS Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) — parent guide covering progress bars, checkpoints, and observability for long batch runs
+- [Progress Tracking for Batch Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/) — parent guide covering progress bars, checkpoints, and observability for long batch runs
 - [Estimating ETA for Long-Running Raster Batch Jobs](https://www.batch-processing.com/spatial-batch-processing-async-workflows/progress-tracking-in-batch-jobs/estimating-eta-for-long-running-raster-batch-jobs/) — turn the same throughput signal into a remaining-time estimate

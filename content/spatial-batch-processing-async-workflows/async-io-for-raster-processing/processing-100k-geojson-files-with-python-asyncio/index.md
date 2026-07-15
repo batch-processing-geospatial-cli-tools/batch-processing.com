@@ -8,66 +8,9 @@ datePublished: "2024-11-15"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Processing 100k GeoJSON Files with Python asyncio",
-      "description": "Step-by-step guide to batch-processing 100,000 GeoJSON files with Python asyncio: bounded concurrency, backpressure queues, CPU offloading, and batched writes.",
-      "datePublished": "2024-11-15",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Spatial Batch Processing & Async Workflows", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/"},
-        {"@type": "ListItem", "position": 3, "name": "Async I/O for Raster Processing", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/"},
-        {"@type": "ListItem", "position": 4, "name": "Processing 100k GeoJSON Files", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/processing-100k-geojson-files-with-python-asyncio/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Process 100k GeoJSON Files with Python asyncio",
-      "description": "Use asyncio.Semaphore, a bounded asyncio.Queue, and aiofiles to process 100,000 GeoJSON files concurrently while keeping memory under 200 MB.",
-      "step": [
-        {"@type": "HowToStep", "name": "Raise the OS file-descriptor limit", "text": "Run ulimit -n 65536 or set fs.file-max in /etc/sysctl.conf before launch."},
-        {"@type": "HowToStep", "name": "Build a bounded read semaphore", "text": "Create asyncio.Semaphore(80) to gate concurrent aiofiles opens and prevent OSError 24."},
-        {"@type": "HowToStep", "name": "Feed paths through a capped queue", "text": "Use asyncio.Queue(maxsize=1000) so the path-feeder blocks when consumers fall behind."},
-        {"@type": "HowToStep", "name": "Offload JSON parsing to an executor", "text": "Call loop.run_in_executor(None, json.loads, content) for payloads above ~50 KB to avoid blocking the event loop."},
-        {"@type": "HowToStep", "name": "Write results in batches", "text": "Accumulate 500 validated features before each aiofiles write to reduce inode churn."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does asyncio raise OSError: [Errno 24] Too many open files when processing GeoJSON?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Linux defaults to 1024 open file descriptors per process. Each concurrent aiofiles.open() holds a descriptor. Run ulimit -n 65536 and cap asyncio.Semaphore to 80–200 so you never approach the OS limit."}
-        },
-        {
-          "@type": "Question",
-          "name": "Should I use orjson instead of the stdlib json module?",
-          "acceptedAnswer": {"@type": "Answer", "text": "For files under 50 KB, orjson is 2–3x faster but the event-loop impact is negligible. For files above 50 KB with heavy validation logic, prefer run_in_executor with the stdlib json or orjson to avoid starving other coroutines."}
-        },
-        {
-          "@type": "Question",
-          "name": "How many concurrent tasks should I use on an HDD vs NVMe?",
-          "acceptedAnswer": {"@type": "Answer", "text": "HDDs cap at ~20 concurrent random reads due to seek latency. NVMe drives sustain 100–200 concurrent ops. Start at 40, watch iowait with iotop, and double until iowait exceeds 60%."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 Processing 100,000 GeoJSON files with Python asyncio requires decoupling disk I/O from CPU-bound JSON parsing. The bottleneck is rarely raw disk bandwidth — it is uncontrolled concurrency that exhausts file descriptors, triggers memory thrashing, or blocks the event loop during deserialization. A bounded `asyncio.Semaphore`, a capped `asyncio.Queue`, and batched output writes keep peak memory under 200 MB while delivering 3–5x throughput over a synchronous script.
 
-This page is part of the [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) guide, which sits inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
+It applies the patterns from the [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) guide, part of the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -157,7 +100,6 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-
 async def read_geojson(path: Path, sem: asyncio.Semaphore) -> Optional[dict]:
     """Open and parse a single GeoJSON file, gated by the shared semaphore."""
     async with sem:                         # ← backpressure: blocks when 80 ops in flight
@@ -179,7 +121,6 @@ async def read_geojson(path: Path, sem: asyncio.Semaphore) -> Optional[dict]:
         log.error("Giving up on %s after %d retries", path.name, MAX_RETRIES)
         return None
 
-
 def validate_and_transform(data: dict) -> Optional[dict]:
     """
     Validate RFC 7946 FeatureCollection structure and normalise coordinates.
@@ -198,7 +139,6 @@ def validate_and_transform(data: dict) -> Optional[dict]:
             geom["coordinates"] = [round(c, 6) for c in coords]
     return data
 
-
 async def _flush_batch(output_dir: Path, batch: list, batch_index: int) -> None:
     """Serialise a list of GeoJSON features to a single FeatureCollection file."""
     out_path = output_dir / f"batch_{batch_index:06d}.geojson"
@@ -210,7 +150,6 @@ async def _flush_batch(output_dir: Path, batch: list, batch_index: int) -> None:
     async with aiofiles.open(out_path, mode="w", encoding="utf-8") as fh:
         await fh.write(payload)
     log.info("Wrote %d features → %s", len(batch), out_path.name)
-
 
 async def batch_writer(
     output_dir: Path,
@@ -234,7 +173,6 @@ async def batch_writer(
             pending = pending[batch_size:]
             index += 1
 
-
 async def worker(
     path: Path,
     sem: asyncio.Semaphore,
@@ -247,7 +185,6 @@ async def worker(
     transformed = validate_and_transform(data)
     if transformed is not None:
         await results.put(transformed)
-
 
 async def main(input_dir: Path, output_dir: Path) -> int:
     paths = sorted(input_dir.rglob("*.geojson"))
@@ -270,7 +207,6 @@ async def main(input_dir: Path, output_dir: Path) -> int:
 
     log.info("Done.")
     return 0
-
 
 if __name__ == "__main__":
     import argparse

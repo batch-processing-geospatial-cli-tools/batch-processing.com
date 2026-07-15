@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Loading .env Files in a Geospatial CLI",
-      "description": "Load a .env file with python-dotenv at CLI startup so GDAL, PROJ, and cloud-credential variables are set before rasterio imports, without leaking secrets into logs.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Environment Variable Sync for Python GIS CLI Tools", "item": "https://batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/"},
-        {"@type": "ListItem", "position": 3, "name": "Loading .env Files in a Geospatial CLI", "item": "https://batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/loading-dotenv-files-in-a-geospatial-cli/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Load a .env file in a geospatial CLI before rasterio imports",
-      "step": [
-        {"@type": "HowToStep", "name": "Locate the .env file", "text": "Call find_dotenv() from a bootstrap module so the file is resolved by walking up from the current working directory."},
-        {"@type": "HowToStep", "name": "Load before importing rasterio", "text": "Call load_dotenv() at the very top of the entry module, before any import of rasterio or osgeo, so GDAL and PROJ read the variables at their own import time."},
-        {"@type": "HowToStep", "name": "Choose override semantics", "text": "Use override=False so real shell and CI environment variables win over the checked-in .env defaults."},
-        {"@type": "HowToStep", "name": "Mask secrets in log output", "text": "Redact AWS_SECRET_ACCESS_KEY and similar keys before logging the resolved environment so credentials never reach log files."},
-        {"@type": "HowToStep", "name": "Verify the load order", "text": "Print the effective GDAL_DATA and a masked AWS key at startup and confirm a /vsis3/ read succeeds."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why must load_dotenv run before importing rasterio?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Rasterio and osgeo read GDAL_DATA, PROJ_DATA, GDAL_CACHEMAX and the AWS_* credentials from os.environ during their own import and driver registration. If load_dotenv runs after that import, the values already read into GDAL's C-level configuration will not change, so the /vsis3/ handler and PROJ transforms use stale or missing settings."}
-        },
-        {
-          "@type": "Question",
-          "name": "Should I use override=True or override=False with load_dotenv?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use override=False, which is the default. Real environment variables set by the shell, container, or CI runner then take precedence over the .env file, so production credentials injected by the platform are not clobbered by a checked-in development file. Use override=True only for a deliberate local reset."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I stop .env secrets from leaking into CLI logs?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Never log os.environ wholesale. Build a redacted copy that masks any key matching SECRET, TOKEN, PASSWORD or KEY, showing only the last four characters, and log that copy instead. Also add .env to .gitignore so credentials are never committed."}
-        },
-        {
-          "@type": "Question",
-          "name": "Where should the .env file live for a CLI run from any directory?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use find_dotenv(), which walks up the directory tree from the current working directory until it finds a .env file. This lets the CLI be invoked from a subfolder of a project and still resolve the project-root .env. Pass an explicit path with a --env-file flag when you need to override that search."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Loading .env Files in a Geospatial CLI
 
-Load the `.env` file at the very top of your entry module with `python-dotenv` — `load_dotenv(find_dotenv(), override=False)` — before any `import rasterio` or `from osgeo import gdal`. GDAL and PROJ read `GDAL_DATA`, `PROJ_DATA`, `GDAL_CACHEMAX`, and the `AWS_*` credentials for `/vsis3/` at their own import time, so a late load leaves them stale. This page is part of the [Environment Variable Sync for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/) guide within the broader [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
+Load the `.env` file at the very top of your entry module with `python-dotenv` — `load_dotenv(find_dotenv(), override=False)` — before any `import rasterio` or `from osgeo import gdal`. GDAL and PROJ read `GDAL_DATA`, `PROJ_DATA`, `GDAL_CACHEMAX`, and the `AWS_*` credentials for `/vsis3/` at their own import time, so a late load leaves them stale. This ordering problem is the focus of the [Environment Variable Sync for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/environment-variable-sync/) guide, itself part of the broader [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
@@ -160,14 +99,12 @@ _GDAL_KEYS = (
     "AWS_SECRET_ACCESS_KEY", "AWS_S3_ENDPOINT", "AWS_REGION",
 )
 
-
 def _mask(key: str, value: str) -> str:
     """Redact secret values, keeping only the last four characters."""
     if any(marker in key.upper() for marker in _SECRET_MARKERS):
         tail = value[-4:] if len(value) > 4 else ""
         return f"****{tail}"
     return value
-
 
 def load_environment(env_file: str | None = None, override: bool = False) -> Path | None:
     """Load a .env file into os.environ and return the path that was used.
@@ -193,7 +130,6 @@ def load_environment(env_file: str | None = None, override: bool = False) -> Pat
                 dotenv_path, override, resolved)
     return Path(dotenv_path)
 
-
 # Load at import time so a plain `import bootstrap` is enough to arm GDAL.
 load_environment()
 ```
@@ -217,7 +153,6 @@ from rasterio.crs import CRS
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("gis_cli")
-
 
 def reproject_vsis3(src_uri: str, dst_path: Path, target_epsg: str) -> int:
     """Read a raster (local or /vsis3/) and warp it to target_epsg."""
@@ -245,7 +180,6 @@ def reproject_vsis3(src_uri: str, dst_path: Path, target_epsg: str) -> int:
     logger.info("Wrote %s in %s", dst_path, dst_crs)
     return 0
 
-
 def main() -> int:
     parser = argparse.ArgumentParser(description="Reproject a raster to a target CRS")
     parser.add_argument("src", help="Source raster: local path or s3://bucket/key")
@@ -260,7 +194,6 @@ def main() -> int:
         bootstrap.load_environment(args.env_file)
 
     return reproject_vsis3(args.src, args.dst, args.crs)
-
 
 if __name__ == "__main__":
     sys.exit(main())

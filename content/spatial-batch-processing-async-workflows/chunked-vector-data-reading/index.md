@@ -8,75 +8,9 @@ datePublished: "2024-03-15"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Chunked Vector Data Reading for Spatial Pipelines",
-      "description": "Stream multi-gigabyte shapefiles, GeoJSON, and GeoParquet without OOM errors using pyogrio offset/limit reads, memory-aware chunk sizing, and incremental columnar output.",
-      "datePublished": "2024-03-15",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Spatial Batch Processing & Async Workflows", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/"},
-        {"@type": "ListItem", "position": 3, "name": "Chunked Vector Data Reading", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Chunked Vector Data Reading for Spatial Pipelines",
-      "step": [
-        {"@type": "HowToStep", "name": "Inspect metadata without loading features", "text": "Call pyogrio.read_info() to retrieve row count, CRS, and schema before allocating memory."},
-        {"@type": "HowToStep", "name": "Calculate memory-aware chunk size", "text": "Sample the first 5,000 rows, measure RSS delta with psutil, and extrapolate a safe batch window."},
-        {"@type": "HowToStep", "name": "Iterate via offset/limit cursor", "text": "Pass rows=slice(offset, offset + chunk_size) to pyogrio.read_dataframe() with use_arrow=True."},
-        {"@type": "HowToStep", "name": "Validate schema on every chunk", "text": "Compare column sets to detect attribute drift before writing."},
-        {"@type": "HowToStep", "name": "Write incrementally to GeoParquet", "text": "Use pyarrow.parquet.write_to_dataset() to append each chunk to a partitioned output directory."},
-        {"@type": "HowToStep", "name": "Checkpoint the cursor offset", "text": "Persist the last successful offset to a .state file so the pipeline can resume after failure."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "How do I choose chunk size for a large shapefile?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Read the first 5,000 rows, measure the RSS delta with psutil, and multiply that per-row footprint by 0.6 × available_memory. Never set a hard 100,000-row default for polygon datasets — dense multipolygons can be 50× heavier per row than points."}
-        },
-        {
-          "@type": "Question",
-          "name": "Why does pyogrio raise a RuntimeError when I use rows= on a shapefile?",
-          "acceptedAnswer": {"@type": "Answer", "text": "The Shapefile driver does not support random seek. Convert to GeoPackage or FlatGeobuf first, or use skip_features/max_features OGR open options via pyogrio.open_arrow()."}
-        },
-        {
-          "@type": "Question",
-          "name": "Can I write chunked output to a single GeoParquet file?",
-          "acceptedAnswer": {"@type": "Answer", "text": "No. GeoParquet (Parquet) files are immutable once written. Use pyarrow.parquet.write_to_dataset() with a partition_cols argument to write each chunk as a new row-group file in a directory, then read the whole directory as a single dataset."}
-        },
-        {
-          "@type": "Question",
-          "name": "What exit codes should a chunked ingestion CLI return?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Follow POSIX: 0 for success, 1 for a general runtime error (schema drift, write failure), 2 for a bad argument (missing input path, invalid chunk size), and 3 for a partial completion where the checkpoint file exists but not all chunks were written."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I handle CRS mismatches between input chunks?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Capture the CRS from the first chunk and assert it on every subsequent chunk. If a mismatch occurs, re-project inline with GeoDataFrame.to_crs(epsg=4326) and log a warning — never silently drop features."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 Stream multi-gigabyte vector datasets into a predictable memory footprint using `pyogrio` offset/limit cursor reads, memory-aware chunk sizing, and incremental GeoParquet output — without ever materializing the full `GeoDataFrame`.
 
-This page is part of the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) guide.
+It fits into the wider [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) guide.
 
 ## Prerequisites
 
@@ -378,7 +312,7 @@ The diagram below shows the full pipeline: metadata inspection feeds chunk sizin
 
 ## Full Production CLI
 
-The following `typer` CLI assembles all six steps into a production-ready ingestion command with structured logging, POSIX exit codes, and resume-from-checkpoint support.
+The following `typer` CLI assembles all six steps into a complete ingestion command with structured logging, POSIX exit codes, and resume-from-checkpoint support.
 
 ```python
 from __future__ import annotations
@@ -400,7 +334,6 @@ from geopandas import GeoDataFrame
 app = typer.Typer(add_completion=False)
 logger = logging.getLogger("chunked_reader")
 
-
 # ── Checkpointing ─────────────────────────────────────────────────────────────
 
 def _state_path(output_dir: Path) -> Path:
@@ -415,7 +348,6 @@ def _save_checkpoint(output_dir: Path, offset: int) -> None:
 
 def _clear_checkpoint(output_dir: Path) -> None:
     _state_path(output_dir).unlink(missing_ok=True)
-
 
 # ── Memory helpers ─────────────────────────────────────────────────────────────
 
@@ -433,7 +365,6 @@ def _auto_chunk_size(path: str, safety: float = 0.60) -> int:
     avail_mb = psutil.virtual_memory().available / (1024 ** 2)
     row_mb = _sample_row_footprint_mb(path)
     return max(5_000, min(int(avail_mb * safety / row_mb), 500_000))
-
 
 # ── Schema / CRS validation ────────────────────────────────────────────────────
 
@@ -458,7 +389,6 @@ def _validate(
 
     return chunk, expected_cols, expected_epsg
 
-
 # ── Incremental GeoParquet write ───────────────────────────────────────────────
 
 def _write_chunk(chunk: GeoDataFrame, output_dir: str) -> None:
@@ -469,7 +399,6 @@ def _write_chunk(chunk: GeoDataFrame, output_dir: str) -> None:
         existing_data_behavior="overwrite_or_ignore",
         use_legacy_dataset=False,
     )
-
 
 # ── CLI command ────────────────────────────────────────────────────────────────
 
@@ -558,7 +487,6 @@ def ingest(
     logger.info("Done. %d chunks in %.2fs → %s", chunks_done, elapsed, output_dir)
     _clear_checkpoint(output_dir)
     raise typer.Exit(code=0)
-
 
 if __name__ == "__main__":
     app()

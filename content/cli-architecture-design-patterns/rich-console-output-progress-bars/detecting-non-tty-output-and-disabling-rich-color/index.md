@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Detecting Non-TTY Output and Disabling Rich Color",
-      "description": "Detect when a geospatial CLI's stdout is piped or running in CI and switch Rich to plain, ANSI-free output so log files and CI consoles stay clean.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Rich Console Output & Progress Bars for GIS CLIs", "item": "https://batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/"},
-        {"@type": "ListItem", "position": 3, "name": "Detecting Non-TTY Output and Disabling Rich Color", "item": "https://batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/detecting-non-tty-output-and-disabling-rich-color/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Detect Non-TTY Output and Disable Rich Color",
-      "step": [
-        {"@type": "HowToStep", "name": "Inspect stdout", "text": "Call sys.stdout.isatty() to decide whether the destination is an interactive terminal or a pipe, file, or CI log."},
-        {"@type": "HowToStep", "name": "Honour environment overrides", "text": "Check the NO_COLOR and CI environment variables so users and pipelines can force plain output regardless of the TTY state."},
-        {"@type": "HowToStep", "name": "Construct the console", "text": "Build rich.console.Console with force_terminal and no_color set from the detection result, routing logs to stderr."},
-        {"@type": "HowToStep", "name": "Degrade the progress bar", "text": "Disable the live Rich Progress in non-TTY mode and emit periodic plain percentage lines instead."},
-        {"@type": "HowToStep", "name": "Verify", "text": "Run the tool piped through cat and confirm no ANSI escape codes appear in the captured output."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does Rich still emit color when I redirect output to a file?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Rich only auto-detects a non-terminal on the stream it was constructed with. If you build one global Console bound to stdout but write logs elsewhere, or if force_terminal was set anywhere, detection is bypassed. Build the Console from an explicit isatty() check and leave force_terminal as None unless you deliberately want to override it."}
-        },
-        {
-          "@type": "Question",
-          "name": "What is the difference between NO_COLOR and forcing a plain terminal?",
-          "acceptedAnswer": {"@type": "Answer", "text": "NO_COLOR strips ANSI color and style but keeps Rich's layout features such as progress bars and tables in a terminal. A plain, non-TTY console disables color and also drops live-updating widgets because a pipe cannot process carriage returns. For clean log files you want the fully plain path, not just NO_COLOR."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I keep the progress bar off log files but on for interactive users?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Gate the Rich Progress instance on the same TTY detection used for the console. When stdout is not a terminal, skip the live Progress and log a plain percentage line every N items or every few seconds instead, so CI logs show measurable advancement without carriage-return spam."}
-        },
-        {
-          "@type": "Question",
-          "name": "Should logs go to stdout or stderr?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Send machine-consumable results to stdout and human-facing logs and progress to stderr via Console(stderr=True). This lets a user run the tool and pipe stdout to jq or a file while still seeing progress on the terminal, and it prevents progress redraws from corrupting a structured JSON payload."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Detecting Non-TTY Output and Disabling Rich Color
 
-Decide Rich's output mode from `sys.stdout.isatty()` plus the `NO_COLOR` and `CI` environment variables, then build `rich.console.Console` with `force_terminal` and `no_color` set accordingly. When the destination is a pipe, a redirected file, or a CI runner, return a plain console with color disabled and skip the live progress bar; when it is an interactive terminal, return the full styled console. This page is part of the [Rich Console Output & Progress Bars for GIS CLIs](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/) guide within the broader [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
+Decide Rich's output mode from `sys.stdout.isatty()` plus the `NO_COLOR` and `CI` environment variables, then build `rich.console.Console` with `force_terminal` and `no_color` set accordingly. When the destination is a pipe, a redirected file, or a CI runner, return a plain console with color disabled and skip the live progress bar; when it is an interactive terminal, return the full styled console. This detection logic sits inside the [Rich Console Output & Progress Bars for GIS CLIs](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/) guide, itself part of the broader [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
@@ -159,14 +98,12 @@ from rich.progress import Progress, BarColumn, TimeRemainingColumn
 import rasterio
 from rasterio.warp import calculate_default_transform, reproject, Resampling
 
-
 def _truthy(name: str) -> bool:
     """A variable counts as 'set' if it exists and is not an explicit off value."""
     value = os.environ.get(name)
     if value is None:
         return False
     return value.strip().lower() not in {"", "0", "false", "no"}
-
 
 def is_interactive(stream=sys.stdout) -> bool:
     """Return True only when the stream is a real terminal AND nothing forces plain.
@@ -180,7 +117,6 @@ def is_interactive(stream=sys.stdout) -> bool:
         return False
     # isatty() may be absent on some wrapped streams (e.g. pytest capture).
     return bool(getattr(stream, "isatty", lambda: False)())
-
 
 def make_console(stderr: bool = True) -> Console:
     """Build a Console tuned for the current output destination.
@@ -201,7 +137,6 @@ def make_console(stderr: bool = True) -> Console:
         width=None if interactive else 100,
         highlight=interactive,
     )
-
 
 @contextmanager
 def batch_progress(console: Console, total: int, label: str):
@@ -232,7 +167,6 @@ def batch_progress(console: Console, total: int, label: str):
         yield advance
         console.print(f"{label}: {total}/{total} (100%) done")
 
-
 def reproject_one(src_path: Path, dst_path: Path, target_crs: str) -> None:
     with rasterio.open(src_path) as src:
         transform, width, height = calculate_default_transform(
@@ -249,7 +183,6 @@ def reproject_one(src_path: Path, dst_path: Path, target_crs: str) -> None:
                     dst_crs=target_crs,
                     resampling=Resampling.bilinear,
                 )
-
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Reproject a folder of GeoTIFFs")
@@ -282,7 +215,6 @@ def main() -> int:
     # Machine-readable summary on stdout, never styled.
     result.print(f"{ok} {len(sources)}")
     return 0 if ok == len(sources) else 12
-
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Streaming Cloud-Optimized GeoTIFFs with Async Range Requests",
-      "description": "Fetch only the tiles you need from a remote COG using async HTTP range requests, decoding each block with rasterio without downloading the whole file.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Async I/O for Raster Processing: CLI Patterns", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/"},
-        {"@type": "ListItem", "position": 3, "name": "Streaming Cloud-Optimized GeoTIFFs with Async Range Requests", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/streaming-cloud-optimized-geotiffs-with-async-range-requests/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Stream blocks from a remote Cloud-Optimized GeoTIFF with async range requests",
-      "step": [
-        {"@type": "HowToStep", "name": "Confirm the file is a valid COG", "text": "Validate internal tiling and overviews so GDAL can seek to individual blocks instead of reading the whole file."},
-        {"@type": "HowToStep", "name": "Configure the VSI curl layer", "text": "Set CPL_VSIL_CURL_ALLOWED_EXTENSIONS and GDAL_HTTP_MULTIPLEX so /vsicurl/ issues efficient HTTP range reads."},
-        {"@type": "HowToStep", "name": "Bound concurrency with a Semaphore", "text": "Wrap each blocking rasterio window read in asyncio.to_thread guarded by an asyncio.Semaphore to cap simultaneous connections."},
-        {"@type": "HowToStep", "name": "Read each window and reproject", "text": "Open the dataset inside the worker thread and read a rasterio.windows.Window transformed from EPSG:4326 to the raster CRS."},
-        {"@type": "HowToStep", "name": "Verify bytes fetched versus full size", "text": "Compare the range bytes read against the full object size to confirm only the needed blocks were transferred."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does opening the dataset inside the worker thread matter?",
-          "acceptedAnswer": {"@type": "Answer", "text": "A GDAL dataset handle is not thread-safe and must not be shared across threads. Opening the /vsicurl/ dataset inside the same thread that reads the window keeps each handle confined to one thread, which is why the open call lives inside the function passed to asyncio.to_thread rather than in the parent coroutine."}
-        },
-        {
-          "@type": "Question",
-          "name": "What happens if the remote file is not a valid COG?",
-          "acceptedAnswer": {"@type": "Answer", "text": "A striped or untiled GeoTIFF has no internal blocks to seek to, so a windowed read forces GDAL to fetch the whole file or long contiguous strips. The result is that bytes fetched approaches the full object size and streaming provides no benefit. Run rio cogeo validate first and re-tile the source if it fails."}
-        },
-        {
-          "@type": "Question",
-          "name": "Does GDAL_HTTP_MULTIPLEX actually reduce latency?",
-          "acceptedAnswer": {"@type": "Answer", "text": "When the origin serves HTTP/2, GDAL_HTTP_MULTIPLEX=YES lets multiple range requests share one connection, which cuts per-request handshake overhead when reading many small blocks. On an HTTP/1.1 origin it has no effect, so the asyncio.Semaphore limit becomes the primary throughput control."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I stream a window in Web Mercator instead of geographic coordinates?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Build the bounding box in EPSG:3857 and pass it through rasterio.warp.transform_bounds to the raster CRS before deriving the Window. The read still returns pixels in the raster CRS; reproject the array afterward with rasterio.warp.reproject if you need it resampled to EPSG:3857."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Streaming Cloud-Optimized GeoTIFFs with Async Range Requests
 
-To stream just the blocks you need from a remote Cloud-Optimized GeoTIFF, point GDAL's `/vsicurl/` driver at the object's URL and read a `rasterio.windows.Window`; GDAL parses the header once, then issues HTTP range requests for only the tiles the window overlaps. Wrapping each blocking read in `asyncio.to_thread()` under a `Semaphore` lets you pull many windows concurrently without downloading whole files. This page is part of the [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) guide inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
+To stream just the blocks you need from a remote Cloud-Optimized GeoTIFF, point GDAL's `/vsicurl/` driver at the object's URL and read a `rasterio.windows.Window`; GDAL parses the header once, then issues HTTP range requests for only the tiles the window overlaps. Wrapping each blocking read in `asyncio.to_thread()` under a `Semaphore` lets you pull many windows concurrently without downloading whole files. It applies the async patterns from the [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) guide, part of the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -169,7 +108,6 @@ os.environ.setdefault("CPL_VSIL_CURL_USE_HEAD", "NO")       # skip extra HEAD ca
 
 MAX_CONCURRENCY = 8          # cap simultaneous range-request connections
 
-
 @dataclass
 class Aoi:
     """A named area of interest as a WGS84 (EPSG:4326) bounding box."""
@@ -178,7 +116,6 @@ class Aoi:
     south: float
     east: float
     north: float
-
 
 def read_window_blocking(url: str, aoi: Aoi) -> dict:
     """Open the remote COG and read one window. Runs in a worker thread.
@@ -206,18 +143,15 @@ def read_window_blocking(url: str, aoi: Aoi) -> dict:
             "max": float(np.nanmax(data)) if data.size else None,
         }
 
-
 async def read_window(url: str, aoi: Aoi, sem: asyncio.Semaphore) -> dict:
     """Async wrapper: bound concurrency, then offload the blocking read."""
     async with sem:                                    # never exceed MAX_CONCURRENCY
         return await asyncio.to_thread(read_window_blocking, url, aoi)
 
-
 async def stream_all(url: str, aois: list[Aoi]) -> list[dict]:
     sem = asyncio.Semaphore(MAX_CONCURRENCY)
     tasks = [read_window(url, aoi, sem) for aoi in aois]
     return await asyncio.gather(*tasks, return_exceptions=False)
-
 
 def main() -> None:
     if len(sys.argv) != 2:
@@ -245,7 +179,6 @@ def main() -> None:
             f"min={r['min']}  max={r['max']}"
         )
     sys.exit(0)
-
 
 if __name__ == "__main__":
     main()

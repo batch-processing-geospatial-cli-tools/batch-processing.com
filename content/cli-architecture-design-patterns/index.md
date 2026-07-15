@@ -1,5 +1,5 @@
 ---
-title: "CLI Architecture & Design Patterns for Python GIS"
+title: "CLI Architecture & Design Patterns for Geospatial Command-Line Tools"
 description: "CLI architecture patterns for Python GIS developers: layered separation, subcommand routing, chunked raster I/O, and idempotent batch processing."
 slug: "cli-architecture-design-patterns"
 type: "guide"
@@ -8,67 +8,7 @@ datePublished: "2024-01-15"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "CLI Architecture & Design Patterns for Python GIS Tools",
-      "description": "Production-grade CLI architecture patterns for Python geospatial developers: layered separation, subcommand routing, chunked raster I/O, configuration precedence, structured logging, and idempotent batch processing.",
-      "datePublished": "2024-01-15",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "CLI Architecture & Design Patterns", "item": "https://batch-processing.com/cli-architecture-design-patterns/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Structure a production-grade Python GIS CLI",
-      "step": [
-        {"@type": "HowToStep", "name": "Enforce a three-layer architecture", "text": "Separate the interface layer, orchestration layer, and domain/engine layer so each has a single clear responsibility."},
-        {"@type": "HowToStep", "name": "Organise commands into subcommand groups", "text": "Group related operations by data lifecycle stage and lazy-load heavy dependencies per subcommand."},
-        {"@type": "HowToStep", "name": "Implement layered configuration resolution", "text": "Resolve settings through a precedence chain: defaults → config file → environment variables → CLI flags."},
-        {"@type": "HowToStep", "name": "Stream raster and vector data in chunks", "text": "Use block-aligned windowed reads and generator pipelines to maintain a constant memory footprint."},
-        {"@type": "HowToStep", "name": "Add structured observability", "text": "Emit JSON-formatted log records, deterministic POSIX exit codes, and TTY-aware progress output."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Should I choose Click or Typer for a new GIS CLI?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Choose Typer when your team uses Python 3.9+ type hints extensively and wants automatic argument inference; choose Click when you need fine-grained control over decorators and plugin systems. Both produce compatible CLIs, so the decision is usually about team ergonomics."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I prevent memory exhaustion when processing large GeoTIFFs?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use rasterio's windowed read API to iterate over block-aligned tiles. Set the window size to match the file's internal tile dimensions (block_shapes), chain tiles through generators rather than lists, and write output incrementally with matching windows."}
-        },
-        {
-          "@type": "Question",
-          "name": "What exit codes should a GIS CLI use?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Follow POSIX conventions: 0 for success, 1 for general runtime errors, 2 for argument/syntax errors. Reserve domain-specific codes for named failure modes: 10 for CRS mismatch, 11 for unsupported file format, 12 for missing GDAL driver, 13 for out-of-memory conditions."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I make batch jobs idempotent?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Write outputs to a temporary path first, then atomically rename with os.replace() once complete. Track processed inputs in a lightweight JSON or SQLite manifest. On restart, skip any item whose output already exists and whose checksum matches."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
-Building production-grade command-line interfaces for geospatial workloads requires more than stringing together `subprocess` calls or wrapping GDAL utilities. When Python GIS CLI tools scale to handle batch processing, multi-tenant deployments, or automated CI/CD pipelines, architectural discipline becomes non-negotiable. Geospatial command-line tools sit at the intersection of heavy I/O, mathematical precision, and distributed execution — without deliberate structural boundaries, they quickly degrade into monolithic scripts that are difficult to test, impossible to profile, and fragile under production loads. This guide establishes proven patterns tailored for Python GIS practitioners, DevOps engineers, open-source maintainers, and internal tooling teams who need tools that survive real workloads.
+Building robust command-line interfaces for geospatial workloads requires more than stringing together `subprocess` calls or wrapping GDAL utilities. When Python GIS CLI tools scale to handle batch processing, multi-tenant deployments, or automated CI/CD pipelines, architectural discipline becomes non-negotiable. Geospatial command-line tools sit at the intersection of heavy I/O, mathematical precision, and distributed execution — without deliberate structural boundaries, they quickly degrade into monolithic scripts that are difficult to test, impossible to profile, and fragile under production loads. This guide establishes proven patterns tailored for Python GIS practitioners, DevOps engineers, open-source maintainers, and internal tooling teams who need tools that survive real workloads.
 
 ## Foundational Principles
 

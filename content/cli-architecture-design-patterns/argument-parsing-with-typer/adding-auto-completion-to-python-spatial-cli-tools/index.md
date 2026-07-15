@@ -14,61 +14,7 @@ datePublished: "2024-03-15"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Adding Auto-Completion to Python Spatial CLI Tools",
-      "description": "Step-by-step guide to enabling shell tab completion in Typer-based Python GIS CLIs, with dynamic completers for file paths, EPSG codes, and spatial formats.",
-      "datePublished": "2024-03-15",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "CLI Architecture & Design Patterns", "item": "https://batch-processing.com/cli-architecture-design-patterns/"},
-        {"@type": "ListItem", "position": 2, "name": "Argument Parsing with Typer", "item": "https://batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/"},
-        {"@type": "ListItem", "position": 3, "name": "Adding Auto-Completion to Python Spatial CLI Tools", "item": "https://batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/adding-auto-completion-to-python-spatial-cli-tools/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Add Shell Tab Completion to a Typer Spatial CLI",
-      "step": [
-        {"@type": "HowToStep", "position": 1, "name": "Write lightweight dynamic completer functions", "text": "Define pure functions that return filtered lists of spatial file paths, EPSG codes, or format names within the shell timeout window."},
-        {"@type": "HowToStep", "position": 2, "name": "Bind completers to Typer parameters via shell_complete", "text": "Pass each completer as the shell_complete argument on typer.Argument or typer.Option."},
-        {"@type": "HowToStep", "position": 3, "name": "Generate and register the shell completion script", "text": "Run --install-completion for interactive use, or --show-completion to export a static script for system-wide deployment."},
-        {"@type": "HowToStep", "position": 4, "name": "Verify completion is active", "text": "Source the config file and press TAB after a partial path or flag to confirm suggestions appear."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does TAB completion return nothing even after --install-completion?",
-          "acceptedAnswer": {"@type": "Answer", "text": "The most common cause is a missing or unclosed source line in ~/.bashrc or ~/.zshrc. Run `type _spatial_cli_completion` in your shell — if it returns 'not found', the script was not sourced. Also check that shellingham is installed (`pip show shellingham`); without it, Typer cannot detect the active shell."}
-        },
-        {
-          "@type": "Question",
-          "name": "Can completer functions import rasterio or geopandas?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Avoid it. The shell spawns a fresh Python subprocess for every TAB press, and GDAL driver registration alone can take 200–400 ms on cold starts — well above the shell's completion timeout. Cache any expensive lookups outside the hot path using functools.lru_cache or a pre-built SQLite index."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I distribute completion scripts to a team?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Export a static script with --show-completion bash > completions/my_tool.bash, commit it to the repository, and add a post-install step (e.g. a Makefile target or pip post-install hook) that sources the file from /etc/profile.d/ or the user's shell config."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
-Tab completion in a Typer spatial CLI requires three things: completer functions that resolve paths or EPSG codes in under 200 ms, binding those functions to parameters via `shell_complete`, and registering the generated script in the user's shell config. Install `typer[all]` (which pulls in `shellingham`) and run `--install-completion` to activate. This page is part of the [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) guide under [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/).
+Tab completion in a Typer spatial CLI requires three things: completer functions that resolve paths or EPSG codes in under 200 ms, binding those functions to parameters via `shell_complete`, and registering the generated script in the user's shell config. Install `typer[all]` (which pulls in `shellingham`) and run `--install-completion` to activate. It builds on the [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) guide, part of the wider [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
@@ -157,16 +103,13 @@ EPSG_REGISTRY: List[str] = [
 
 SPATIAL_EXTS = frozenset({".tif", ".tiff", ".shp", ".gpkg", ".geojson", ".nc", ".fgb"})
 
-
 def complete_formats(ctx: typer.Context, param: typer.CallbackParam, incomplete: str) -> List[str]:  # (2)
     """Return spatial format names that start with the partial input."""
     return [f for f in SUPPORTED_FORMATS if f.lower().startswith(incomplete.lower())]
 
-
 def complete_crs(ctx: typer.Context, param: typer.CallbackParam, incomplete: str) -> List[str]:
     """Return EPSG codes matching the partial string."""
     return [c for c in EPSG_REGISTRY if incomplete.upper() in c.upper()]
-
 
 @functools.lru_cache(maxsize=64)   # (3) cache per unique parent-dir string
 def _list_spatial_files(parent: str) -> List[str]:
@@ -178,14 +121,12 @@ def _list_spatial_files(parent: str) -> List[str]:
     except (PermissionError, NotADirectoryError):
         return []
 
-
 def complete_paths(ctx: typer.Context, param: typer.CallbackParam, incomplete: str) -> List[str]:
     """Suggest .tif/.shp/.gpkg/.geojson files relative to the partial path."""
     p = Path(incomplete)
     parent = str(p.parent) if p.parent != Path(".") else "."
     candidates = _list_spatial_files(parent)
     return [c for c in candidates if Path(c).name.startswith(p.name)]
-
 
 # ---------------------------------------------------------------------------
 # CLI command
@@ -216,7 +157,6 @@ def process(
     typer.echo(f"Format: {output_format}")
     typer.echo(f"CRS   : {target_crs}")
     # Replace this block with rasterio.open / pyogrio.read_dataframe logic.
-
 
 if __name__ == "__main__":
     app()
@@ -330,6 +270,6 @@ Build a one-time index at tool install time rather than at completion time. A po
 
 ## Related
 
-- [Argument Parsing with Typer for GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — parent guide covering type-safe parameter definitions, validators, and help text generation
+- [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — parent guide covering type-safe parameter definitions, validators, and help text generation
 - [How to Build a Typer CLI for Shapefile Conversion](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/how-to-build-a-typer-cli-for-shapefile-conversion/) — sibling page that builds the CLI this page adds completion to
 - [CLI Subcommand Organization](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) — structuring multi-command tools so completion works across the full command tree

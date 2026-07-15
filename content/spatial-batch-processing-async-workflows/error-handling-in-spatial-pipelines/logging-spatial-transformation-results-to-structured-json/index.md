@@ -8,68 +8,7 @@ datePublished: "2024-11-01"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Logging Spatial Transformation Results to Structured JSON",
-      "description": "Configure a Python JSONSpatialFormatter that captures CRS, geometry counts, bounding boxes, and error traces as machine-readable JSON — and wire it into a Click CLI or async batch pipeline.",
-      "datePublished": "2024-11-01",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Spatial Batch Processing & Async Workflows", "item": "/spatial-batch-processing-async-workflows/"},
-        {"@type": "ListItem", "position": 2, "name": "Error Handling in Spatial Pipelines", "item": "/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/"},
-        {"@type": "ListItem", "position": 3, "name": "Logging Spatial Transformation Results to Structured JSON", "item": "/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/logging-spatial-transformation-results-to-structured-json/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Log spatial transformation results to structured JSON in Python",
-      "step": [
-        {"@type": "HowToStep", "name": "Install dependencies", "text": "pip install geopandas pyproj shapely click pyogrio"},
-        {"@type": "HowToStep", "name": "Implement SpatialJSONEncoder", "text": "Subclass json.JSONEncoder to handle Path, CRS, datetime, and geometry objects."},
-        {"@type": "HowToStep", "name": "Implement JSONSpatialFormatter", "text": "Subclass logging.Formatter to embed spatial extras into every log record as a JSON object."},
-        {"@type": "HowToStep", "name": "Write transform_with_metrics", "text": "Wrap gdf.to_crs() in a try/except, measure elapsed time, and emit structured log events for both success and failure."},
-        {"@type": "HowToStep", "name": "Wire into CLI", "text": "Route logs to stderr with a Click command so structured telemetry never pollutes piped stdout output."},
-        {"@type": "HowToStep", "name": "Verify output", "text": "Run python -c 'import json, subprocess; ...' or pipe output through jq to assert all expected keys are present."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why route JSON logs to stderr instead of stdout?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Stdout is the data channel in UNIX pipelines. If you mix JSON log lines with GeoJSON or WKT output, downstream tools that expect clean data — jq, ogr2ogr, or your own scripts — will fail to parse the stream. Routing logs to stderr keeps the data channel clean."}
-        },
-        {
-          "@type": "Question",
-          "name": "Will logging full geometries in JSON flood my log aggregator?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Yes. A single MultiPolygon can exceed 500 KB of GeoJSON. Log only the bounding box (total_bounds), feature count, and a validity flag. Store the geometry reference separately if you need it for debugging."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I use QueueHandler for async batch jobs?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Replace the direct StreamHandler with a logging.handlers.QueueHandler feeding a QueueListener that owns the StreamHandler. The listener runs on a background thread so coroutines in your asyncio loop never block on disk I/O during log writes."}
-        },
-        {
-          "@type": "Question",
-          "name": "What CRS representation is safest for JSON logs?",
-          "acceptedAnswer": {"@type": "Answer", "text": "EPSG short codes (e.g. 'EPSG:4326') are the safest — they are compact, human-readable, and round-trip cleanly through pyproj. The SpatialJSONEncoder shown here calls crs.to_epsg() first and falls back to crs.to_string() when no EPSG authority code exists."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
-Configuring a custom `logging.Formatter` that serializes Python `logging.LogRecord` objects to JSON — and injecting spatial context via the `extra` parameter — gives every CRS transformation, geometry validation step, or clipping operation a deterministic, machine-readable audit trail. This is part of the [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) guide.
+Configuring a custom `logging.Formatter` that serializes Python `logging.LogRecord` objects to JSON — and injecting spatial context via the `extra` parameter — gives every CRS transformation, geometry validation step, or clipping operation a deterministic, machine-readable audit trail. It extends the patterns in the [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) guide.
 
 ## Prerequisites
 
@@ -144,7 +83,6 @@ import geopandas as gpd
 from pyproj import CRS
 from shapely.validation import make_valid
 
-
 # ── 1. Custom JSON encoder for GIS-specific types ────────────────────────────
 class SpatialJSONEncoder(json.JSONEncoder):
     def default(self, obj: Any) -> Any:
@@ -160,7 +98,6 @@ class SpatialJSONEncoder(json.JSONEncoder):
             # Geometries: log only the type, never the full coordinate ring
             return {"type": obj.__geo_interface__["type"]}
         return super().default(obj)
-
 
 # ── 2. Formatter that injects spatial extras into every log line ──────────────
 class JSONSpatialFormatter(logging.Formatter):
@@ -190,7 +127,6 @@ class JSONSpatialFormatter(logging.Formatter):
                     log_obj[key] = str(val)
         return json.dumps(log_obj, cls=SpatialJSONEncoder)
 
-
 # ── 3. Logger factory ─────────────────────────────────────────────────────────
 def setup_json_logger(
     name: str = "spatial_transform",
@@ -216,7 +152,6 @@ def setup_json_logger(
         logger.addHandler(fh)
 
     return logger
-
 
 # ── 4. Transformation wrapper with metrics emission ───────────────────────────
 def transform_with_metrics(
@@ -272,7 +207,6 @@ def transform_with_metrics(
         )
         raise
 
-
 # ── 5. Click CLI entry point ──────────────────────────────────────────────────
 @click.command()
 @click.argument("input_file", type=click.Path(exists=True, path_type=Path))
@@ -301,7 +235,6 @@ def cli(input_file: Path, output_crs: str, log_file: Optional[Path]) -> None:
             exc_info=True,
         )
         raise click.ClickException(str(exc))
-
 
 if __name__ == "__main__":
     cli()

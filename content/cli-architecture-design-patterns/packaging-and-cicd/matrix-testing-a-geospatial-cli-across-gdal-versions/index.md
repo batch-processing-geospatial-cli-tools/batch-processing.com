@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Matrix Testing a Geospatial CLI Across GDAL Versions",
-      "description": "Configure a GitHub Actions matrix that runs your CLI test suite against multiple GDAL and Python versions to catch driver and API regressions before release.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Packaging & CI/CD for Python GIS CLI Tools", "item": "https://batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/"},
-        {"@type": "ListItem", "position": 3, "name": "Matrix Testing a Geospatial CLI Across GDAL Versions", "item": "https://batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/matrix-testing-a-geospatial-cli-across-gdal-versions/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Matrix Test a Geospatial CLI Across GDAL Versions",
-      "step": [
-        {"@type": "HowToStep", "name": "Declare the matrix", "text": "Define a strategy.matrix over python-version and gdal-version with fail-fast set to false so one red job does not cancel the rest."},
-        {"@type": "HowToStep", "name": "Run inside an official GDAL container", "text": "Set the job container to ghcr.io/osgeo/gdal so the C library and Python bindings are pinned to the exact GDAL version under test."},
-        {"@type": "HowToStep", "name": "Install and pin bindings", "text": "Install the package and pin rasterio and pyproj to versions built against the container GDAL to avoid ABI mismatches."},
-        {"@type": "HowToStep", "name": "Run pytest with coverage", "text": "Execute pytest with coverage and assert that a reprojection to EPSG:3857 produces the expected coordinates."},
-        {"@type": "HowToStep", "name": "Upload coverage per job", "text": "Upload the coverage report with a job-specific flag so each GDAL and Python combination is tracked separately."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Should I test against GDAL container images or conda-forge builds?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use the official ghcr.io/osgeo/gdal container images when you want the exact C library and system bindings the OSGeo project ships, and they start fast in CI. Use conda-forge gdal pins when your users install via conda or when you need a GDAL version not published as an image. Many projects run both as separate matrix legs to cover both installation paths."}
-        },
-        {
-          "@type": "Question",
-          "name": "Why does my reprojection test pass on GDAL 3.4 but fail on GDAL 3.8?",
-          "acceptedAnswer": {"@type": "Answer", "text": "The most common cause is authority-compliant axis order. Since PROJ 6 and GDAL 3, transformations respect the CRS axis order, so EPSG:4326 is latitude then longitude. If your test hardcodes longitude-first inputs it can drift across GDAL and PROJ point releases. Pin pyproj and rasterio to versions built against the container GDAL and assert on rounded coordinates rather than exact floats."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I skip a known-incompatible GDAL and Python combination?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Add an exclude entry under strategy.matrix that names the exact python-version and gdal-version pair to drop, or use include to add a single extra leg without expanding the full cross product. This keeps the matrix green when a specific combination has no compatible wheel or container image."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I confirm each job actually used the GDAL version I intended?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Add a step that runs gdalinfo --version and python -c to print rasterio.gdal_version() before pytest. Printing the resolved version in the log proves the container or conda pin took effect and makes a silent fallback to a cached GDAL obvious in the job output."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Matrix Testing a Geospatial CLI Across GDAL Versions
 
-To test a geospatial CLI across GDAL versions, define a GitHub Actions `strategy.matrix` over `python-version` and `gdal-version`, run each job inside the matching `ghcr.io/osgeo/gdal` container (or a conda-forge `gdal=<ver>` pin), install your package, run `pytest`, and upload coverage per job. Set `fail-fast: false` so one red combination does not cancel the rest. This page is part of the [Packaging & CI/CD for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/) guide within the broader [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
+To test a geospatial CLI across GDAL versions, define a GitHub Actions `strategy.matrix` over `python-version` and `gdal-version`, run each job inside the matching `ghcr.io/osgeo/gdal` container (or a conda-forge `gdal=<ver>` pin), install your package, run `pytest`, and upload coverage per job. Set `fail-fast: false` so one red combination does not cancel the rest. This workflow is a deep dive within the [Packaging & CI/CD for Python GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/) guide, part of the broader [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
@@ -219,7 +158,6 @@ import math
 import pytest
 from pyproj import CRS, Transformer
 
-
 def reproject_point(lon: float, lat: float) -> tuple[float, float]:
     """Reproject a lon/lat point to Web Mercator (EPSG:3857).
 
@@ -233,7 +171,6 @@ def reproject_point(lon: float, lat: float) -> tuple[float, float]:
     )
     return transformer.transform(lon, lat)
 
-
 def test_reprojection_to_web_mercator():
     # Null Island's neighbour: 1 degree east, on the equator.
     easting, northing = reproject_point(1.0, 0.0)
@@ -242,7 +179,6 @@ def test_reprojection_to_web_mercator():
     assert math.isclose(easting, 111319.49, abs_tol=0.5)
     # The equator maps to northing 0 in Web Mercator.
     assert math.isclose(northing, 0.0, abs_tol=1e-6)
-
 
 @pytest.mark.parametrize("epsg", [3857, 32633])
 def test_target_crs_is_projected(epsg):

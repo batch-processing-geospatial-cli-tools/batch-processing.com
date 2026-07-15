@@ -8,72 +8,7 @@ datePublished: "2024-11-10"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Async I/O for Raster Processing: CLI Patterns",
-      "description": "How to build a Python asyncio pipeline that fetches, decompresses, and writes cloud-optimized GeoTIFFs concurrently — without stalling the event loop on GDAL's synchronous C bindings.",
-      "datePublished": "2024-11-10",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Spatial Batch Processing & Async Workflows", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/"},
-        {"@type": "ListItem", "position": 3, "name": "Async I/O for Raster Processing", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Build an async raster processing pipeline with aiohttp and rasterio",
-      "step": [
-        {"@type": "HowToStep", "name": "Configure semaphore and aiohttp session", "text": "Initialise an asyncio.Semaphore to cap concurrent network requests and a shared aiohttp.ClientSession to reuse TCP connections."},
-        {"@type": "HowToStep", "name": "Stream remote rasters to temporary files", "text": "Use aiohttp response.content.iter_chunked() to buffer each GeoTIFF to a NamedTemporaryFile without loading the full tile into memory."},
-        {"@type": "HowToStep", "name": "Offload GDAL reads to asyncio.to_thread()", "text": "Wrap rasterio.open() and windowed read calls inside asyncio.to_thread() so blocking C operations do not stall the event loop."},
-        {"@type": "HowToStep", "name": "Wrap in a Click CLI entry point", "text": "Expose concurrency, output directory, and URL file as Click options; call asyncio.run() once at the top level."},
-        {"@type": "HowToStep", "name": "Verify with log output and checksums", "text": "Confirm correct CRS, pixel count, and POSIX exit codes in structured JSON logs."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does rasterio block the asyncio event loop?",
-          "acceptedAnswer": {"@type": "Answer", "text": "rasterio is a Cython wrapper around GDAL's C library. GDAL file opens, header reads, and pixel decompression all release the Python GIL but do not yield to the asyncio event loop — they are blocking OS calls. asyncio.to_thread() moves them to a thread-pool worker so the loop can continue scheduling other coroutines."}
-        },
-        {
-          "@type": "Question",
-          "name": "What semaphore limit should I use for a COG batch?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Start at 10–20 and benchmark network utilisation. Cloud-optimised GeoTIFFs served via HTTP range requests are small per request; the limit is usually your outbound bandwidth or the remote host's rate cap, not local CPU."}
-        },
-        {
-          "@type": "Question",
-          "name": "Can I use asyncio with multiprocessing for CPU-heavy transforms?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Yes. Run asyncio for all I/O phases, then fan the downloaded paths out to a multiprocessing.Pool for pixel-level transforms. Avoid spawning subprocess workers inside a running event loop — collect temp paths first, then call the pool synchronously after asyncio.run() returns."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I handle a GDAL driver not available error in async context?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Catch rasterio.errors.RasterioIOError inside _read_and_write and re-raise as a domain-specific exception. The outer asyncio.gather(return_exceptions=True) collects it without aborting the batch."}
-        },
-        {
-          "@type": "Question",
-          "name": "Is aiofiles a better choice than tempfile for buffering rasters?",
-          "acceptedAnswer": {"@type": "Answer", "text": "No. GDAL requires seekable file handles with a .tif extension for driver detection. aiofiles writes to named files asynchronously, but the overhead over streaming chunks via aiohttp's iter_chunked() to a standard NamedTemporaryFile is negligible and avoids an extra dependency."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
-Raster batch pipelines stall at I/O: a synchronous loop over 500 cloud-optimized GeoTIFFs spends 90 % of its wall time blocked on network round-trips, not on pixel math. The fix is to decouple network and disk waits from GDAL compute using Python's `asyncio` event loop — part of the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) guide.
+Raster batch pipelines stall at I/O: a synchronous loop over 500 cloud-optimized GeoTIFFs spends 90 % of its wall time blocked on network round-trips, not on pixel math. The fix is to decouple network and disk waits from GDAL compute using Python's `asyncio` event loop, the approach applied across pipeline types in the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) guide.
 
 ## TL;DR
 
@@ -194,7 +129,6 @@ import aiohttp
 
 MAX_CONCURRENT = 15          # adjust to bandwidth and remote API quotas
 
-
 def make_session(concurrency: int) -> aiohttp.ClientSession:
     """Return a shared ClientSession with DNS caching and bounded TCP pool."""
     connector = aiohttp.TCPConnector(
@@ -239,7 +173,6 @@ async def fetch_raster_to_temp(
 import rasterio
 from rasterio.windows import Window
 from rasterio.crs import CRS
-
 
 async def process_raster_async(
     temp_path: str,
@@ -296,7 +229,6 @@ Setting `tiled=True` with 256×256 blocks produces a COG-compatible output that 
 ```python
 from tqdm.asyncio import tqdm as async_tqdm
 
-
 async def run_batch(
     urls: list[str],
     output_dir: Path,
@@ -342,7 +274,6 @@ async def run_batch(
 import json
 import sys
 import click
-
 
 @click.command()
 @click.argument("url_file", type=click.Path(exists=True, dir_okay=False))
@@ -396,7 +327,6 @@ def cli(url_file: str, output_dir: str, concurrency: int, epsg: int, json_log: b
             err=True,
         )
     sys.exit(0 if summary["failed"] == 0 else 1)
-
 
 if __name__ == "__main__":
     cli()

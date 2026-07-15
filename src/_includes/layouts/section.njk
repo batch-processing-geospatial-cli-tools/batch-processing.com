@@ -25,13 +25,13 @@ pageType: section
     <div class="sections-grid">
       {% for sub in subs %}
       <div class="card">
-        <a href="{{ sub.url }}" class="card__title card__title--link">{{ sub.data.title or sub.fileSlug }}</a>
+        <a href="{{ site.site.url }}{{ sub.url }}" class="card__title card__title--link">{{ sub.data.title or sub.fileSlug }}</a>
         {# List leaf articles under this subsection #}
         {% set subArticles = collections.articles | articlesFor(sub.url) %}
         {% if subArticles.length %}
         <ul class="link-list">
           {% for art in subArticles %}
-          <li><a href="{{ art.url }}">{{ art.data.title or art.fileSlug }}</a></li>
+          <li><a href="{{ site.site.url }}{{ art.url }}">{{ art.data.title or art.fileSlug }}</a></li>
           {% endfor %}
         </ul>
         {% else %}

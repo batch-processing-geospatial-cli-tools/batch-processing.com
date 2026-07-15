@@ -16,69 +16,7 @@ datePublished: "2025-01-15"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Optimizing GDAL Batch Operations with multiprocessing.Pool",
-      "description": "Step-by-step guide to safe, high-throughput GDAL batch processing with Python's multiprocessing.Pool: worker isolation, spawn start method, environment variables, and I/O bottleneck strategies.",
-      "datePublished": "2025-01-15",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Spatial Batch Processing & Async Workflows", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/"},
-        {"@type": "ListItem", "position": 3, "name": "Multiprocessing Geospatial Tasks", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/"},
-        {"@type": "ListItem", "position": 4, "name": "Optimizing GDAL Batch Operations with multiprocessing.Pool", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/optimizing-gdal-batch-operations-with-multiprocessing-pool/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Optimize GDAL Batch Operations with multiprocessing.Pool",
-      "step": [
-        {"@type": "HowToStep", "name": "Force spawn start method", "text": "Call set_start_method('spawn', force=True) before Pool creation to prevent GDAL C-state inheritance."},
-        {"@type": "HowToStep", "name": "Write a worker initializer", "text": "Pass an initializer to Pool that calls gdal.UseExceptions() and sets GDAL_NUM_THREADS=1 and CPL_NUM_THREADS=1."},
-        {"@type": "HowToStep", "name": "Build and dispatch tasks", "text": "Generate (src, dst, crs) tuples and submit them via pool.map()."},
-        {"@type": "HowToStep", "name": "Explicitly close GDAL datasets", "text": "Assign None to dataset references to trigger GDALClose() and free C-level file handles."},
-        {"@type": "HowToStep", "name": "Profile and cap worker count", "text": "Monitor iostat -x 1 and cap workers when disk utilisation exceeds 80 percent."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does GDAL segfault under fork-based multiprocessing?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Fork copies the parent's initialized GDAL driver registry and open file descriptors into every child. Multiple workers then race to mutate shared C-level state, producing segmentation faults. Switching to the spawn start method prevents this by starting fresh Python interpreters with no inherited state."}
-        },
-        {
-          "@type": "Question",
-          "name": "What should GDAL_NUM_THREADS be set to inside each worker?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Set GDAL_NUM_THREADS=1 and CPL_NUM_THREADS=1 per worker. The default ALL_CPUS means each worker spawns as many internal threads as there are CPU cores, causing severe oversubscription when combined with Python-level multiprocessing."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I prevent GDAL from leaking file descriptors across tasks?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Assign None to every dataset reference when the task is done. This triggers GDAL's C-level GDALClose(), which flushes write buffers and releases the file handle. Relying on Python's garbage collector is not reliable enough in long-running pool workers."}
-        },
-        {
-          "@type": "Question",
-          "name": "When does adding more workers stop helping?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Once disk utilisation (iostat %util) stays above 80%, the storage layer is saturated and adding workers increases seek contention rather than throughput. For local NVMe drives this point is usually around cpu_count(); for NFS or object storage cap at 4–8 workers."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
-Safely parallelising GDAL with `multiprocessing.Pool` requires three things: forcing the `spawn` process start method so workers receive no inherited C-level state, running a per-worker initializer that calls `gdal.UseExceptions()` and caps internal threads to `1`, and explicitly setting dataset references to `None` when a task finishes. Without these steps, fork-based pools produce silent raster corruption and segmentation faults. This page is part of the [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) guide inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
+Safely parallelising GDAL with `multiprocessing.Pool` requires three things: forcing the `spawn` process start method so workers receive no inherited C-level state, running a per-worker initializer that calls `gdal.UseExceptions()` and caps internal threads to `1`, and explicitly setting dataset references to `None` when a task finishes. Without these steps, fork-based pools produce silent raster corruption and segmentation faults. It builds on the [Multiprocessing Geospatial Tasks](https://www.batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/) guide, part of the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -86,7 +24,7 @@ Safely parallelising GDAL with `multiprocessing.Pool` requires three things: for
 - `gdal` from `python3-gdal` or a conda/mamba GDAL package (GDAL 3.4+)
 - No additional pip install — `multiprocessing` is in the standard library
 
-For broader context on why geospatial workloads need explicit parallelism strategies, read the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) overview first.
+For why geospatial workloads need explicit parallelism strategies, see the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) overview.
 
 ## Why Fork Breaks GDAL
 
@@ -173,7 +111,6 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)],
 )
 
-
 def init_gdal_worker() -> None:
     """Run once per worker process before any task is dispatched.
 
@@ -189,7 +126,6 @@ def init_gdal_worker() -> None:
     os.environ["VSI_CACHE"] = "FALSE"          # avoid duplicated VSI cache per worker
     if "GDAL_DATA" not in os.environ:
         os.environ["GDAL_DATA"] = "/usr/share/gdal"
-
 
 def reproject_raster(task: tuple) -> dict:
     """Warp a single raster to the target CRS.
@@ -231,7 +167,6 @@ def reproject_raster(task: tuple) -> dict:
         logging.error("FAIL %s: %s", src_path, exc)
         return {"src": str(src_path), "ok": False, "error": str(exc)}
 
-
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Batch raster reprojection with isolated pool workers"
@@ -265,7 +200,6 @@ def main() -> None:
     logging.info("Completed %d/%d successfully.", ok, len(tasks))
     sys.exit(0 if ok == len(tasks) else 1)
 
-
 if __name__ == "__main__":
     # set_start_method must be called before Pool is created.
     # Placing it under __main__ prevents accidental re-invocation when
@@ -284,7 +218,7 @@ if __name__ == "__main__":
 
 4. **`dst_ds = None` / `src_ds = None`** — Python's garbage collector does not call `GDALClose()` on a predictable schedule inside a long-running worker. Explicit `None` assignment triggers `__del__` immediately, flushing write buffers and releasing the OS file handle. This matters especially with `COMPRESS=LZW` because GDAL must write the compressed block table on close.
 
-5. **`errorThreshold=0.125`** — Controls the maximum allowed deviation in output pixels during the reprojection warp. Lower values increase accuracy at the cost of CPU; `0.125` is the GDAL default and appropriate for most geospatial workflows. Reduce to `0.05` for high-precision DEMs.
+5. **`errorThreshold=0.125`** — Controls the maximum allowed deviation in output pixels during the reprojection warp. Lower values increase accuracy at the cost of CPU; `0.125` is the GDAL default and appropriate for most reprojection work. Reduce to `0.05` for high-precision DEMs.
 
 6. **Return dict instead of bool** — Returning a structured dict from each task allows the calling code to aggregate failures, log CRS mismatches, or feed results into the [error-handling pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) pattern without re-parsing log output.
 

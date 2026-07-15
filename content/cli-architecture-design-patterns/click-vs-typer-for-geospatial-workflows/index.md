@@ -8,77 +8,11 @@ datePublished: "2024-03-15"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Click vs Typer for Geospatial Workflows",
-      "description": "Compare Click and Typer for building geospatial Python CLIs: type safety, CRS validation, batch processing patterns, and production deployment trade-offs.",
-      "datePublished": "2024-03-15",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "CLI Architecture & Design Patterns", "item": "https://batch-processing.com/cli-architecture-design-patterns/"},
-        {"@type": "ListItem", "position": 3, "name": "Click vs Typer for Geospatial Workflows", "item": "https://batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Build a production geospatial CLI with Click or Typer",
-      "step": [
-        {"@type": "HowToStep", "name": "Isolate the geospatial environment", "text": "Pin GDAL, PROJ, and shapely versions; validate availability at import time."},
-        {"@type": "HowToStep", "name": "Choose a framework", "text": "Use Typer for type-driven rapid development; use Click for explicit callback control."},
-        {"@type": "HowToStep", "name": "Define command groups by data type", "text": "Group subcommands under vector, raster, and metadata to mirror GIS taxonomy."},
-        {"@type": "HowToStep", "name": "Validate CRS inputs at the boundary", "text": "Attach pyproj validator callbacks to EPSG options before any processing begins."},
-        {"@type": "HowToStep", "name": "Wire in layered config", "text": "Cascade defaults → YAML file → environment variables → CLI flags for every spatial option."},
-        {"@type": "HowToStep", "name": "Verify with exit codes", "text": "Return POSIX exit codes 0/1/2 and log structured JSON on failure for CI integration."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Can I mix Click and Typer in the same project?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Yes — Typer wraps Click internally, so you can call typer.main.get_command() to expose a Typer app as a Click group, enabling incremental migration of existing Click commands."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I validate a bounding box argument in Typer?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Define a callback that parses the string into four floats, validates min/max ordering and coordinate range for the target CRS, and raises typer.BadParameter with a human-readable message on failure."}
-        },
-        {
-          "@type": "Question",
-          "name": "Why does importing geopandas slow my CLI startup?",
-          "acceptedAnswer": {"@type": "Answer", "text": "geopandas loads pyogrio/fiona, GDAL, and PROJ on import. Defer the import to inside the command function body so that help text and argument validation remain instant even when the geospatial stack is not installed."}
-        },
-        {
-          "@type": "Question",
-          "name": "Which framework works better with PyInstaller for distribution?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Both work, but Click's smaller dependency surface makes PyInstaller hidden-import lists shorter. With Typer you must ensure rich and its extras are collected; with Click you only need click itself plus your GIS stack."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I test a Typer command that reads a real shapefile?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use typer.testing.CliRunner with pytest's tmp_path fixture. Write a minimal GeoPackage with geopandas into tmp_path, then invoke the command with runner.invoke(app, [str(tmp_path / 'test.gpkg')]). Assert both the exit code and the output file's CRS."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 **TL;DR:** For greenfield geospatial tooling choose [Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — its native type hints eliminate boilerplate CRS validation; for legacy code or intricate parameter interdependencies, Click's explicit callback chain gives finer control with no surprises.
 
 ## Prerequisites
 
-This page is part of the [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
+This comparison sits within the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
 
 - Python 3.10 or later (required for `match` statements and `typing.Annotated`)
 - `click>=8.1` or `typer>=0.12` (Typer 0.12 targets Click 8.1 internally)
@@ -180,7 +114,7 @@ For teams comparing options, the [Argument Parsing with Typer](https://www.batch
 
 ## Step-by-Step Implementation
 
-The following five steps build a production batch coordinate-transformer CLI. Each step includes the Typer form alongside the equivalent Click pattern so you can evaluate them side by side.
+The following five steps build a batch coordinate-transformer CLI. Each step includes the Typer form alongside the equivalent Click pattern so you can evaluate them side by side.
 
 ### Step 1 — Guard Geospatial Imports at Module Root
 
@@ -532,4 +466,4 @@ For Typer, implement a completion callback that queries `pyproj.get_codes("EPSG"
 - [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — type-driven parameter definitions, subcommand routing, and shared context injection for geospatial CLIs
 - [Handling missing dependencies gracefully in Click apps](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/handling-missing-dependencies-gracefully-in-click-apps/) — structured diagnostics for GDAL `OSError` and `ImportError` at startup
 - [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) — layered YAML config with environment-variable overrides for spatial defaults
-- [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) — parent guide covering the full design space of production Python GIS tooling
+- [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) — parent guide covering the full design space of Python GIS tooling

@@ -24,7 +24,7 @@ pageType: subsection
     <p class="related-articles__heading">Articles in this subsection</p>
     <div class="articles-grid">
       {% for art in arts %}
-      <a href="{{ art.url }}" class="card">
+      <a href="{{ site.site.url }}{{ art.url }}" class="card">
         <p class="card__title">{{ art.data.title or art.fileSlug }}</p>
       </a>
       {% endfor %}

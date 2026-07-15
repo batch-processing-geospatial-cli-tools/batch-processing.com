@@ -8,62 +8,6 @@ datePublished: "2024-11-14"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "How to Build a Typer CLI for Shapefile Conversion",
-      "description": "Step-by-step guide to building a production-grade Typer CLI that batch-converts ESRI Shapefiles to GeoJSON, GeoPackage, FlatGeobuf, or Parquet using pyogrio, with CRS handling and deterministic exit codes.",
-      "datePublished": "2024-11-14",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "CLI Architecture & Design Patterns", "item": "https://batch-processing.com/cli-architecture-design-patterns/"},
-        {"@type": "ListItem", "position": 2, "name": "Argument Parsing with Typer", "item": "https://batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/"},
-        {"@type": "ListItem", "position": 3, "name": "How to Build a Typer CLI for Shapefile Conversion", "item": "https://batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/how-to-build-a-typer-cli-for-shapefile-conversion/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Build a Typer CLI for Shapefile Conversion",
-      "description": "Build a batch shapefile converter CLI using Typer and pyogrio with CRS handling, progress tracking, and deterministic exit codes.",
-      "step": [
-        {"@type": "HowToStep", "name": "Install dependencies", "text": "pip install typer[all] geopandas pyogrio"},
-        {"@type": "HowToStep", "name": "Define the Typer app and format registry", "text": "Create a Typer app instance, declare SUPPORTED_FORMATS and DRIVER_MAP constants."},
-        {"@type": "HowToStep", "name": "Implement resolve_targets()", "text": "Normalize a single .shp path, directory, or glob pattern into a deterministic list of Path objects."},
-        {"@type": "HowToStep", "name": "Implement the convert command", "text": "Use @app.command() with typed arguments, validate format early, iterate with Rich progress, and emit exit codes 0/1/2/3."},
-        {"@type": "HowToStep", "name": "Verify output", "text": "Use ogrinfo or geopandas to confirm CRS, row count, and geometry validity of the converted file."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why use pyogrio instead of fiona for shapefile I/O?",
-          "acceptedAnswer": {"@type": "Answer", "text": "pyogrio is a zero-copy C extension that calls GDAL/OGR directly without Python-level feature iteration. For batch shapefile conversion, pyogrio is 3–8x faster than fiona and is the default engine in GeoPandas ≥1.0."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I handle CRS mismatches silently causing wrong coordinates?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Always pass target_crs explicitly. Use pyproj.CRS.from_user_input() to validate the CRS string before processing any files, then call gdf.to_crs() during conversion."}
-        },
-        {
-          "@type": "Question",
-          "name": "What is the difference between exit code 2 and exit code 3?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Exit code 2 means no .shp files matched the input path — nothing was attempted. Exit code 3 means at least one file was attempted but failed; some outputs may exist. CI systems should treat both as errors but with different remediation paths."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # How to Build a Typer CLI for Shapefile Conversion
 
 Combine [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) with `geopandas` (backed by `pyogrio`) to batch-convert ESRI Shapefiles to GeoJSON, GeoPackage, FlatGeobuf, or Parquet. Declare a single `@app.command()` function, resolve globs or directories into an explicit file list before any I/O begins, stream progress via Rich, and return deterministic exit codes that CI/CD pipelines can act on without parsing log text.
@@ -74,7 +18,7 @@ Combine [Argument Parsing with Typer](https://www.batch-processing.com/cli-archi
 pip install "typer[all]" geopandas pyogrio
 ```
 
-GeoPandas ≥ 1.0 defaults to `pyogrio` for all vector I/O, replacing the older `fiona` bindings with a faster, thread-safe C extension built directly on GDAL/OGR. For broader context on structuring spatial command-line tools, this page is part of the [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
+GeoPandas ≥ 1.0 defaults to `pyogrio` for all vector I/O, replacing the older `fiona` bindings with a faster, thread-safe C extension built directly on GDAL/OGR. For broader context on structuring spatial command-line tools, see the [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
 
 ## Data-flow overview
 
@@ -142,7 +86,6 @@ DRIVER_MAP = {
     "parquet":  "Parquet",        # written via gdf.to_parquet(), driver key unused
 }
 
-
 def resolve_targets(input_path: Path) -> List[Path]:
     """Normalise a single .shp file, directory, or glob into an explicit file list."""
     if input_path.is_file() and input_path.suffix.lower() == ".shp":
@@ -153,7 +96,6 @@ def resolve_targets(input_path: Path) -> List[Path]:
     resolved = sorted(Path.cwd().glob(str(input_path)))
     return [p for p in resolved if p.suffix.lower() == ".shp"]
 
-
 def _validate_crs(crs_string: str) -> None:
     """Exit with code 1 if the CRS string is not accepted by pyproj."""
     try:
@@ -161,7 +103,6 @@ def _validate_crs(crs_string: str) -> None:
     except CRSError as exc:
         typer.echo(f"Invalid CRS '{crs_string}': {exc}", err=True)
         raise typer.Exit(code=1)
-
 
 @app.command()
 def convert(
@@ -224,7 +165,6 @@ def convert(
     typer.echo(f"\nDone — {success_count} converted, {fail_count} failed.")
     if fail_count > 0:
         raise typer.Exit(code=3)
-
 
 if __name__ == "__main__":
     app()
@@ -338,5 +278,5 @@ The implementation overwrites silently — `to_file()` and `to_parquet()` both r
 
 ## Related
 
-- [Argument Parsing with Typer for GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — the parent guide covering type-hint-driven argument parsing, custom validators, and multi-command app structure
+- [Argument Parsing with Typer](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/) — the parent guide covering type-hint-driven argument parsing, custom validators, and multi-command app structure
 - [Adding Auto-Completion to Python Spatial CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/argument-parsing-with-typer/adding-auto-completion-to-python-spatial-cli-tools/) — extend this converter with dynamic completers for format names and EPSG codes

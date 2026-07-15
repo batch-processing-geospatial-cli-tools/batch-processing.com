@@ -8,76 +8,9 @@ datePublished: "2025-03-10"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-[
-  {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    "headline": "Managing YAML Configs for Geospatial CLI Workflows",
-    "description": "How to load, validate, and apply YAML configuration files in Python GIS CLIs using PyYAML and Pydantic v2 — covering schema enforcement, CRS validation, GDAL env injection, and multi-environment override chains.",
-    "datePublished": "2025-03-10",
-    "dateModified": "2026-06-23",
-    "author": {"@type": "Organization", "name": "batch-processing.com"}
-  },
-  {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    "itemListElement": [
-      {"@type": "ListItem", "position": 1, "name": "CLI Architecture & Design Patterns", "item": "https://batch-processing.com/cli-architecture-design-patterns/"},
-      {"@type": "ListItem", "position": 2, "name": "Configuration File Management", "item": "https://batch-processing.com/cli-architecture-design-patterns/configuration-file-management/"},
-      {"@type": "ListItem", "position": 3, "name": "Managing YAML Configs for Geospatial CLI Workflows", "item": "https://batch-processing.com/cli-architecture-design-patterns/configuration-file-management/managing-yaml-configs-for-geospatial-cli-workflows/"}
-    ]
-  },
-  {
-    "@context": "https://schema.org",
-    "@type": "HowTo",
-    "name": "How to Manage YAML Configs for Geospatial CLI Workflows",
-    "step": [
-      {"@type": "HowToStep", "position": 1, "text": "Install PyYAML, Pydantic v2, and Click into your project environment."},
-      {"@type": "HowToStep", "position": 2, "text": "Define nested Pydantic models for GdalEnv, SpatialParams, and BatchConfig with field-level validators for EPSG codes and path resolution."},
-      {"@type": "HowToStep", "position": 3, "text": "Load the YAML file with yaml.safe_load and pass the resulting dict into BatchConfig for validation."},
-      {"@type": "HowToStep", "position": 4, "text": "Apply CLI flag overrides into the raw dict before constructing the model so that the flag wins the precedence chain."},
-      {"@type": "HowToStep", "position": 5, "text": "Call apply_gdal_env() to inject GDAL_CACHEMAX and GDAL_NUM_THREADS before any rasterio or GDAL I/O."},
-      {"@type": "HowToStep", "position": 6, "text": "Log config.model_dump_json() at startup so CI logs capture the exact runtime parameters used for each batch run."}
-    ]
-  },
-  {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "Why use PyYAML instead of tomllib for geospatial CLIs?",
-        "acceptedAnswer": {"@type": "Answer", "text": "YAML's multi-line strings and inline comments make it well-suited for documenting spatial parameters such as bounding boxes, PROJ strings, and glob patterns. TOML is preferable for flat key-value configs, but YAML wins when the config tree is deeply nested or frequently edited by non-developers."}
-      },
-      {
-        "@type": "Question",
-        "name": "How do I override a nested YAML key from a Click CLI flag?",
-        "acceptedAnswer": {"@type": "Answer", "text": "Read the YAML into a plain dict with yaml.safe_load, then mutate the relevant nested key before passing the dict to your Pydantic model. This keeps Pydantic as the single validation gateway and ensures CLI flags always win the precedence chain."}
-      },
-      {
-        "@type": "Question",
-        "name": "When should I call apply_gdal_env() relative to rasterio imports?",
-        "acceptedAnswer": {"@type": "Answer", "text": "Call apply_gdal_env() before any rasterio.open(), osgeo.gdal, or pyogrio operation. GDAL reads environment variables at the point of first use, so injecting them after a dataset has been opened has no effect on that handle."}
-      },
-      {
-        "@type": "Question",
-        "name": "Can a Pydantic validator check that a path glob actually matches files?",
-        "acceptedAnswer": {"@type": "Answer", "text": "Yes, but do this in a @model_validator(mode='after') rather than a field_validator, because the glob needs both the workspace and the input_glob fields to be resolved first. Raise a ValueError listing the zero-match pattern so the operator sees a clear error message before the batch job starts."}
-      },
-      {
-        "@type": "Question",
-        "name": "How do I handle YAML configs that were written for an older schema version?",
-        "acceptedAnswer": {"@type": "Answer", "text": "Add a schema_version key with a default of 1. In a @model_validator(mode='before') check the version and remap any legacy keys to their new names before Pydantic validates the rest of the model. This preserves backward compatibility without forking your validation logic."}
-      }
-    ]
-  }
-]
-</script>
-
 # Managing YAML Configs for Geospatial CLI Workflows
 
-Use `PyYAML` with `Pydantic` v2 to load, validate, and apply a YAML config in a Python GIS CLI: parse the file with `yaml.safe_load`, construct a typed `BatchConfig` model, apply GDAL environment variables before any I/O, and inject CLI flag overrides into the raw dict before model construction so that the flag always wins. This self-contained pattern — part of the [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) guide — prevents silent CRS errors and coordinate corruptions that only surface after hours of raster processing.
+Use `PyYAML` with `Pydantic` v2 to load, validate, and apply a YAML config in a Python GIS CLI: parse the file with `yaml.safe_load`, construct a typed `BatchConfig` model, apply GDAL environment variables before any I/O, and inject CLI flag overrides into the raw dict before model construction so that the flag always wins. This self-contained pattern, drawn from the [Configuration File Management](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) guide, prevents silent CRS errors and coordinate corruptions that only surface after hours of raster processing.
 
 ## Prerequisites
 
@@ -157,7 +90,6 @@ import click
 import yaml
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-
 # ── Schema models ─────────────────────────────────────────────────────────────
 
 class GdalEnv(BaseModel):
@@ -166,7 +98,6 @@ class GdalEnv(BaseModel):
                                description="Raster block cache in MB")
     GDAL_NUM_THREADS: int = Field(default=4, ge=1, le=64)
     OGR_ENABLE_PARTIAL_REPROJECTION: bool = Field(default=True)
-
 
 class SpatialParams(BaseModel):
     src_crs: str = Field(default="EPSG:4326")
@@ -190,7 +121,6 @@ class SpatialParams(BaseModel):
             raise ValueError(f"resampling must be one of {sorted(valid)}")
         return v.lower()
 
-
 class BatchConfig(BaseModel):
     workspace: Path
     input_glob: str
@@ -212,7 +142,6 @@ class BatchConfig(BaseModel):
         """Expand input_glob relative to workspace into a sorted, deduplicated list."""
         pattern = str(self.workspace / self.input_glob)
         return sorted({Path(p) for p in glob.glob(pattern, recursive=True)})
-
 
 # ── CLI entry-point ────────────────────────────────────────────────────────────
 
@@ -271,7 +200,6 @@ def run_pipeline(cfg_path: Path, threads: Optional[int], dst_crs: Optional[str])
         f"@ {config.spatial.resampling} resampling"
     )
     # ⑥ Pipeline execution continues here with fully validated config.
-
 
 if __name__ == "__main__":
     run_pipeline()

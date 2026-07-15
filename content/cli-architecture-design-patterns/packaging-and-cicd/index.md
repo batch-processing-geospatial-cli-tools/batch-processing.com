@@ -1,5 +1,5 @@
 ---
-title: "Packaging & CI/CD for Python GIS CLI Tools"
+title: "Packaging & CI/CD for a Python Geospatial CLI"
 description: "Package, containerise, and continuously test a Python geospatial CLI: pin GDAL, ship reproducible Docker images, matrix-test across GDAL versions, and publish to PyPI."
 slug: "packaging-and-cicd"
 type: "topic"
@@ -8,74 +8,7 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Packaging & CI/CD for Python GIS CLI Tools",
-      "description": "Package, containerise, and continuously test a Python geospatial CLI: pin GDAL, ship reproducible Docker images, matrix-test across GDAL versions, and publish to PyPI.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "CLI Architecture & Design Patterns for Python GIS", "item": "https://batch-processing.com/cli-architecture-design-patterns/"},
-        {"@type": "ListItem", "position": 3, "name": "Packaging & CI/CD", "item": "https://batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Package and continuously deliver a Python GIS CLI",
-      "step": [
-        {"@type": "HowToStep", "name": "Declare console-script entry points and pin the geospatial stack", "text": "Define the console_scripts entry point in pyproject.toml under PEP 621 metadata and constrain the GDAL, rasterio, and pyproj versions to a compatible range."},
-        {"@type": "HowToStep", "name": "Choose a GDAL distribution strategy", "text": "Decide between binary wheels, a conda-forge environment, or a system GDAL supplied by the base image, and encode that choice in your build."},
-        {"@type": "HowToStep", "name": "Build a reproducible multi-stage Docker image", "text": "Install a pinned GDAL in a builder stage, compile the wheel, and copy only the runtime artefacts into a slim final image."},
-        {"@type": "HowToStep", "name": "Matrix-test across GDAL and Python versions", "text": "Run the test suite against every supported GDAL and Python combination in a GitHub Actions matrix so version drift surfaces before release."},
-        {"@type": "HowToStep", "name": "Lock the environment with hashes", "text": "Compile a fully pinned, hash-verified lock file with pip-tools or uv so installs are byte-for-byte reproducible."},
-        {"@type": "HowToStep", "name": "Publish to PyPI from a release workflow", "text": "Build the sdist and wheel on a tagged commit and upload them to PyPI using trusted publishing with no long-lived tokens."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Should I pin GDAL as a Python dependency or install it from the system?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Pin the rasterio and pyproj versions in pyproject.toml, but let the actual GDAL C library come from one controlled source per environment: the manylinux binary wheels for CI and PyPI installs, or a system GDAL baked into your Docker base image for containers. Never mix a system libgdal with pip-installed rasterio wheels that bundle their own GDAL, because two GDAL copies loaded into one process cause segfaults and PROJ database mismatches."}
-        },
-        {
-          "@type": "Question",
-          "name": "Why does my CLI work locally but crash with a PROJ database error in Docker?",
-          "acceptedAnswer": {"@type": "Answer", "text": "The PROJ_LIB or PROJ_DATA environment variable is pointing at a proj.db from a different PROJ version than the one your rasterio wheel was compiled against. When the image bundles GDAL from apt but rasterio from a wheel, two proj.db files exist and the wrong one wins. Fix it by installing rasterio without its bundled binaries (pip install --no-binary rasterio) against the system GDAL, or by using the wheel's own PROJ data and unsetting the system PROJ_LIB."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I test my geospatial CLI against multiple GDAL versions?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use a GitHub Actions matrix that pairs Python versions with GDAL versions, installing each GDAL from a controlled channel such as conda-forge or the ubuntugis PPA, then running the same pytest suite in every cell. Pin the matrix to the GDAL versions your users actually run — typically the current release, the previous minor, and whatever ships in the latest Ubuntu LTS."}
-        },
-        {
-          "@type": "Question",
-          "name": "What belongs in the lock file for a reproducible GIS environment?",
-          "acceptedAnswer": {"@type": "Answer", "text": "The lock file must contain every transitive dependency pinned to an exact version with a SHA-256 hash, including rasterio, pyogrio, pyproj, shapely, and numpy. Compile it with pip-tools or uv lock so the resolver records the exact wheels that satisfy your GDAL constraint, and install with hash checking enabled so a tampered or mismatched wheel aborts the build instead of silently loading a different GDAL ABI."}
-        },
-        {
-          "@type": "Question",
-          "name": "Should I publish binary wheels for my GIS CLI to PyPI?",
-          "acceptedAnswer": {"@type": "Answer", "text": "If your package is pure Python and only depends on rasterio and pyogrio, publish a single universal wheel and let those dependencies supply their own compiled GDAL wheels. Only build platform-specific binary wheels yourself if you ship compiled C or Cython extensions that link against GDAL directly, in which case you need cibuildwheel with the GDAL headers available in each manylinux build container."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
-# Packaging & CI/CD for Python GIS CLI Tools
+# Packaging & CI/CD for a Python Geospatial CLI
 
 **TL;DR:** Package a Python geospatial CLI so it installs and runs identically everywhere by pinning the GDAL stack in `pyproject.toml`, shipping a reproducible multi-stage Docker image, matrix-testing across GDAL and Python versions in CI, locking dependencies with hashes, and publishing to PyPI through a tagged release workflow.
 
@@ -85,7 +18,7 @@ dateModified: "2026-07-10"
 - `pip install build twine pip-tools rasterio>=1.3 pyogrio>=0.7 pyproj>=3.6 shapely>=2.0`
 - A working GDAL toolchain to develop against (`gdal-config --version` should print 3.6 or newer)
 - Docker 24+ and a GitHub repository with Actions enabled
-- This page is part of the [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) guide — read the parent page first for the overall shape of a production geospatial command-line tool, of which packaging is the final delivery stage.
+- Read the parent [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) guide first for the overall shape of a geospatial command-line tool, of which packaging is the final delivery stage.
 
 ## Problem Framing
 
@@ -185,7 +118,7 @@ dev = ["pytest>=8", "pytest-cov", "pip-tools>=7.4"]
 geowarp = "geowarp_cli.__main__:app"   # `geowarp reproject ...` after install
 
 [project.urls]
-Homepage = "https://batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/"
+Homepage = "https://www.batch-processing.com/cli-architecture-design-patterns/packaging-and-cicd/"
 ```
 
 The `geowarp = "geowarp_cli.__main__:app"` line is what makes the tool feel native: after `pip install geowarp-cli` the shell has a `geowarp` command wired to your Typer or Click application object. Keep the version constraints on `rasterio` and `pyproj` in lockstep — they must be built against the same PROJ. The way that command exposes subcommands like `geowarp reproject` and `geowarp validate` is covered in [CLI Subcommand Organization for GIS Toolchains](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/).

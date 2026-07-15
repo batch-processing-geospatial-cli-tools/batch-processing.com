@@ -14,71 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Building a Dead-Letter Queue for Failed Geometry Transforms",
-      "description": "Quarantine invalid geometries and CRS mismatches into a JSON dead-letter file so a batch pipeline finishes clean features and you can replay failures later.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Error Handling in Spatial Pipelines", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/"},
-        {"@type": "ListItem", "position": 3, "name": "Building a Dead-Letter Queue for Failed Geometry Transforms", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/building-a-dead-letter-queue-for-failed-geometry-transforms/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Build a Dead-Letter Queue for Failed Geometry Transforms",
-      "step": [
-        {"@type": "HowToStep", "name": "Iterate features individually", "text": "Loop over each row of the GeoDataFrame so one bad geometry cannot abort the whole batch."},
-        {"@type": "HowToStep", "name": "Validate and repair geometry", "text": "Use explain_validity to detect self-intersections and make_valid to repair them before reprojection."},
-        {"@type": "HowToStep", "name": "Reproject per feature", "text": "Call to_crs on the single-feature frame and catch CRS mismatch and topology errors."},
-        {"@type": "HowToStep", "name": "Quarantine failures atomically", "text": "Write each failure with feature id, error_class, and original WKT to a JSON dead-letter file using an atomic temp-then-rename write."},
-        {"@type": "HowToStep", "name": "Signal partial failure", "text": "Return exit code 12 when the dead-letter file is non-empty so schedulers can flag the run."},
-        {"@type": "HowToStep", "name": "Replay quarantined features", "text": "Re-read the dead-letter file and re-run only the failed features once the root cause is fixed."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does a self-intersecting polygon load fine but fail on to_crs?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Reading a feature only parses coordinates; it never checks topology. Shapely raises on self-intersections only when an operation such as reprojection, buffering, or an overlay walks the ring. Call explain_validity to see the reason and make_valid to repair the geometry before the transform runs."}
-        },
-        {
-          "@type": "Question",
-          "name": "Should the dead-letter file be JSON or a shapefile?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use JSON. A failed geometry may be structurally invalid, which many vector drivers refuse to write, and you also want to store the error_class and a traceback alongside the WKT. Plain JSON with a WKT string per record survives invalid geometries and stays diff-friendly for replay."}
-        },
-        {
-          "@type": "Question",
-          "name": "Why write the dead-letter file atomically?",
-          "acceptedAnswer": {"@type": "Answer", "text": "A batch that is killed mid-write leaves a truncated JSON file that breaks the replay step. Writing to a temporary file in the same directory and calling os.replace makes the swap atomic on POSIX filesystems, so readers always see either the old file or the complete new one."}
-        },
-        {
-          "@type": "Question",
-          "name": "What exit code should a partial batch failure return?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Return exit code 12 for partial batch failure: some features were written cleanly and some were quarantined. Reserve 0 for a fully clean run and 10 for a CRS mismatch that stops the whole job. This lets a scheduler distinguish a recoverable partial run from a hard failure."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Building a Dead-Letter Queue for Failed Geometry Transforms
 
-To keep a batch running when some geometries fail to transform, process the GeoDataFrame one feature at a time, wrap each `to_crs` call in a try/except, and route any feature that raises into a JSON dead-letter file recording its id, `error_class`, and original geometry as WKT. Clean features flow straight to the output; the run finishes and returns exit code `12` to signal a partial failure you can replay later. This page is part of the [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) guide inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
+To keep a batch running when some geometries fail to transform, process the GeoDataFrame one feature at a time, wrap each `to_crs` call in a try/except, and route any feature that raises into a JSON dead-letter file recording its id, `error_class`, and original geometry as WKT. Clean features flow straight to the output; the run finishes and returns exit code `12` to signal a partial failure you can replay later. For the wider failure-handling context, see the [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) guide within [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/).
 
 ## Prerequisites
 
@@ -168,7 +106,6 @@ EXIT_OK = 0
 EXIT_CRS_MISMATCH = 10
 EXIT_PARTIAL_FAILURE = 12
 
-
 def atomic_write_json(records: list[dict], path: Path) -> None:
     """Write the dead-letter records so readers never see a half-written file.
 
@@ -187,7 +124,6 @@ def atomic_write_json(records: list[dict], path: Path) -> None:
         Path(tmp_name).unlink(missing_ok=True)
         raise
 
-
 def repair_geometry(geom):
     """Return a valid geometry, repairing self-intersections when needed.
 
@@ -199,7 +135,6 @@ def repair_geometry(geom):
     if reason == "Valid Geometry":
         return geom
     return make_valid(geom)
-
 
 def transform_features(
     gdf: gpd.GeoDataFrame, target_crs: str, id_field: str
@@ -241,7 +176,6 @@ def transform_features(
         else gpd.GeoDataFrame(geometry=[], crs=target_crs)
     return clean, dead_letters
 
-
 def _dead_record(feature_id, error_class, geom, detail: str = "") -> dict:
     """Serialise one failure. Store the ORIGINAL geometry as WKT so replay
     starts from the untouched input, not a partially repaired version."""
@@ -251,7 +185,6 @@ def _dead_record(feature_id, error_class, geom, detail: str = "") -> dict:
         "detail": detail,
         "geometry_wkt": geom.wkt if geom is not None else None,
     }
-
 
 def run(src: Path, clean_out: Path, dlq_out: Path, target_crs: str, id_field: str) -> int:
     gdf = gpd.read_file(src, engine="pyogrio")
@@ -269,7 +202,6 @@ def run(src: Path, clean_out: Path, dlq_out: Path, target_crs: str, id_field: st
     print(f"total={total} clean={clean_count} dead_letter={dead_letter_count}")
 
     return EXIT_PARTIAL_FAILURE if dead_letter_count else EXIT_OK
-
 
 def replay(dlq_in: Path, out: Path, target_crs: str) -> int:
     """Re-read the dead-letter file and retry only the failed features.
@@ -296,7 +228,6 @@ def replay(dlq_in: Path, out: Path, target_crs: str) -> int:
     print(f"replayed={len(records)} recovered={len(clean)} still_failing={len(still_failing)}")
     return EXIT_OK if not still_failing else EXIT_PARTIAL_FAILURE
 
-
 def main() -> None:
     parser = argparse.ArgumentParser(description="Feature-level transform with a dead-letter queue")
     parser.add_argument("--replay", action="store_true", help="Replay a dead-letter file")
@@ -314,7 +245,6 @@ def main() -> None:
     except CRSError as exc:
         print(f"CRS error: {exc}", file=sys.stderr)
         sys.exit(EXIT_CRS_MISMATCH)
-
 
 if __name__ == "__main__":
     main()

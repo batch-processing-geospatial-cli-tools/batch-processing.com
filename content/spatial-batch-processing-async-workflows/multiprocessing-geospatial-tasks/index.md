@@ -8,71 +8,6 @@ datePublished: "2024-11-01"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Multiprocessing Geospatial Tasks in Python",
-      "description": "Saturate CPU cores safely when processing raster mosaics, topology validations, and coordinate transformations by enforcing stateless workers, the spawn start method, and atomic I/O inside ProcessPoolExecutor.",
-      "datePublished": "2024-11-01",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Spatial Batch Processing & Async Workflows", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/"},
-        {"@type": "ListItem", "position": 3, "name": "Multiprocessing Geospatial Tasks", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/multiprocessing-geospatial-tasks/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Run multiprocessing geospatial tasks safely in Python",
-      "step": [
-        {"@type": "HowToStep", "name": "Profile and isolate CPU bottlenecks", "position": 1},
-        {"@type": "HowToStep", "name": "Enforce stateless worker boundaries", "position": 2},
-        {"@type": "HowToStep", "name": "Configure the spawn start method", "position": 3},
-        {"@type": "HowToStep", "name": "Partition workloads and dispatch via ProcessPoolExecutor", "position": 4},
-        {"@type": "HowToStep", "name": "Stream outputs and handle failures atomically", "position": 5}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does fork break GDAL when I use multiprocessing?",
-          "acceptedAnswer": {"@type": "Answer", "text": "The fork start method copies the parent's entire memory space — including GDAL's internal mutex state, PROJ datum caches, and GEOS topology contexts — into each child. Those C-library structures are not safe to copy mid-execution, so workers either deadlock waiting on a mutex the parent held, or silently corrupt spatial outputs. Using spawn forces a clean interpreter in every child, so each worker initialises its own GDAL/PROJ context from scratch."}
-        },
-        {
-          "@type": "Question",
-          "name": "How many workers should I use for raster reprojection?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Start with min(os.cpu_count(), len(tile_list)) and profile from there. Each worker at idle consumes 150–300 MB for the Python interpreter and geospatial libraries; multiply by worker count and add your per-tile data footprint to ensure you stay within available RAM. If psutil reports memory pressure above 85% at peak, reduce workers before increasing them."}
-        },
-        {
-          "@type": "Question",
-          "name": "Can I pass a rasterio dataset object into a worker?",
-          "acceptedAnswer": {"@type": "Answer", "text": "No. Rasterio dataset objects hold live C-pointers to GDAL dataset handles. Python's pickle protocol cannot serialise C-pointers, so passing one across a process boundary raises TypeError or causes silent memory corruption. Pass only the file path as a string and open the dataset inside the worker function."}
-        },
-        {
-          "@type": "Question",
-          "name": "What is the difference between ProcessPoolExecutor and multiprocessing.Pool?",
-          "acceptedAnswer": {"@type": "Answer", "text": "ProcessPoolExecutor is part of concurrent.futures and provides a Future-based API with cleaner exception propagation — exceptions from workers surface as Future.exception() rather than being swallowed or requiring chunksize tuning. multiprocessing.Pool is lower-level and useful when you need imap_unordered streaming of results from a large generator. For most geospatial batch pipelines, ProcessPoolExecutor is the right default."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I detect the real CPU quota inside a Docker container?",
-          "acceptedAnswer": {"@type": "Answer", "text": "os.cpu_count() returns the host's total logical cores, not the container's allocated quota. Read /sys/fs/cgroup/cpu.max (cgroup v2) to get the quota and period values, then compute effective_cores = quota / period. Pass that integer to ProcessPoolExecutor(max_workers=…) rather than using os.cpu_count() directly."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 **TL;DR:** Use `ProcessPoolExecutor` with the `spawn` start method, stateless worker functions, and atomic file writes to safely parallelise CPU-bound geospatial work across raster tiles or vector batches without corrupting GDAL, PROJ, or GEOS state.
 
 ## Prerequisites
@@ -80,7 +15,7 @@ dateModified: "2026-06-23"
 - Python 3.10+
 - `pip install rasterio>=1.3 geopandas>=0.14 shapely>=2.0 pyogrio>=0.7 psutil click>=8`
 - GDAL 3.6+ system library (confirm with `gdal-config --version`)
-- This page is part of the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) guide — read the parent page first for an overview of concurrency strategy and when to choose multiprocessing over async I/O.
+- For an overview of concurrency strategy and when to choose multiprocessing over async I/O, start with the parent [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) guide.
 
 ## Problem Framing
 
@@ -285,7 +220,6 @@ def max_safe_workers(worker_overhead_mb: int = 280) -> int:
     # Leave 20% headroom for OS caching and I/O buffers
     usable = available * 0.80
     return max(1, min(os.cpu_count() or 1, int(usable / (worker_overhead_mb * 1024 ** 2))))
-
 
 def build_tile_tasks(
     tile_dir: Path,
@@ -506,7 +440,7 @@ No. Rasterio dataset objects hold live C-pointers to GDAL dataset handles. Pytho
 
 ## Related
 
-- [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) — parent guide covering the full concurrency decision tree for Python GIS pipelines
+- [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) — parent guide covering the full concurrency decision tree for spatial pipelines
 - [Async I/O for Raster Processing](https://www.batch-processing.com/spatial-batch-processing-async-workflows/async-io-for-raster-processing/) — when I/O latency dominates, async event loops outperform process pools
 - [Chunked Vector Data Reading](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) — partition large GeoPackage and Shapefile inputs before dispatching to workers
 - [Error Handling in Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/error-handling-in-spatial-pipelines/) — structured logging and exit-code conventions for fault-tolerant batch runs

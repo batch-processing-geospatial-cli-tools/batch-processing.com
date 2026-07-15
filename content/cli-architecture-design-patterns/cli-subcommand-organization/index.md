@@ -1,5 +1,5 @@
 ---
-title: "CLI Subcommand Organization for GIS Toolchains"
+title: "CLI Subcommand Organization"
 description: "Structure Python GIS CLI tools with modular subcommand hierarchies, lazy imports, and type-driven signatures so your toolchain stays fast and testable as it scales."
 slug: "cli-subcommand-organization"
 type: "topic"
@@ -8,73 +8,7 @@ datePublished: "2024-11-01"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "CLI Subcommand Organization for GIS Toolchains",
-      "description": "Structure Python GIS CLI tools with modular subcommand hierarchies, lazy imports, and type-driven signatures so your toolchain stays fast and testable as it scales.",
-      "datePublished": "2024-11-01",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "CLI Architecture & Design Patterns", "item": "https://batch-processing.com/cli-architecture-design-patterns/"},
-        {"@type": "ListItem", "position": 3, "name": "CLI Subcommand Organization", "item": "https://batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Organize CLI Subcommands for a Python GIS Toolchain",
-      "step": [
-        {"@type": "HowToStep", "position": 1, "name": "Define namespace hierarchy", "text": "Map GIS operations into domain-action groups before writing code."},
-        {"@type": "HowToStep", "position": 2, "name": "Establish modular directory structure", "text": "Isolate each subcommand group into its own Python module."},
-        {"@type": "HowToStep", "position": 3, "name": "Implement lazy registration", "text": "Defer heavy GIS imports until the specific subcommand is invoked."},
-        {"@type": "HowToStep", "position": 4, "name": "Attach type-driven signatures", "text": "Use typing.Annotated for arguments, options, and file paths."},
-        {"@type": "HowToStep", "position": 5, "name": "Wire entry points", "text": "Define console scripts in pyproject.toml and validate with CliRunner."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "How many subcommand levels should a GIS CLI have?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Two levels (group + command) covers most GIS toolchains. A third level is justified when you have truly distinct domains, such as separating raster processing from vector processing within an ingest group. Beyond three levels, tab completion becomes harder to discover and --help output grows unwieldy."}
-        },
-        {
-          "@type": "Question",
-          "name": "Why does geo --help take 2 seconds on my machine?",
-          "acceptedAnswer": {"@type": "Answer", "text": "GDAL and rasterio trigger C extension initialisation at import time. If your subcommand modules import rasterio or pyproj at module level, every --help call pays that cost. Use lazy registration — defer those imports into the command callback itself."}
-        },
-        {
-          "@type": "Question",
-          "name": "Can I mix Click and Typer subcommands in the same app?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Yes. Typer exposes a .as_click_group() method. You can attach a raw Click group as a subcommand of a Typer app, or vice versa. This is useful when migrating a legacy Click-based command incrementally."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I share a database or GDAL environment handle across subcommands?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use a Typer callback on the root app to initialise shared resources and store them on a context object (ctx.ensure_object(dict)). Each subcommand retrieves the handle via ctx.obj. Avoid module-level singletons — they survive test isolation boundaries and cause subtle state leakage."}
-        },
-        {
-          "@type": "Question",
-          "name": "What exit code should a CRS validation failure return?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Reserve 0 for success, 1 for user input errors (wrong flag, missing file), 2 for framework/CLI errors, and codes 3+ for domain-specific failures. A CRS mismatch caught before processing should exit 1 (bad input). A CRS transformation that fails mid-flight due to a missing PROJ datum grid should exit 3 so orchestrators can distinguish recoverable input mistakes from environment failures."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
-Splitting a Python GIS CLI into a clean subcommand hierarchy is the single most effective way to keep startup time under 200 ms and test surface area manageable — even when the underlying stack pulls in GDAL, rasterio, and pyproj. This page is part of the [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
+Splitting a Python GIS CLI into a clean subcommand hierarchy is the single most effective way to keep startup time under 200 ms and test surface area manageable — even when the underlying stack pulls in GDAL, rasterio, and pyproj. It is one topic within the broader [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
 
 ## Prerequisites
 

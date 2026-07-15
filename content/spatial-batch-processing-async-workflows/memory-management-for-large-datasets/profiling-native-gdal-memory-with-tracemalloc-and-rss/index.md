@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Profiling Native GDAL Memory with tracemalloc and RSS",
-      "description": "Pair Python's tracemalloc with process RSS sampling to separate NumPy allocations from C-level GDAL buffers and pin down native memory growth.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Memory Management for Large GIS Datasets", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/"},
-        {"@type": "ListItem", "position": 3, "name": "Profiling Native GDAL Memory with tracemalloc and RSS", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/profiling-native-gdal-memory-with-tracemalloc-and-rss/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Profile Native GDAL Memory with tracemalloc and RSS",
-      "step": [
-        {"@type": "HowToStep", "name": "Start tracemalloc and record baseline RSS", "text": "Call tracemalloc.start() and read psutil.Process().memory_info().rss once before the read loop begins."},
-        {"@type": "HowToStep", "name": "Sample both meters inside the loop", "text": "After each raster read, capture a tracemalloc snapshot and the current RSS so you can compare Python-tracked bytes against total process memory."},
-        {"@type": "HowToStep", "name": "Attribute the divergence", "text": "If RSS climbs while tracemalloc stays flat, the growth is native GDAL memory such as the block cache or unclosed datasets, not Python objects."},
-        {"@type": "HowToStep", "name": "Close datasets and cap the block cache", "text": "Wrap every rasterio.open in a with block and run under rasterio.Env(GDAL_CACHEMAX=...) so C buffers are released and bounded."},
-        {"@type": "HowToStep", "name": "Verify RSS returns to baseline", "text": "Re-run the profiled loop and confirm RSS plateaus near its starting value instead of growing per iteration."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does tracemalloc show low memory but my process RSS keeps growing?",
-          "acceptedAnswer": {"@type": "Answer", "text": "tracemalloc only instruments allocations made through Python's memory allocator. GDAL allocates its block cache and dataset buffers with malloc in C, so those bytes never appear in a tracemalloc snapshot. They are visible only in the operating system's resident set size, which is why RSS climbs while tracemalloc stays flat."}
-        },
-        {
-          "@type": "Question",
-          "name": "Does closing a rasterio dataset actually free native memory?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Closing a dataset releases the file handle and the per-dataset buffers back to GDAL, but blocks already loaded into the shared GDAL block cache stay resident until the cache evicts them or you lower GDAL_CACHEMAX. Closing datasets stops per-iteration growth; capping the cache bounds the steady-state ceiling."}
-        },
-        {
-          "@type": "Question",
-          "name": "What value should I set for GDAL_CACHEMAX?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Set GDAL_CACHEMAX to an explicit byte or megabyte budget rather than leaving the default of five percent of RAM. A value like 64 or 128 megabytes per process is a safe start for batch workers. Under multiprocessing, remember the cache is per process, so multiply the cap by the worker count to get the real ceiling."}
-        },
-        {
-          "@type": "Question",
-          "name": "Can I trust RSS as an exact leak measurement?",
-          "acceptedAnswer": {"@type": "Answer", "text": "RSS is a coarse meter because the C allocator may hold freed pages instead of returning them to the kernel, so a small residual is normal. What matters is the trend: flat RSS across iterations means no leak, while linear growth per iteration signals unclosed datasets or an unbounded cache."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Profiling Native GDAL Memory with tracemalloc and RSS
 
-`tracemalloc` reports low usage while your process keeps swelling because it only tracks allocations routed through Python's allocator. GDAL allocates its block cache and dataset buffers directly in C with `malloc`, so those bytes are invisible to `tracemalloc` and show up only as growth in the process resident set size (RSS). Profiling native GDAL memory means running both meters at once. This page is part of the [Memory Management for Large GIS Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) guide within the wider [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
+`tracemalloc` reports low usage while your process keeps swelling because it only tracks allocations routed through Python's allocator. GDAL allocates its block cache and dataset buffers directly in C with `malloc`, so those bytes are invisible to `tracemalloc` and show up only as growth in the process resident set size (RSS). Profiling native GDAL memory means running both meters at once. For the broader context, see the [Memory Management for Large GIS Datasets](https://www.batch-processing.com/spatial-batch-processing-async-workflows/memory-management-for-large-datasets/) guide within the wider [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -149,17 +88,14 @@ import rasterio
 
 MB = 1024 * 1024
 
-
 def rss_mb() -> float:
     """Resident set size of THIS process in megabytes."""
     return psutil.Process().memory_info().rss / MB
-
 
 def traced_mb() -> float:
     """Current bytes tracked by tracemalloc (Python allocations only)."""
     current, _peak = tracemalloc.get_traced_memory()
     return current / MB
-
 
 def read_correct(path: Path) -> int:
     """Open inside a with-block so GDAL closes the dataset on exit."""
@@ -167,14 +103,12 @@ def read_correct(path: Path) -> int:
         band = ds.read(1)          # NumPy array -> visible to tracemalloc
         return int(band.shape[0] * band.shape[1])
 
-
 def read_leaky(path: Path, held: list) -> int:
     """Open without closing; the dataset (and its C buffers) stays alive."""
     ds = rasterio.open(path)       # no with-block, no ds.close()
     band = ds.read(1)
     held.append(ds)                # keep a reference so nothing is collected
     return int(band.shape[0] * band.shape[1])
-
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Profile GDAL native memory")
@@ -211,7 +145,6 @@ def main() -> None:
     tracemalloc.stop()
     print(f"final              rss={rss_mb():8.1f}MB  "
           f"(baseline {base_rss:.1f}MB)")
-
 
 if __name__ == "__main__":
     main()

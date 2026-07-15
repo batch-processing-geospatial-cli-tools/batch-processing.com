@@ -1,55 +1,76 @@
-# Python GIS CLI Toolcraft & Batch Processing
+<p align="center">
+  <a href="https://www.batch-processing.com">
+    <img src="https://www.batch-processing.com/og-image.png" alt="Python GIS CLI Toolcraft & Batch Processing" width="820">
+  </a>
+</p>
 
-**Production-grade, practitioner-focused guides for building command-line tools and batch-processing pipelines for geospatial workflows in Python.**
+<h1 align="center">Python GIS CLI Toolcraft &amp; Batch Processing</h1>
 
-🌐 **[batch-processing.com](https://batch-processing.com)**
+<p align="center">
+  Guides and runnable code for building command-line tools and batch-processing
+  pipelines for geospatial work in Python.
+</p>
+
+<p align="center">
+  <a href="https://www.batch-processing.com"><strong>www.batch-processing.com&nbsp;→</strong></a>
+</p>
 
 ---
 
-Modern geospatial work demands more than ad-hoc scripts. Whether you're reprojecting
-thousands of raster tiles, wiring up an internal GIS toolchain, or packaging a reusable
-spatial utility, this site gives you the architecture patterns, runnable code, and
-production-hardening techniques to ship tools that scale.
+Geospatial work usually outgrows the throwaway-script stage faster than expected. The
+moment you are reprojecting thousands of raster tiles, wiring up an internal GIS
+toolchain, or packaging a spatial utility that other people depend on, you need tools
+that behave predictably, fail clearly, and keep running when the input gets messy.
 
-Every guide is written for working practitioners — Python GIS developers, DevOps
-engineers, and open-source maintainers — with complete, copy-pasteable implementations
-that use real geospatial types (rasterio windows, GeoDataFrames, explicit EPSG codes)
-and explain the reasoning behind each decision.
+This repository is the source for
+[www.batch-processing.com](https://www.batch-processing.com) — a collection of practical
+guides on exactly that: the command-line layer and the processing layer of Python
+geospatial tooling. Every guide is written for people who ship working software — Python
+developers, DevOps and platform engineers, and maintainers of open-source spatial
+libraries — and each one includes complete, runnable code that uses real geospatial types
+(rasterio windows, GeoDataFrames, explicit EPSG codes) and explains the reasoning behind
+each decision.
 
 ## What's inside
 
-**50+ in-depth guides** across two areas:
+The guides are organised into two areas.
 
-### ⚙️ [CLI Architecture & Design Patterns](https://batch-processing.com/cli-architecture-design-patterns/)
+### CLI Architecture &amp; Design Patterns
 
-Argument parsing with Typer & Click, subcommand organisation, Rich console output and
-progress bars, layered configuration (TOML / YAML / environment variables), environment
-variable sync, and packaging & CI/CD for the notoriously fragile GDAL stack.
+Argument parsing with Typer and Click, subcommand organisation, Rich console output and
+progress bars, layered configuration across TOML, YAML, and environment variables,
+keeping environment variables in sync, and packaging and CI/CD for the awkward GDAL
+dependency stack.
 
-### 🗺️ [Spatial Batch Processing & Async Workflows](https://batch-processing.com/spatial-batch-processing-async-workflows/)
+→ [Read the section](https://www.batch-processing.com/cli-architecture-design-patterns/)
 
-Async I/O for raster processing, multiprocessing GDAL tasks, chunked vector reading with
-pyogrio, memory management for terabyte-scale datasets, fault-tolerant error handling
-(dead-letter queues, retries), and progress tracking for long-running batch jobs.
+### Spatial Batch Processing &amp; Async Workflows
+
+Async I/O for raster processing, multiprocessing for GDAL tasks, chunked vector reading
+with pyogrio, memory management for very large datasets, error handling that survives
+partial failure (dead-letter queues, retries, structured logs), and progress tracking for
+jobs that run for hours.
+
+→ [Read the section](https://www.batch-processing.com/spatial-batch-processing-async-workflows/)
 
 ## Who it's for
 
-- **Python GIS developers** building or maintaining spatial command-line tools
-- **DevOps & platform engineers** running geospatial pipelines in CI/CD and Kubernetes
-- **Open-source maintainers** packaging reusable geospatial utilities
-- **Internal tooling teams** standardising on reproducible spatial workflows
+- Python developers building or maintaining spatial command-line tools
+- DevOps and platform engineers running geospatial pipelines in CI/CD and Kubernetes
+- Open-source maintainers packaging reusable geospatial utilities
+- Internal tooling teams standardising on reproducible spatial workflows
 
-## Why it's different
+## Why it reads differently
 
-- **Complete, runnable Python** — no pseudocode; real GDAL, rasterio, geopandas, and pyogrio
-- **Decision guides** for the high-stakes calls — *multiprocessing vs asyncio*, *pyogrio vs Fiona*
-- **Hand-authored diagrams**, structured FAQs, and a consistent, accessible design in light and dark themes
+- **Complete, runnable Python** — no pseudocode; real GDAL, rasterio, geopandas, and pyogrio.
+- **Decision guides** for the calls that are easy to get wrong — *multiprocessing vs asyncio*, *pyogrio vs Fiona*.
+- **Hand-drawn diagrams**, plain-language explanations, and a consistent, accessible design in light and dark themes.
 
 ## About this repository
 
-This repository contains the source for **[batch-processing.com](https://batch-processing.com)** —
-a static site built with [Eleventy](https://www.11ty.dev/) and deployed on
-[Cloudflare Workers](https://developers.cloudflare.com/workers/) (Static Assets).
+This is the source for [www.batch-processing.com](https://www.batch-processing.com) — a
+static site built with [Eleventy](https://www.11ty.dev/) and deployed on
+[Cloudflare Workers](https://developers.cloudflare.com/workers/) with static assets.
 
 ```bash
 npm install      # install dependencies
@@ -58,6 +79,9 @@ npm start        # local dev server with live reload
 npm run deploy   # build and deploy the Cloudflare Worker
 ```
 
+The content lives in `content/` as Markdown, page templates in `src/_includes/`, and
+styles in `src/css/`.
+
 ---
 
-Maintained by **[batch-processing-geospatial-cli-tools](https://github.com/batch-processing-geospatial-cli-tools)**.
+Maintained by [**batch-processing-geospatial-cli-tools**](https://github.com/batch-processing-geospatial-cli-tools).

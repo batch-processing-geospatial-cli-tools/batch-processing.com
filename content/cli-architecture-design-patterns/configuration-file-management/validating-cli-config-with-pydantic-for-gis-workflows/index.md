@@ -1,5 +1,5 @@
 ---
-title: "Validating CLI Config with Pydantic for GIS Workflows"
+title: "Validating CLI Config with Pydantic"
 description: "Model a geospatial CLI's config with Pydantic so invalid EPSG codes, negative worker counts, and unknown keys fail fast with a clear exit code 2."
 slug: "validating-cli-config-with-pydantic-for-gis-workflows"
 type: "article"
@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Validating CLI Config with Pydantic for GIS Workflows",
-      "description": "Model a geospatial CLI's config with Pydantic v2 so invalid EPSG codes, negative worker counts, and unknown keys fail fast with a readable message and exit code 2.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Configuration File Management for GIS CLI Tools", "item": "https://batch-processing.com/cli-architecture-design-patterns/configuration-file-management/"},
-        {"@type": "ListItem", "position": 3, "name": "Validating CLI Config with Pydantic for GIS Workflows", "item": "https://batch-processing.com/cli-architecture-design-patterns/configuration-file-management/validating-cli-config-with-pydantic-for-gis-workflows/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Validate a GIS CLI Config with Pydantic",
-      "step": [
-        {"@type": "HowToStep", "name": "Declare a BaseSettings model", "text": "Subclass pydantic-settings BaseSettings with typed fields for target_epsg, max_workers, and Path inputs."},
-        {"@type": "HowToStep", "name": "Reject unknown keys", "text": "Set model_config extra to forbid so a misspelled key raises instead of being silently ignored."},
-        {"@type": "HowToStep", "name": "Validate the EPSG code", "text": "Add a field_validator that calls pyproj.CRS.from_epsg to confirm the code resolves to a real coordinate system."},
-        {"@type": "HowToStep", "name": "Constrain numeric and path fields", "text": "Use PositiveInt for max_workers and a validator that checks input directories exist on disk."},
-        {"@type": "HowToStep", "name": "Catch ValidationError and exit 2", "text": "Wrap construction in try/except, print a readable summary of each error, and exit with code 2 for usage errors."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why exit with code 2 instead of 1 for a bad config?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Exit code 2 is the POSIX convention for usage and argument errors, which a malformed config file is. Reserving 1 for genuine runtime failures lets CI pipelines and wrapper scripts distinguish an operator typo from a crash mid-batch, so retries and alerting can branch correctly."}
-        },
-        {
-          "@type": "Question",
-          "name": "Does Pydantic coerce the string EPSG:4326 to an integer?",
-          "acceptedAnswer": {"@type": "Answer", "text": "No. A field typed as int rejects the string EPSG:4326 because it is not a plain integer literal. Either type the field as int and require the config to store 4326, or accept a str and strip the EPSG: prefix inside your field_validator before calling pyproj.CRS.from_epsg."}
-        },
-        {
-          "@type": "Question",
-          "name": "How does env var precedence work in pydantic-settings?",
-          "acceptedAnswer": {"@type": "Answer", "text": "By default pydantic-settings ranks sources as init arguments, then environment variables, then the dotenv file, then file secrets. An environment variable such as GIS_MAX_WORKERS therefore overrides the same value passed from a parsed config file unless you reorder sources with settings_customise_sources."}
-        },
-        {
-          "@type": "Question",
-          "name": "Can I validate that a Path field exists without a custom validator?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Yes. Pydantic ships path types such as DirectoryPath and FilePath that fail validation when the target does not exist or is the wrong kind. Use a plain Path plus a field_validator only when you also need to create missing output directories rather than reject them."}
-        }
-      ]
-    }
-  ]
-}
-</script>
+# Validating CLI Config with Pydantic
 
-# Validating CLI Config with Pydantic for GIS Workflows
-
-Model your geospatial CLI's config as a Pydantic v2 `BaseSettings` class: type `target_epsg`, constrain `max_workers` to `PositiveInt`, use `DirectoryPath` for inputs, set `extra="forbid"` to reject unknown keys, and add a `field_validator` that runs `pyproj.CRS.from_epsg`. Wrap construction in a `try/except ValidationError` that prints each error and exits `2`. This page is part of the [Configuration File Management for GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) guide within the wider [CLI Architecture & Design Patterns for Python GIS](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
+Model your geospatial CLI's config as a Pydantic v2 `BaseSettings` class: type `target_epsg`, constrain `max_workers` to `PositiveInt`, use `DirectoryPath` for inputs, set `extra="forbid"` to reject unknown keys, and add a `field_validator` that runs `pyproj.CRS.from_epsg`. Wrap construction in a `try/except ValidationError` that prints each error and exits `2`. It belongs to the [Configuration File Management for GIS CLI Tools](https://www.batch-processing.com/cli-architecture-design-patterns/configuration-file-management/) guide, part of the wider [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 The point of a schema is to fail before the batch starts. A raster pipeline that reads `target_epsg: 99999` from a config file, opens 4,000 GeoTIFFs, warps them, and only then discovers the CRS is undefined has wasted an hour and left a half-written output directory. Validation moves that failure to the first millisecond.
 
@@ -161,7 +100,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pyproj import CRS
 from pyproj.exceptions import CRSError
 
-
 class ToolConfig(BaseSettings):
     """Schema for the reprojection tool's config file and env overrides."""
 
@@ -200,7 +138,6 @@ class ToolConfig(BaseSettings):
             )
         return value
 
-
 def load_config(path: Path) -> ToolConfig:
     """Parse a TOML file and validate it, or exit 2 on any error."""
     try:
@@ -218,7 +155,6 @@ def load_config(path: Path) -> ToolConfig:
             loc = ".".join(str(p) for p in err["loc"]) or "(root)"
             print(f"  {loc}: {err['msg']}", file=sys.stderr)
         raise SystemExit(2)
-
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

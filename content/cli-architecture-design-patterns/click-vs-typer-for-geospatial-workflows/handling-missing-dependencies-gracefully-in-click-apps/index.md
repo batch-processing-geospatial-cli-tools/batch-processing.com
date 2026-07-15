@@ -14,85 +14,13 @@ datePublished: "2024-11-15"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Handling Missing Dependencies Gracefully in Click Apps",
-      "description": "Defer heavy geospatial imports with lazy loaders and Click's exception hierarchy so help text, shell completion, and fallback commands work even when rasterio or GDAL are absent.",
-      "datePublished": "2024-11-15",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "CLI Architecture & Design Patterns", "item": "https://batch-processing.com/cli-architecture-design-patterns/"},
-        {"@type": "ListItem", "position": 2, "name": "Click vs Typer for Geospatial Workflows", "item": "https://batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/"},
-        {"@type": "ListItem", "position": 3, "name": "Handling Missing Dependencies Gracefully in Click Apps", "item": "https://batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/handling-missing-dependencies-gracefully-in-click-apps/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Handle Missing Geospatial Dependencies in Click Apps",
-      "description": "Defer heavy imports, route errors through Click's exception hierarchy, and provide fallback commands so a GIS CLI stays functional in minimal environments.",
-      "step": [
-        {"@type": "HowToStep", "name": "Wrap heavy imports in lazy loader functions", "text": "Define a dedicated function for each compiled dependency (rasterio, geopandas, pyproj) that runs the import inside a try/except block and raises click.UsageError on failure."},
-        {"@type": "HowToStep", "name": "Call loaders inside command bodies only", "text": "Never import geospatial packages at module level. Invoke the lazy loader as the first line of the command function that needs it."},
-        {"@type": "HowToStep", "name": "Provide pure-Python fallback commands", "text": "Add lightweight subcommands (inspect, validate-path) that use only the standard library so --help and basic introspection work in stripped environments."},
-        {"@type": "HowToStep", "name": "Test degraded paths with mocked sys.modules", "text": "Use unittest.mock.patch.dict(sys.modules, {'rasterio': None}) to simulate missing packages in CI without modifying the host environment."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does my Click CLI crash before --help is shown?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Module-level imports of compiled extensions like rasterio or GDAL trigger shared-library loading before Click initialises its command router. Move those imports inside the command function body (lazy loading) to isolate the failure to runtime."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Should I raise click.UsageError or click.ClickException for a missing dependency?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Use click.UsageError for dependency problems caused by the environment — it exits with code 2 and prints a clean message without a traceback. Reserve click.ClickException (exit code 1) for runtime processing failures where the dependency loaded but the operation failed."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Can I use importlib.import_module instead of try/except?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. importlib.import_module raises ImportError on failure just like a bare import, so the same try/except pattern applies. It is most useful when the package name is determined dynamically at runtime."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How do I test fallback paths without uninstalling rasterio?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Patch sys.modules in a pytest fixture: unittest.mock.patch.dict(sys.modules, {'rasterio': None}). This makes the import fail for the duration of the test without touching the real environment."
-          }
-        }
-      ]
-    }
-  ]
-}
-</script>
-
-Wrap each compiled geospatial import in a dedicated lazy-loader function and call that function inside the command body rather than at module level. When the import fails, raise `click.UsageError` with an install hint. This keeps `--help`, tab completion, and pure-Python subcommands fully operational in environments where `rasterio`, `GDAL`, or `geopandas` are absent — a key resilience pattern within the broader [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) guide.
+Wrap each compiled geospatial import in a dedicated lazy-loader function and call that function inside the command body rather than at module level. When the import fails, raise `click.UsageError` with an install hint. This keeps `--help`, tab completion, and pure-Python subcommands fully operational in environments where `rasterio`, `GDAL`, or `geopandas` are absent. The [Click vs Typer for Geospatial Workflows](https://www.batch-processing.com/cli-architecture-design-patterns/click-vs-typer-for-geospatial-workflows/) guide covers this pattern alongside the wider framework comparison.
 
 ## Prerequisites
 
 - Python 3.9+, `click>=8.1`
 - No GIS package required at import time — that is the point of this pattern
-- For broader CLI design context see [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/)
+- See [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) for the wider design context
 
 ## Why Geospatial CLIs Crash Before Argument Parsing
 
@@ -172,7 +100,6 @@ from pathlib import Path
 
 import click
 
-
 # ---------------------------------------------------------------------------
 # Lazy loaders — called INSIDE command bodies, never at module level
 # ---------------------------------------------------------------------------
@@ -189,7 +116,6 @@ def _require_rasterio():
             "or for conda: conda install -c conda-forge rasterio"
         ) from exc
 
-
 def _require_geopandas():
     """Return the geopandas module or raise click.UsageError with install hint."""
     try:
@@ -200,7 +126,6 @@ def _require_geopandas():
             f"geopandas is not installed: {exc}\n"
             "Install: pip install geopandas"
         ) from exc
-
 
 # ---------------------------------------------------------------------------
 # CLI group
@@ -214,7 +139,6 @@ def gis_batch() -> None:
     Core commands (raster-to-vector, reproject) require rasterio and
     geopandas. The `inspect` command runs with the standard library only.
     """
-
 
 # ---------------------------------------------------------------------------
 # Heavy command — lazy-loads compiled extensions
@@ -290,7 +214,6 @@ def raster_to_vector(
     except (OSError, rasterio.errors.RasterioIOError) as exc:
         raise click.ClickException(f"Raster read failed: {exc}") from exc
 
-
 # ---------------------------------------------------------------------------
 # Lightweight command — pure stdlib, works in any environment
 # ---------------------------------------------------------------------------
@@ -304,7 +227,6 @@ def inspect(path: Path) -> None:
     click.echo(f"size     : {stat.st_size:,} bytes")
     click.echo(f"modified : {stat.st_mtime:.0f}")
     click.echo(f"suffix   : {path.suffix or '(none)'}")
-
 
 # ---------------------------------------------------------------------------
 # Entry point

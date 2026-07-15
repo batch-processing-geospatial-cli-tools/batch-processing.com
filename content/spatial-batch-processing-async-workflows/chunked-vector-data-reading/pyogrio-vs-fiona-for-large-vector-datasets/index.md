@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "pyogrio vs Fiona for Large Vector Datasets",
-      "description": "Benchmark pyogrio against Fiona for reading large Shapefiles and GeoPackages, and choose based on Arrow throughput, memory, and per-feature access needs.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "Chunked Vector Data Reading for Spatial Pipelines", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/"},
-        {"@type": "ListItem", "position": 3, "name": "pyogrio vs Fiona for Large Vector Datasets", "item": "https://batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/pyogrio-vs-fiona-for-large-vector-datasets/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Choose between pyogrio and Fiona for large vector datasets",
-      "step": [
-        {"@type": "HowToStep", "name": "Read the layer in bulk with pyogrio", "text": "Call pyogrio.read_dataframe() to load the whole layer into a GeoDataFrame in one Arrow-backed pass."},
-        {"@type": "HowToStep", "name": "Stream the same layer with Fiona", "text": "Open the source with fiona.open() and iterate feature by feature to keep peak memory constant."},
-        {"@type": "HowToStep", "name": "Reproject both outputs to EPSG:4326", "text": "Apply a pyproj Transformer or GeoDataFrame.to_crs so both readers produce identical coordinates."},
-        {"@type": "HowToStep", "name": "Time both readers on the same file", "text": "Wrap each read in time.perf_counter and record elapsed seconds and feature counts."},
-        {"@type": "HowToStep", "name": "Pick the reader from the decision matrix", "text": "Choose pyogrio for bulk analytics throughput and Fiona for bounded-memory per-feature streaming."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Is pyogrio always faster than Fiona?",
-          "acceptedAnswer": {"@type": "Answer", "text": "For bulk reads of a full layer into a GeoDataFrame, pyogrio is typically 5 to 20 times faster because it moves columns through GDAL's Arrow interface instead of building one Python dict per feature. For genuine record-by-record streaming where you never materialise the whole layer, the throughput gap narrows and Fiona's constant memory becomes the deciding factor."}
-        },
-        {
-          "@type": "Question",
-          "name": "Does pyogrio load the entire file into memory?",
-          "acceptedAnswer": {"@type": "Answer", "text": "By default pyogrio.read_dataframe reads the whole layer into a single in-memory GeoDataFrame, so peak memory scales with layer size. To bound it, pass skip_features and max_features to read fixed-size windows, or use pyogrio.open_arrow with a batch_size to pull record batches without materialising everything at once."}
-        },
-        {
-          "@type": "Question",
-          "name": "When should I still choose Fiona?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Choose Fiona when you need true streaming over a layer larger than RAM, when you process one feature at a time and discard it, or when you depend on its stable per-feature GeoJSON-like mapping for schema introspection. Fiona is slower per feature but holds memory constant regardless of layer size."}
-        },
-        {
-          "@type": "Question",
-          "name": "Do pyogrio and Fiona return the same feature count and geometry?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Yes, both wrap the same GDAL/OGR drivers, so a correctly written read returns identical feature counts and identical geometries for the same source layer. Verify by comparing len(gdf) against the Fiona iteration count and by reprojecting both to EPSG:4326 before comparison."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # pyogrio vs Fiona for Large Vector Datasets
 
-For reading large Shapefiles and GeoPackages, choose **pyogrio** when you want the whole layer as a `GeoDataFrame` fast — it moves data through GDAL's Arrow interface and is commonly 5–20x quicker than Fiona. Choose **Fiona** when you need true record-by-record streaming at constant memory. This page is part of the [Chunked Vector Data Reading for Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) guide inside the broader [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
+For reading large Shapefiles and GeoPackages, choose **pyogrio** when you want the whole layer as a `GeoDataFrame` fast — it moves data through GDAL's Arrow interface and is commonly 5–20x quicker than Fiona. Choose **Fiona** when you need true record-by-record streaming at constant memory. This is one comparison within the [Chunked Vector Data Reading for Spatial Pipelines](https://www.batch-processing.com/spatial-batch-processing-async-workflows/chunked-vector-data-reading/) guide, part of the [Spatial Batch Processing & Async Workflows](https://www.batch-processing.com/spatial-batch-processing-async-workflows/) reference.
 
 ## Prerequisites
 
@@ -177,7 +116,6 @@ from pyproj import CRS
 
 TARGET_CRS = CRS.from_epsg(4326)   # canonical WGS84 lon/lat
 
-
 def read_with_pyogrio(path: Path, layer: str) -> tuple[int, float]:
     """Bulk read the whole layer into a GeoDataFrame, then reproject.
 
@@ -192,7 +130,6 @@ def read_with_pyogrio(path: Path, layer: str) -> tuple[int, float]:
     count = len(gdf)
     elapsed = time.perf_counter() - start
     return count, elapsed
-
 
 def read_with_fiona(path: Path, layer: str) -> tuple[int, float]:
     """Stream the layer one feature at a time, reprojecting each geometry.
@@ -216,7 +153,6 @@ def read_with_fiona(path: Path, layer: str) -> tuple[int, float]:
             count += 1
     elapsed = time.perf_counter() - start
     return count, elapsed
-
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -244,7 +180,6 @@ def main() -> None:
         sys.exit(1)                            # runtime error
     print("counts match — readers agree")
     sys.exit(0)
-
 
 if __name__ == "__main__":
     main()

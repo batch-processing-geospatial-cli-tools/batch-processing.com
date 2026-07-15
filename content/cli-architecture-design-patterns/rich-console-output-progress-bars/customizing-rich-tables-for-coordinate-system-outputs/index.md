@@ -14,62 +14,7 @@ datePublished: "2024-03-12"
 dateModified: "2026-06-23"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Customizing Rich Tables for Coordinate System Outputs",
-      "description": "How to render EPSG codes, WKT strings, and bounding boxes in a Rich table without layout collapse — explicit column constraints, conditional styling, and pyproj integration.",
-      "datePublished": "2024-03-12",
-      "dateModified": "2026-06-23",
-      "author": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "CLI Architecture & Design Patterns", "item": "https://batch-processing.com/cli-architecture-design-patterns/"},
-        {"@type": "ListItem", "position": 2, "name": "Rich Console Output & Progress Bars", "item": "https://batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/"},
-        {"@type": "ListItem", "position": 3, "name": "Customizing Rich Tables for Coordinate System Outputs", "item": "https://batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/customizing-rich-tables-for-coordinate-system-outputs/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Customize Rich Tables for Coordinate System Outputs",
-      "step": [
-        {"@type": "HowToStep", "name": "Install dependencies", "text": "Install rich>=13.0.0 and pyproj>=3.4."},
-        {"@type": "HowToStep", "name": "Define column constraints", "text": "Use add_column() with width, max_width, overflow, and justify to prevent layout collapse on long WKT strings."},
-        {"@type": "HowToStep", "name": "Resolve CRS via pyproj", "text": "Parse every input through CRS.from_user_input() to extract EPSG code, type name, and area-of-use bounds."},
-        {"@type": "HowToStep", "name": "Apply conditional markup", "text": "Use Rich inline markup to colour-code geographic vs projected CRS types and flag invalid entries."},
-        {"@type": "HowToStep", "name": "Verify output", "text": "Run the verification snippet to confirm column widths and row counts match expectations."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Why does my Rich table overflow on narrow CI runners?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Rich respects the COLUMNS environment variable, but without explicit max_width on each column the table can exceed the runner's 80-column default. Set max_width on every variable-length column and use overflow='ellipsis' to hard-cap expansion."}
-        },
-        {
-          "@type": "Question",
-          "name": "When should I use overflow='fold' versus overflow='ellipsis'?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Use fold for WKT or PROJ strings that need to remain copy-pasteable in the terminal. Use ellipsis for bounding-box or name columns where truncation is acceptable for quick scanning."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I capture the Rich table output for a log file?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Instantiate Console with record=True and force_terminal=True, then call console.export_text() after printing. This captures the rendered table without ANSI codes, suitable for structured log aggregation."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
-Use `add_column()` with explicit `width`, `max_width`, and `overflow` constraints and delegate CRS parsing to `pyproj.CRS.from_user_input()`. Without those column constraints a Rich table collapses or overflows when EPSG names, WKT strings, or four-decimal bounding-box values hit a narrow CI terminal. This task is a focused extension of the broader [Rich Console Output & Progress Bars](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/) pattern, which sits within the [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
+Use `add_column()` with explicit `width`, `max_width`, and `overflow` constraints and delegate CRS parsing to `pyproj.CRS.from_user_input()`. Without those column constraints a Rich table collapses or overflows when EPSG names, WKT strings, or four-decimal bounding-box values hit a narrow CI terminal. It builds directly on the [Rich Console Output & Progress Bars](https://www.batch-processing.com/cli-architecture-design-patterns/rich-console-output-progress-bars/) pattern, part of the [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) guide.
 
 ## Prerequisites
 
@@ -127,7 +72,6 @@ from rich.table import Table
 from pyproj import CRS, Transformer
 from pyproj.exceptions import CRSError
 
-
 def build_crs_table(
     crs_inputs: list[str],
     console: Optional[Console] = None,
@@ -182,7 +126,6 @@ def build_crs_table(
             table.add_row(str(idx), "—", truncated, "[red]ERROR[/]", "—", "[red]NO[/]")
 
     return table
-
 
 if __name__ == "__main__":
     samples = ["EPSG:4326", "EPSG:3857", "EPSG:32633", "EPSG:27700", "INVALID"]

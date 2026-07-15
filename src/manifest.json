@@ -1,7 +1,7 @@
 {
   "name": "Python GIS CLI Toolcraft & Batch Processing",
   "short_name": "GIS CLI Tools",
-  "description": "A practitioner-focused resource for building, packaging, testing, and deploying command-line tools for spatial workflows.",
+  "description": "Guides and runnable code for building, packaging, testing, and deploying command-line tools for spatial work in Python.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#fdf9f6",

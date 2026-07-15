@@ -14,70 +14,9 @@ datePublished: "2025-07-10"
 dateModified: "2026-07-10"
 ---
 
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Article",
-      "headline": "Structuring a Multi-Command GDAL CLI with Typer Sub-Apps",
-      "description": "Organise raster, vector, and inspect commands into separate Typer sub-apps mounted on one root app so each subcommand module stays independently testable.",
-      "datePublished": "2025-07-10",
-      "dateModified": "2026-07-10",
-      "author": {"@type": "Organization", "name": "batch-processing.com"},
-      "publisher": {"@type": "Organization", "name": "batch-processing.com"}
-    },
-    {
-      "@type": "BreadcrumbList",
-      "itemListElement": [
-        {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://batch-processing.com/"},
-        {"@type": "ListItem", "position": 2, "name": "CLI Subcommand Organization for GIS Toolchains", "item": "https://batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/"},
-        {"@type": "ListItem", "position": 3, "name": "Structuring a Multi-Command GDAL CLI with Typer Sub-Apps", "item": "https://batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/structuring-a-multi-command-gdal-cli-with-typer-sub-apps/"}
-      ]
-    },
-    {
-      "@type": "HowTo",
-      "name": "Structure a Multi-Command GDAL CLI with Typer Sub-Apps",
-      "step": [
-        {"@type": "HowToStep", "name": "Create one Typer app per command group", "text": "Give each module in commands/ its own typer.Typer() instance so raster, vector, and inspect commands live in isolated files."},
-        {"@type": "HowToStep", "name": "Keep the root app in its own module", "text": "Define the root Typer app in main.py and import the sub-apps there, never the other way around, to avoid circular imports."},
-        {"@type": "HowToStep", "name": "Mount each sub-app with add_typer", "text": "Call app.add_typer(raster_app, name='raster') for every group to produce namespaced commands like mytool raster warp."},
-        {"@type": "HowToStep", "name": "Set no_args_is_help on every app", "text": "Pass no_args_is_help=True so bare group invocations print help instead of exiting with an error."},
-        {"@type": "HowToStep", "name": "Verify the command tree", "text": "Run mytool --help and mytool raster --help to confirm every sub-app mounted under the expected namespace."}
-      ]
-    },
-    {
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Where should the root Typer app object live?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Put the root app in a dedicated main.py that imports each sub-app module. The sub-app modules must never import main.py. Keeping imports one-directional prevents the circular import that occurs when a command module and the root both reference each other at module load time."}
-        },
-        {
-          "@type": "Question",
-          "name": "Why does my group print an error instead of help when run with no arguments?",
-          "acceptedAnswer": {"@type": "Answer", "text": "By default Typer exits with code 2 and a usage error when a command group is invoked without a subcommand. Pass no_args_is_help=True to each typer.Typer() constructor so bare invocations like mytool raster print the group help text and exit 0 instead."}
-        },
-        {
-          "@type": "Question",
-          "name": "How do I test one subcommand group in isolation?",
-          "acceptedAnswer": {"@type": "Answer", "text": "Because each group is its own typer.Typer() instance, you can import just commands.raster and drive its app with typer.testing.CliRunner without loading vector or inspect. This keeps unit tests fast and their imports minimal, and it means a broken vector dependency never blocks raster tests."}
-        },
-        {
-          "@type": "Question",
-          "name": "Does add_typer change the command names inside a sub-app?",
-          "acceptedAnswer": {"@type": "Answer", "text": "No. add_typer(raster_app, name='raster') only prefixes the namespace. A command defined as warp inside raster_app becomes mytool raster warp. The function names and their own command names are untouched, so you can mount the same sub-app under a different name without editing the commands."}
-        }
-      ]
-    }
-  ]
-}
-</script>
-
 # Structuring a Multi-Command GDAL CLI with Typer Sub-Apps
 
-Split a growing GDAL CLI by giving each command group its own `typer.Typer()` instance in a separate module — `commands/raster.py`, `commands/vector.py`, `commands/inspect.py` — then mount them on one root app with `app.add_typer(raster_app, name="raster")`. That produces namespaced commands such as `mytool raster warp` and `mytool vector reproject` while keeping every module independently importable and testable. This page is part of the [CLI Subcommand Organization for GIS Toolchains](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) guide within the wider [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
+Split a growing GDAL CLI by giving each command group its own `typer.Typer()` instance in a separate module — `commands/raster.py`, `commands/vector.py`, `commands/inspect.py` — then mount them on one root app with `app.add_typer(raster_app, name="raster")`. That produces namespaced commands such as `mytool raster warp` and `mytool vector reproject` while keeping every module independently importable and testable. It belongs to the [CLI Subcommand Organization](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) guide, within the wider [CLI Architecture & Design Patterns](https://www.batch-processing.com/cli-architecture-design-patterns/) reference.
 
 ## Prerequisites
 
@@ -146,7 +85,6 @@ from osgeo import gdal
 
 raster_app = typer.Typer(no_args_is_help=True, help="Raster operations")
 
-
 @raster_app.command("warp")
 def warp(
     src: Annotated[Path, typer.Argument(help="Source GeoTIFF")],
@@ -179,7 +117,6 @@ import geopandas as gpd
 
 vector_app = typer.Typer(no_args_is_help=True, help="Vector operations")
 
-
 @vector_app.command("reproject")
 def reproject(
     src: Annotated[Path, typer.Argument(help="Source vector file")],
@@ -205,7 +142,6 @@ import typer
 import geopandas as gpd
 
 inspect_app = typer.Typer(no_args_is_help=True, help="Inspection helpers")
-
 
 @inspect_app.command("crs")
 def crs(
@@ -234,11 +170,9 @@ app.add_typer(raster_app, name="raster")     # -> mytool raster warp
 app.add_typer(vector_app, name="vector")     # -> mytool vector reproject
 app.add_typer(inspect_app, name="inspect")   # -> mytool inspect crs
 
-
 def run() -> None:
     """Console-script entry point registered in pyproject.toml."""
     app()
-
 
 if __name__ == "__main__":
     run()
@@ -314,5 +248,5 @@ No. `add_typer(raster_app, name="raster")` only prefixes the namespace. A comman
 
 ## Related
 
-- [CLI Subcommand Organization for GIS Toolchains](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) — parent guide covering how to group, name, and namespace commands as a GDAL tool grows
+- [CLI Subcommand Organization](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/) — parent guide covering how to group, name, and namespace commands as a GDAL tool grows
 - [Sharing Global Options Across Geospatial Subcommands](https://www.batch-processing.com/cli-architecture-design-patterns/cli-subcommand-organization/sharing-global-options-across-geospatial-subcommands/) — pass verbosity, config paths, and CRS defaults down into every mounted sub-app
